@@ -1,30 +1,61 @@
+# Dependencias de PHP y Node
 /vendor/
 node_modules/
-npm-debug.log
-yarn-error.log
 
-# Laravel 4 specific
-bootstrap/compiled.php
-app/storage/
-
-# Laravel 5 & Lumen specific
-public/storage
-public/hot
-
-# Laravel 5 & Lumen specific with changed public path
-public_html/storage
-public_html/hot
-
-storage/*.key
+# Archivos de entorno y configuración sensible
 .env
+.env.*
+auth.json
+*.env
+*.bak
+*.tmp
+
+# Cachés y archivos de test
+.phpunit.result.cache
+/.phpunit.cache
+.phpactor.json
+
+# Laravel: almacenamiento y compilados
+storage/*.key
+storage/logs/
+storage/framework/*
+!storage/framework/.gitkeep
+/public/storage
+/public/build
+/public/hot
+
+# Compilados de Laravel
+bootstrap/cache/
+!bootstrap/cache/.gitkeep
+
+# Base de datos local y backups
+database/*.sqlite
+/dumps/
+/backups/
+/*.sql
+*.gz
+
+# IDEs y entornos locales
+/.idea
+/.vscode
+/.phpstorm.meta.php
+/.DS_Store
+/.fleet
+/.nova
+/.zed
+Thumbs.db
+*.swp
+*.swo
+
+# Homestead & Vagrant
 Homestead.yaml
 Homestead.json
 /.vagrant
-.phpunit.result.cache
 
-/public/build
-/storage/pail
-.env.backup
-.env.production
-.phpactor.json
-auth.json
+# Lock files (opcional, si no los quieres en control de versiones)
+composer.lock
+package-lock.json
+yarn.lock
+
+# Git keep (para carpetas vacías requeridas por Laravel)
+!.gitkeep
