@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+<<<<<<< HEAD
 use Livewire\Volt\Volt;
 
 Route::get('/', function () {
@@ -20,3 +21,9 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+=======
+
+Route::get('/', function () {
+    return view('welcome');
+});
+>>>>>>> 3ae4eef (movidas de alexis)

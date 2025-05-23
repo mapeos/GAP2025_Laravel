@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+<<<<<<< HEAD
 @import '../../vendor/livewire/flux/dist/flux.css';
 
 @source '../views';
@@ -64,3 +65,15 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+=======
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+>>>>>>> 3ae4eef (movidas de alexis)
