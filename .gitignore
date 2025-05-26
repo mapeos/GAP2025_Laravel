@@ -59,3 +59,9 @@ yarn.lock
 
 # Git keep (para carpetas vacías requeridas por Laravel)
 !.gitkeep
+.env.example
+.gitattributes
+composer.json
+composer.lock
+package-lock.json
+package.json
