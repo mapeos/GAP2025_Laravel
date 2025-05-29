@@ -88,8 +88,12 @@ php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvid
 ```bash
 php artisan migrate
 ```
+4. Ejecutar los seeders para crear los usuarios con roles asignados para pruebas 
+```bash
+php artisan db:seed --class=RolesAndUsersSeeder
+```
 
-4. Esta migracion:
+ Esta migracion:
 
     - Crea las tablas roles y permissions y sus relaciones 
 
