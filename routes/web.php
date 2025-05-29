@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CursoController;
+use App\Http\Controllers\UserController;
 
 Route::view('/', 'welcome');
 
@@ -26,15 +27,27 @@ Route::view('profile', 'profile')
 
 require __DIR__.'/auth.php';
 
-// Rutas de Cursos Publicas
+// Rutas de Cursos Públicas
 Route::get('/cursos', [CursoController::class, 'index'])->name('cursos.index');
 Route::get('/cursos/create', [CursoController::class, 'create'])->name('cursos.create');
 Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
 
-// El resto de rutas protegidas
+// Rutas protegidas para Cursos
 Route::middleware(['auth'])->group(function () {
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
     Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
     Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
     Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
+});
+
+// Rutas administración de usuarios con prefijo y nombre de ruta
+Route::prefix('admin/users')->name('admin.users.')->middleware(['auth'])->group(function () {
+    Route::get('/', [UserController::class, 'index'])->name('index');           // Lista de usuarios
+    Route::get('/create', [UserController::class, 'create'])->name('create');   // Formulario de creación
+    Route::post('/', [UserController::class, 'store'])->name('store');          // Guardar nuevo usuario
+    Route::get('/{user}', [UserController::class, 'show'])->name('show');       // Ver detalle (opcional)
+    Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');  // Formulario de edición
+    Route::put('/{user}', [UserController::class, 'update'])->name('update');   // Actualizar usuario
+    Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy'); // Eliminar usuario
+    Route::post('/{id}/restore', [UserController::class, 'restore'])->name('restore'); // Restaurar usuario eliminado
 });
