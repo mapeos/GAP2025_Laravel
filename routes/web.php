@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NewsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\UserController;
@@ -51,3 +52,34 @@ Route::prefix('admin/users')->name('admin.users.')->middleware(['auth'])->group(
     Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy'); // Eliminar usuario
     Route::post('/{id}/restore', [UserController::class, 'restore'])->name('restore'); // Restaurar usuario eliminado
 });
+
+require __DIR__ . '/auth.php';
+
+//-------------------------------------------
+// Rutas de News - CRUD
+
+/* (Opcion 1)
+    - Rutas hechas de manera manual
+    - De momanto no estan protegidas 
+    - De usar esta opcion usar middleware global o gestionar proteccion de otro lado.
+*/
+
+Route::get('admin/news', [NewsController::class, 'index'])->name('admin.news.index');
+Route::get('admin/news/create', [NewsController::class, 'create'])->name('admin.news.create');
+Route::post('admin/news', [NewsController::class, 'store'])->name('admin.news.store');
+Route::get('admin/news/{news}', [NewsController::class, 'show'])->name('admin.news.show');
+Route::get('admin/news/{news}/edit', [NewsController::class, 'edit'])->name('admin.news.edit');
+Route::put('admin/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
+Route::delete('admin/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
+
+/* 
+    (Opcion 2)
+    - Bloque usando "Route::resource equivalente a todas las rutas CRUD estandar, con el prefijo admin en URL y name
+    - Rutas protegidas con Middleware para que solo usuario identificado o admins tengan acceso
+    - Necesario crear Middleware is_admin
+
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'is_admin'])->group(function () {
+    Route::resource('news', NewsController::class);
+ });
+*/
+// 5179a36 (CRUD de noticias y categorias (pendiente de terminar las vistas))

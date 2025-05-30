@@ -8,6 +8,29 @@
                 <i class="ri-dashboard-line"></i> <span>Dashboard</span>
             </a>
         </li>
+
+        <!-- News Section -->
+        <li class="nav-item has-submenu parent">
+            <a class="nav-link" href="#">
+                <i class="ri-newspaper-line"></i> <span>News</span> <i class="ri-arrow-right-s-line"></i>
+            </a>
+            <ul class="submenu">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.news.index') }}">
+                        <i class="ri-list-unordered"></i> <span>All News</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.news.create') }}">
+                        <i class="ri-add-line"></i> <span>Create News</span>
+                    </a>
+                </li>
+                <!-- A espera de agregar más enlaces de ser necesarios -->
+
+            </ul>
+        </li>
+
+
         <!-- Analytics -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/analytics">
