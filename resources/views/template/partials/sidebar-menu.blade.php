@@ -8,6 +8,29 @@
                 <i class="ri-dashboard-line"></i> <span>Dashboard</span>
             </a>
         </li>
+
+        <!-- News Section -->
+        <li class="nav-item has-submenu parent">
+            <a class="nav-link" href="#">
+                <i class="ri-newspaper-line"></i> <span>News</span> <i class="ri-arrow-right-s-line"></i>
+            </a>
+            <ul class="submenu">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.news.index') }}">
+                        <i class="ri-list-unordered"></i> <span>All News</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.news.create') }}">
+                        <i class="ri-add-line"></i> <span>Create News</span>
+                    </a>
+                </li>
+                <!-- A espera de agregar más enlaces de ser necesarios -->
+
+            </ul>
+        </li>
+
+
         <!-- Analytics -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/analytics">
@@ -162,68 +185,118 @@
         </li>
         <!-- Pages Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Pages</span></li>
-        <!-- Users Section -->
+        <!-- Administración Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
-                <i class="ri-user-line"></i> <span>Users</span> <i class="ri-arrow-right-s-line"></i>
-            </a>
-            <ul class="submenu">
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/users/add"> <span>Add User</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/users/list"> <span>List Users</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/users/profile"> <span>Profile</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/users/security"> <span>Security</span> </a>
-                </li>
-            </ul>
-        </li>
-        <!-- Role & Permissions Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-shield-user-line"></i> <span>Roles & Permissions</span>
+                <i class="ri-settings-3-line"></i> <span>Administración</span>
                 <i class="ri-arrow-right-s-line"></i>
             </a>
             <ul class="submenu">
+
+                <!-- Users Section -->
                 <li class="nav-item has-submenu">
-                    <a class="nav-link" href="#"> <span>Roles</span> <i class="ri-arrow-right-s-line"></i> </a>
+                    <a class="nav-link" href="#">
+                        <i class="ri-user-line"></i> <span>Usuarios</span>
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
                     <ul class="submenu">
                         <li class="nav-item">
-                            <a class="nav-link" href="/pages/roles-permissions/roles/list"> <span>List</span> </a>
+                            <a class="nav-link" href="{{ route('admin.users.create') }}">
+                                <span>Añadir Usuario</span>
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/pages/roles-permissions/roles/add"> <span>Add</span> </a>
+                            <a class="nav-link" href="{{ route('admin.users.index') }}">
+                                <span>Lista Usuarios</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/pages/users/profile">
+                                <span>Perfiles</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/pages/users/security">
+                                <span>Seguridad</span>
+                            </a>
                         </li>
                     </ul>
                 </li>
+
+                <!-- Roles & Permissions Section -->
                 <li class="nav-item has-submenu">
-                    <a class="nav-link" href="#"> <span>Permissions</span> <i class="ri-arrow-right-s-line"></i> </a>
+                    <a class="nav-link" href="#">
+                        <i class="ri-shield-user-line"></i> <span>Roles & Permisos</span>
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
                     <ul class="submenu">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/roles-permissions/permissions/list"> <span>List</span> </a>
+
+                        <!-- Roles Subsection -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#">
+                                <span>Roles</span>
+                                <i class="ri-arrow-right-s-line"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/pages/roles-permissions/roles/list">
+                                        <span>Lista</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/pages/roles-permissions/roles/add">
+                                        <span>Añadir</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/roles-permissions/permissions/add"> <span>Add</span> </a>
+
+                        <!-- Permissions Subsection -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#">
+                                <span>Permisos</span>
+                                <i class="ri-arrow-right-s-line"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/pages/roles-permissions/permissions/list">
+                                        <span>Lista</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/pages/roles-permissions/permissions/add">
+                                        <span>Añadir</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
+
+                        <!-- Groups Subsection -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#">
+                                <span>Grupos</span>
+                                <i class="ri-arrow-right-s-line"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/pages/roles-permissions/groups/list">
+                                        <span>Lista</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/pages/roles-permissions/groups/add">
+                                        <span>Añadir</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
                     </ul>
                 </li>
-                <li class="nav-item has-submenu">
-                    <a class="nav-link" href="#"> <span>Groups</span> <i class="ri-arrow-right-s-line"></i> </a>
-                    <ul class="submenu">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/roles-permissions/groups/list"> <span>List</span> </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/roles-permissions/groups/add"> <span>Add</span> </a>
-                        </li>
-                    </ul>
-                </li>
+
             </ul>
         </li>
+
         <!-- Authentication Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
