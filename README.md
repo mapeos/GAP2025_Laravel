@@ -95,6 +95,16 @@ export OLLAMA_ORIGINS=*
 ```
 - arrancar *Ollama*: `ollama serve`
 
+Para probar el sistema se puede utilizar un comando como el siguiente:
+```
+php artisan appointments:suggest-ai 1 2 5 "2025-07-01"   
+    --duration=60   
+    --tolerance=7   
+    --max=3   
+    --workingDays='{"monday":["08:00","14:00"],"tuesday":["10:00","18:00"],"wednesday":["08:00","14:00"],"thursday":["08:00","14:00"]}'   
+    --excludedDates='["2025-07-04", "2025-07-15"]'   
+    --preferences='{"times_of_day":"morning","preferred_days":["tuesday","thursday"],"hour_range":["09:00","11:00"]}'
+```
 
 # Agenda/Calendario (Arnaldo y Víctor)
 
