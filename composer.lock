@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b4532a73649852a8b8f4591495771c14",
+    "content-hash": "57eb8a7687fb8a55932023d2b2ac6be2",
     "packages": [
         {
             "name": "brick/math",
@@ -134,6 +134,39 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
+        },
+        {
+            "name": "clevertic/appointment-suggester",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/clevertic/appointment-suggester",
+                "reference": "50753f442f4d70da1f5036c98c14346d65712e47"
+            },
+            "require": {
+                "illuminate/support": "^12.0",
+                "php": ">=8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CleverTIC\\AppointmentSuggester\\AppointmentServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CleverTIC\\AppointmentSuggester\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Paquete Laravel para sugerencia inteligente de citas clínicas",
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "dflydev/dot-access-data",
