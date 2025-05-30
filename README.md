@@ -295,4 +295,7 @@ docker exec -it alumnos-gap-app php artisan migrate
 ```bash
 php artisan migrate
 ```
->>>>>>> 5179a36 (CRUD de noticias y categorias (pendiente de terminar las vistas))
+# Ejecutar los seeders para crear algunas categorias para pruebas 
+```bash
+php artisan db:seed --class=CategoriaSeeder
+```

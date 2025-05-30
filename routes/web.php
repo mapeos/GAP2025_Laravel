@@ -4,6 +4,7 @@ use App\Http\Controllers\NewsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CategoriasController;
 
 Route::view('/', 'welcome');
 
@@ -58,12 +59,6 @@ require __DIR__ . '/auth.php';
 //-------------------------------------------
 // Rutas de News - CRUD
 
-/* (Opcion 1)
-    - Rutas hechas de manera manual
-    - De momanto no estan protegidas 
-    - De usar esta opcion usar middleware global o gestionar proteccion de otro lado.
-*/
-
 Route::get('admin/news', [NewsController::class, 'index'])->name('admin.news.index');
 Route::get('admin/news/create', [NewsController::class, 'create'])->name('admin.news.create');
 Route::post('admin/news', [NewsController::class, 'store'])->name('admin.news.store');
@@ -72,14 +67,15 @@ Route::get('admin/news/{news}/edit', [NewsController::class, 'edit'])->name('adm
 Route::put('admin/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
 Route::delete('admin/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
 
-/* 
-    (Opcion 2)
-    - Bloque usando "Route::resource equivalente a todas las rutas CRUD estandar, con el prefijo admin en URL y name
-    - Rutas protegidas con Middleware para que solo usuario identificado o admins tengan acceso
-    - Necesario crear Middleware is_admin
+//-------------------------------------------
+// Rutas de Categorias - CRUD
 
-    Route::prefix('admin')->name('admin.')->middleware(['auth', 'is_admin'])->group(function () {
-    Route::resource('news', NewsController::class);
- });
-*/
-// 5179a36 (CRUD de noticias y categorias (pendiente de terminar las vistas))
+Route::get('admin/categorias', [CategoriasController::class, 'index'])->name('admin.categorias.index');
+Route::get('admin/categorias/create', [CategoriasController::class, 'create'])->name('admin.categorias.create');
+Route::post('admin/categorias', [CategoriasController::class, 'store'])->name('admin.categorias.store');
+// Route::get('admin/categorias/{categoria}', [CategoriasController::class, 'show'])->name('admin.categorias.show'); opcional si quieres mostrar una categoría
+Route::get('admin/categorias/{categoria}/edit', [CategoriasController::class, 'edit'])->name('admin.categorias.edit');
+Route::put('admin/categorias/{categoria}', [CategoriasController::class, 'update'])->name('admin.categorias.update');
+Route::delete('admin/categorias/{categoria}', [CategoriasController::class, 'destroy'])->name('admin.categorias.destroy');
+
+

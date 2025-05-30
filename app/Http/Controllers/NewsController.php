@@ -41,14 +41,14 @@ class NewsController extends Controller
             'contenido' => 'required',
             'autor' => 'nullable|integer',
             'fecha_publicacion' => 'required|date',
-            'categorias' => 'required|array',
+            'categorias' => 'nullable|array',
         ]);
 
         //Crear la noticia
         $news = News::create($request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']));
 
         //Asignar categorias a las noticias
-        $news->categorias()->sync($request->categorias);
+        $news->categorias()->sync($request->categorias ?? []);
 
         //Enviar mensajes de exito a la vista sanso session
         return redirect()->route('admin.news.index')->with('success', 'Noticia creada exitosamente.');

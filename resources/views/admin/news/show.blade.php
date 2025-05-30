@@ -13,6 +13,13 @@
 <div class="container">
     <h1 class="mb-4">{{ $news->titulo }}</h1>
 
+    @if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
     <p><strong>Categorías:</strong>
         @if ($news->categorias->isNotEmpty())
         @foreach ($news->categorias as $categoria)

@@ -11,6 +11,14 @@
 
 @section('content')
 <div class="container">
+
+    @if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+    
     <h1 class="mb-4">Listado de Noticias</h1>
 
     <div class="mb-3">

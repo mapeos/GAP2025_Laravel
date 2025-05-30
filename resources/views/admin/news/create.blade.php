@@ -13,6 +13,26 @@
 <div class="container">
     <h1>Crear Noticia</h1>
 
+    {{-- Mensajes de éxito y errores --}}
+    @if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Por favor corrige los siguientes errores:</strong>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
     <form action="{{ route('admin.news.store') }}" method="POST">
         @csrf
 
@@ -64,6 +84,8 @@
         </div>
 
         <button type="submit" class="btn btn-success mt-3">Crear Noticia</button>
+        <a href="{{ route('admin.news.index') }}" class="btn btn-secondary">Cancelar</a>
+
     </form>
 </div>
 @endsection
