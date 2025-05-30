@@ -63,6 +63,38 @@ Está disponible una página de ejemplo en la ruta: `admin.dashboard.test`
 @endpush
 ```
 
+# Asistente AI para citas en calendario
+Ejecutar la migración: `php artisan migrate` 
+Se ha creado un comando `php artisan appointments:suggest 1 2 "2025-07-01"` para verificar si se genera una fecha mediate IA
+
+## Motor de IA
+Se utiliza un sistema basado en LLM basado en *Ollama + Mistral 7B*
+- Ollama es U una plataforma de LLMs que se ejecuta en local
+- Mistral 7B es un modelo especializado en instrucciones, entiende cosas como "sugiereme un hueco en la agenda"
+
+Más adelante se podría incluir:
+- Phi-2 (Microsoft): modelo pequeño y muy preciso.
+- Gemma 2B Instruct (Google): excelente para correr en CPU, más pequeño que Mistral.
+ - TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
+
+### Instalación del sistema
+- En linux: `curl -fsSL https://ollama.com/install.sh | sh`
+- En windows:
+```
+# Windows (WSL)
+wsl --install # (Si no tienes WSL)
+wsl
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+- cargar el modelo (unos 4.1Gb de espacio): `ollama run mistral`
+- exportar variables de sistema (linux):
+```
+export OLLAMA_HOST=0.0.0.0
+export OLLAMA_ORIGINS=*
+```
+- arrancar *Ollama*: `ollama serve`
+
 
 # Agenda/Calendario (Arnaldo y Víctor)
 
