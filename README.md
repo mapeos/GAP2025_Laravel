@@ -57,6 +57,95 @@ Está disponible una página de ejemplo en la ruta: `admin.dashboard.test`
 ```
 
 
+# Agenda/Calendario (Arnaldo y Víctor)
+
+## 1. Introducción
+El módulo de Agenda/Calendario permite gestionar y visualizar todos los eventos y actividades del curso. Este sistema está diseñado para facilitar la organización de clases, reuniones, entregas y otros eventos importantes, permitiendo una gestión eficiente del tiempo y los recursos.
+
+---
+
+## 2. Estructura de la Base de Datos
+El sistema está compuesto por tres tablas principales que permiten una gestión flexible de eventos:
+
+### Tabla `tipos_evento`
+- Define las diferentes categorías de eventos en el calendario
+- Campos principales:
+  - `nombre`: Tipo de evento (ej: Clase, Entrega, Reunión)
+  - `color`: Color para identificación visual en el calendario
+  - `status`: Estado activo/inactivo del tipo de evento
+
+### Tabla `eventos`
+- Almacena la información de cada evento en el calendario
+- Campos principales:
+  - `titulo`: Título del evento
+  - `descripcion`: Descripción detallada
+  - `fecha_inicio`: Fecha y hora de inicio
+  - `fecha_fin`: Fecha y hora de finalización
+  - `ubicacion`: Lugar del evento (para eventos presenciales)
+  - `url_virtual`: Enlace para eventos virtuales
+  - `tipo_evento_id`: Categoría del evento
+  - `creado_por`: Usuario que crea el evento
+  - `status`: Estado activo/inactivo
+
+### Tabla `evento_participante`
+- Gestiona la participación de usuarios en los eventos
+- Campos principales:
+  - `evento_id`: ID del evento
+  - `user_id`: ID del participante
+  - `rol`: Rol en el evento (ej: Profesor, Alumno, Invitado)
+  - `estado_asistencia`: Estado de asistencia
+  - `notas`: Notas adicionales
+  - `status`: Estado activo/inactivo
+
+---
+
+## 3. Modelos Implementados
+Se han desarrollado tres modelos principales que gestionan las relaciones entre eventos y usuarios:
+
+### Modelo `TipoEvento`
+- Gestiona las categorías de eventos
+- Relación uno a muchos con `Evento`
+- Permite filtrar y organizar eventos por tipo
+
+### Modelo `Evento`
+- Gestiona la información principal de los eventos
+- Relaciones:
+  - Pertenece a un `TipoEvento`
+  - Pertenece a un `User` (creador)
+  - Tiene muchos `User` a través de `EventoParticipante`
+
+### Modelo `EventoParticipante`
+- Gestiona la participación en eventos
+- Relación muchos a muchos entre `Evento` y `User`
+- Permite seguimiento de asistencia y roles
+
+---
+
+## 4. Características Implementadas
+- Sistema de categorización de eventos con colores
+- Soporte para eventos presenciales y virtuales
+- Gestión de participantes y roles
+- Seguimiento de asistencia
+- Soft deletes para mantener historial
+- Timestamps automáticos
+- Relaciones Eloquent optimizadas
+
+---
+
+## 5. Próximos Pasos
+- Desarrollo de la interfaz de calendario
+- Implementación de vistas para:
+  - Vista mensual
+  - Vista semanal
+  - Vista diaria
+  - Lista de eventos
+- Sistema de notificaciones para eventos
+- Filtros por tipo de evento
+- Búsqueda de eventos
+- Exportación de calendario
+- Integración con calendarios externos
+
+
 # Gestión de usuarios y roles (Miguel)
 
 ## 1. Introducción
