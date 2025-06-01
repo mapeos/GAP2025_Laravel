@@ -4,41 +4,41 @@
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-primary">
                       <div class="inner">
-                        <h3>$40,000</h3>
-                        <p>Monthly Revenue</p>
+                        <h3>{{ $stats['totalUsers'] }}</h3>
+                        <p>Usuarios Totales</p>
                       </div>
-                      <div class="small-box-icon"><i class="ri-money-dollar-circle-fill"></i></div>
-                      <a href="#" class="small-box-footer"> Revenue Details <i class="ri-arrow-right-line"></i> </a>
+                      <div class="small-box-icon"><i class="ri-user-fill"></i></div>
+                      <a href="{{ route('admin.users.index') }}" class="small-box-footer">Ver Usuarios <i class="ri-arrow-right-line"></i></a>
                     </div>
                   </div>
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-success">
                       <div class="inner">
-                        <h3>2,500</h3>
-                        <p>Active Users</p>
+                        <h3>{{ $stats['activeUsers'] }}</h3>
+                        <p>Usuarios Activos</p>
                       </div>
                       <div class="small-box-icon"><i class="ri-user-heart-fill"></i></div>
-                      <a href="#" class="small-box-footer"> User Analytics <i class="ri-arrow-right-line"></i> </a>
+                      <a href="{{ route('admin.users.index') }}" class="small-box-footer">Ver Detalles <i class="ri-arrow-right-line"></i></a>
                     </div>
                   </div>
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-info">
                       <div class="inner">
-                        <h3>75%</h3>
-                        <p>Project Progress</p>
+                        <h3>{{ $stats['totalNews'] }}</h3>
+                        <p>Noticias Totales</p>
                       </div>
-                      <div class="small-box-icon"><i class="ri-task-fill"></i></div>
-                      <a href="#" class="small-box-footer"> Project Details <i class="ri-arrow-right-line"></i> </a>
+                      <div class="small-box-icon"><i class="ri-newspaper-fill"></i></div>
+                      <a href="{{ route('admin.news.index') }}" class="small-box-footer">Ver Noticias <i class="ri-arrow-right-line"></i></a>
                     </div>
                   </div>
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-warning">
                       <div class="inner">
-                        <h3>400</h3>
-                        <p>Support Tickets</p>
+                        <h3>{{ $stats['publishedNews'] }}</h3>
+                        <p>Noticias Publicadas</p>
                       </div>
-                      <div class="small-box-icon"><i class="ri-customer-service-2-fill"></i></div>
-                      <a href="#" class="small-box-footer"> Ticket Overview <i class="ri-arrow-right-line"></i> </a>
+                      <div class="small-box-icon"><i class="ri-article-fill"></i></div>
+                      <a href="{{ route('admin.news.index') }}" class="small-box-footer">Ver Publicadas <i class="ri-arrow-right-line"></i></a>
                     </div>
                   </div>
                 </div>
@@ -381,4 +381,3 @@
 
 
 
-               

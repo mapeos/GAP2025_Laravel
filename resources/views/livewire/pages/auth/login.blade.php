@@ -1,6 +1,9 @@
 <?php
 
 use App\Livewire\Forms\LoginForm;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -20,7 +23,31 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $user = Auth::user();
+        $isAdmin = DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_id', $user->id)
+            ->where('roles.name', 'Administrador')
+            ->exists();
+        $isAlumno = DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_id', $user->id)
+            ->where('roles.name', 'Alumno')
+            ->exists();
+        $isProfesor = DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_id', $user->id)
+            ->where('roles.name', 'Profesor')
+            ->exists();
+        if ($isAdmin) {
+            $this->redirectIntended(default: route('admin.dashboard'), navigate: true);
+        } elseif ($isAlumno) {
+            $this->redirectIntended(default: route('alumno.home'), navigate: true);
+        } elseif ($isProfesor) {
+            $this->redirectIntended(default: route('profesor.home'), navigate: true);
+        } else {
+            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        }
     }
 }; ?>
 

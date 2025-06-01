@@ -29,10 +29,13 @@ new #[Layout('layouts.guest')] class extends Component
         $validated['password'] = Hash::make($validated['password']);
 
         event(new Registered($user = User::create($validated)));
+        // Asignar rol Alumno por defecto
+        $user->assignRole('Alumno');
 
         Auth::login($user);
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        // Redirigir a la vista de usuario (por ejemplo, 'alumno.home')
+        $this->redirect(route('alumno.home', absolute: false), navigate: true);
     }
 }; ?>
 

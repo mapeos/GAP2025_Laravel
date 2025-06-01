@@ -5,15 +5,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoriasController;
+use App\Http\Controllers\WelcomeController;
 
-Route::view('/', 'welcome');
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 Route::view('astro', 'template.base')
     ->name('astro');
 
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard.index');
-});
+Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'role:Administrador'])
+    ->name('admin.dashboard');
 
 Route::get('/admin/pagina-test', function () {
     return view('admin.dashboard.test');
@@ -43,7 +44,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Rutas administración de usuarios con prefijo y nombre de ruta
-Route::prefix('admin/users')->name('admin.users.')->middleware(['auth'])->group(function () {
+Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Administrador'])->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('index');           // Lista de usuarios
     Route::get('/create', [UserController::class, 'create'])->name('create');   // Formulario de creación
     Route::post('/', [UserController::class, 'store'])->name('store');          // Guardar nuevo usuario
@@ -77,5 +78,16 @@ Route::post('admin/categorias', [CategoriasController::class, 'store'])->name('a
 Route::get('admin/categorias/{categoria}/edit', [CategoriasController::class, 'edit'])->name('admin.categorias.edit');
 Route::put('admin/categorias/{categoria}', [CategoriasController::class, 'update'])->name('admin.categorias.update');
 Route::delete('admin/categorias/{categoria}', [CategoriasController::class, 'destroy'])->name('admin.categorias.destroy');
+
+//--------------------------------------------
+// Rutas para el rol Alumno
+Route::middleware(['auth', 'role:Alumno'])->group(function () {
+    Route::view('/alumno/home', 'alumno.home')->name('alumno.home');
+});
+
+// Rutas para el rol Profesor
+Route::middleware(['auth', 'role:Profesor'])->group(function () {
+    Route::view('/profesor/home', 'profesor.home')->name('profesor.home');
+});
 
 
