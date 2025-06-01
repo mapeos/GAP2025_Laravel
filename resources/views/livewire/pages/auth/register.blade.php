@@ -30,6 +30,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         event(new Registered($user = User::create($validated)));
         // Asignar rol Alumno por defecto
+        // TODO redirigir a la vista de perfil de usuario para completar información adicional
         $user->assignRole('Alumno');
 
         Auth::login($user);
