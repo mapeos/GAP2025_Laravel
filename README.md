@@ -214,6 +214,147 @@ Se han desarrollado tres modelos principales que gestionan las relaciones entre 
 - Exportación de calendario
 - Integración con calendarios externos
 
+## 7. Documentación de la API
+
+### Autenticación
+- Todas las rutas requieren autenticación mediante Sanctum
+- Token de acceso requerido en el header: `Authorization: Bearer {token}`
+
+### Endpoints Disponibles
+
+#### Eventos
+```
+GET /api/eventos
+- Lista todos los eventos
+- Filtros disponibles: fecha_inicio, fecha_fin, tipo_evento_id
+- Incluye relaciones: tipoEvento, participantes
+
+GET /api/eventos/{id}
+- Detalle de un evento específicp
+- Incluye todas las relaciones
+
+POST /api/eventos
+- Crea un nuevo evento
+- Requiere: titulo, fecha_inicio, fecha_fin, tipo_evento_id
+- Opcional: descripcion, ubicacion, url_virtual
+
+PUT /api/eventos/{id}
+- Actualiza un evento existente
+- Mismos campos que POST
+
+DELETE /api/eventos/{id}
+- Elimina un evento (soft delete)
+```
+
+#### Tipos de Evento
+```
+GET /api/tipos-evento
+- Lista todos los tipos de evento
+- Incluye: id, nombre, color, status
+
+POST /api/tipos-evento
+- Crea un nuevo tipo
+- Requiere: nombre, color
+
+PUT /api/tipos-evento/{id}
+- Actualiza un tipo existente
+- Mismos campos que POST
+
+DELETE /api/tipos-evento/{id}
+- Elimina un tipo (soft delete)
+```
+
+#### Participantes
+```
+GET /api/evento-participante
+- Lista participantes de eventos
+- Filtros: evento_id, user_id
+
+POST /api/evento-participante
+- Añade un participante
+- Requiere: evento_id, user_id, rol
+
+PUT /api/evento-participante/{id}
+- Actualiza estado de participante
+- Campos: estado_asistencia, notas
+
+DELETE /api/evento-participante/{id}
+- Elimina un participante
+```
+
+### Formatos de Respuesta
+
+#### Evento
+```json
+{
+    "id": 1,
+    "titulo": "Clase de Laravel",
+    "descripcion": "Introducción a Laravel",
+    "fecha_inicio": "2024-03-20T10:00:00Z",
+    "fecha_fin": "2024-03-20T12:00:00Z",
+    "ubicacion": "Aula 101",
+    "url_virtual": "https://meet.google.com/xxx",
+    "tipo_evento": {
+        "id": 1,
+        "nombre": "Clase",
+        "color": "#4CAF50"
+    },
+    "participantes": [
+        {
+            "id": 1,
+            "nombre": "Juan Pérez",
+            "rol": "Profesor",
+            "estado_asistencia": "confirmado"
+        }
+    ],
+    "created_at": "2024-03-19T15:00:00Z",
+    "updated_at": "2024-03-19T15:00:00Z"
+}
+```
+
+#### Tipo de Evento
+```json
+{
+    "id": 1,
+    "nombre": "Clase",
+    "color": "#4CAF50",
+    "status": true,
+    "created_at": "2024-03-19T15:00:00Z",
+    "updated_at": "2024-03-19T15:00:00Z"
+}
+```
+
+#### Participante
+```json
+{
+    "id": 1,
+    "evento_id": 1,
+    "user_id": 1,
+    "rol": "Profesor",
+    "estado_asistencia": "confirmado",
+    "notas": "Profesor principal",
+    "status": true,
+    "created_at": "2024-03-19T15:00:00Z",
+    "updated_at": "2024-03-19T15:00:00Z"
+}
+```
+
+### Código de Estado
+- 200: Éxito
+- 201: Creado
+- 400: Error de validación
+- 401: No autenticado
+- 403: No autorizado
+- 404: No encontrado
+- 500: Error del servidor
+
+### Próximos Endpoints a Implementar
+- GET /api/eventos/usuario/{id} - Eventos de un usuario específico
+- GET /api/eventos/recordatorios - Recordatorios personales
+- PUT /api/evento-participante/{id}/asistencia - Actualizar asistencia
+- GET /api/eventos/tipo/{id} - Eventos por tipo
+- GET /api/eventos/fecha/{fecha} - Eventos por fecha
+
 # Gestión de usuarios y roles (Miguel)
 
 ## 1. Introducción
