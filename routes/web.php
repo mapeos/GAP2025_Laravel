@@ -149,11 +149,21 @@ Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:
     });
 });
 
-// Rutas para todos los usuarios autenticados
+// Rutas para usuarios autenticados (incluyendo alumnos)
 Route::prefix('events')->name('events.')->middleware(['auth'])->group(function () {
+    // Rutas comunes para todos los usuarios autenticados
     Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
     Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
     Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
+
+    // Rutas específicas para alumnos (recordatorios personales)
+    Route::middleware(['role:Alumno'])->group(function () {
+        Route::get('/reminders/create', [EventoController::class, 'createReminder'])->name('reminders.create');
+        Route::post('/reminders', [EventoController::class, 'storeReminder'])->name('reminders.store');
+        Route::get('/reminders/{evento}/edit', [EventoController::class, 'editReminder'])->name('reminders.edit');
+        Route::put('/reminders/{evento}', [EventoController::class, 'updateReminder'])->name('reminders.update');
+        Route::delete('/reminders/{evento}', [EventoController::class, 'destroyReminder'])->name('reminders.destroy');
+    });
 });
 
 

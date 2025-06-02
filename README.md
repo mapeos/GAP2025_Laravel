@@ -178,10 +178,30 @@ Se han desarrollado tres modelos principales que gestionan las relaciones entre 
 - Soft deletes para mantener historial
 - Timestamps automáticos
 - Relaciones Eloquent optimizadas
+- Recordatorios personales para alumnos
+- API RESTful para aplicación móvil
 
 ---
 
-## 5. Próximos Pasos
+## 5. Rutas y Permisos
+### Rutas Web
+- **Administradores y Profesores**:
+  - Gestión completa de eventos (`/admin/events/*`)
+  - Gestión de tipos de evento (`/admin/events/types/*`)
+  - Gestión de participantes (`/admin/events/{evento}/participants/*`)
+
+- **Alumnos**:
+  - Visualización de calendario (`/events/calendar`)
+  - Gestión de recordatorios personales (`/events/reminders/*`)
+
+### Rutas API (App Móvil)
+- Endpoints protegidos con Sanctum
+- Recursos API para eventos, tipos y participantes
+- Autenticación mediante tokens
+
+---
+
+## 6. Próximos Pasos
 - Desarrollo de la interfaz de calendario
 - Implementación de vistas para:
   - Vista mensual
@@ -193,7 +213,6 @@ Se han desarrollado tres modelos principales que gestionan las relaciones entre 
 - Búsqueda de eventos
 - Exportación de calendario
 - Integración con calendarios externos
-
 
 # Gestión de usuarios y roles (Miguel)
 
