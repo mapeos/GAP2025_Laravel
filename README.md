@@ -248,6 +248,40 @@ php artisan db:seed --class=RolesAndUsersSeeder
 
 ---
 
+# Sanctum para gestionar los usuarios de la APP Movil
+
+Laravel Breeze con Livewire usa autenticación basada en sesión para las vistas web.
+Pero para la app móvil, necesitamos tokens, y para eso debemos:
+
+- Habilitar Sanctum como sistema de autenticación solo para la API
+
+- Esto implica:
+
+    Registrar los endpoints /api/login, /api/register, etc.
+
+    Usar auth:sanctum como middleware en las rutas protegidas del API.
+
+## Instalar el paquete de Laravel Sanctum
+
+1. Instalar el paquete:
+
+```bash
+composer require laravel/sanctum
+```
+
+2. Publicar el archivo de configuracion:
+
+```bash
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+```
+
+3. Y ejecuta la migración para crear la tabla `personal_access_tokens`:
+
+```bash
+php artisan migrate
+```
+---
+
 # Gestión de Noticias (Jorge)
 
 ## Parte de Backoffice
