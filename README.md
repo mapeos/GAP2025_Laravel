@@ -442,6 +442,85 @@ php artisan migrate
 ```
 ---
 
+# Flujo de autenticación y registro para la app móvil
+
+Este es el flujo completo para la autenticación y registro de dispositivos móviles en el backend:
+
+---
+
+### 1. Solicitud desde la app móvil
+
+- El usuario se registra o inicia sesión desde la app móvil enviando sus credenciales (y opcionalmente datos del dispositivo) a:
+  - POST `/api/auth/register` o `/api/auth/login`
+
+#### Datos enviados:
+```json
+{
+  "name": "Nombre",         // solo en registro
+  "email": "usuario@dom.com",
+  "password": "secreto",
+  "device_id": "uuid-dispositivo",
+  "device_name": "iPhone 15",
+  "device_os": "iOS 17",
+  "device_token": "token_push",
+  "app_version": "1.0.0",
+  "extra_data": { "foo": "bar" }
+}
+```
+
+---
+
+### 2. Backend procesa la solicitud
+
+- Valida credenciales.
+- Si son correctas:
+  - Crea o actualiza el usuario.
+  - Crea o actualiza el registro del dispositivo en la tabla `devices` (asociado al usuario).
+  - Genera un token de acceso (Sanctum) para el usuario.
+
+---
+
+### 3. Respuesta del backend
+
+- Devuelve un JSON con:
+  - Los datos del usuario.
+  - El token de acceso para autenticación API.
+  - (Opcional) Los datos del dispositivo.
+
+```json
+{
+  "user": { ... },
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOi...",
+  "device": { ... } // si lo implementas así
+}
+```
+
+---
+
+### 4. Uso del token en la app móvil
+
+- La app almacena el token recibido.
+- Para futuras peticiones protegidas, la app envía el token en la cabecera:
+  ```
+  Authorization: Bearer <token>
+  ```
+
+---
+
+### 5. Guardar/actualizar info del dispositivo
+
+- Si la app quiere actualizar la info del dispositivo, puede hacer un POST a:
+  - `/api/auth/device` (con el token en la cabecera)
+- El backend actualiza o crea el registro en la tabla `devices`.
+
+---
+
+### 6. Otros equipos pueden usar la tabla `api_tokens`
+
+- Si otro equipo necesita gestionar tokens independientes, puede usar la tabla `api_tokens` para almacenar y consultar tokens asociados a usuarios y/o dispositivos.
+
+---
+
 # Gestión de Noticias (Jorge)
 
 ## Parte de Backoffice
