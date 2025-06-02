@@ -13,9 +13,10 @@ class DashboardController extends Controller
     {
         $stats = [
             'totalUsers' => User::count(),
-            'activeUsers' => User::where('deleted_at', null)->count(),
+            'activeUsers' => User::where('status', 'activo')->count(),
+            'pendingUsers' => User::where('status', 'pendiente')->count(),
             'totalNews' => News::count(),
-            'publishedNews' => News::where('fecha_publicacion', '<=', Carbon::now())->count(),
+            'publishedNews' => 0, // No filtrar por status, ya que la columna no existe
         ];
 
         return view('admin.dashboard.index', compact('stats'));

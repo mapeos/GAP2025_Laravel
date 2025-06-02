@@ -43,9 +43,11 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'created_by' => Auth::id(),
+            'status' => 'pendiente', // El usuario web también queda pendiente
         ]);
 
-        $user->syncRoles($validated['roles']);
+        // No asignar rol por defecto, el admin lo hará manualmente
+        // $user->syncRoles($validated['roles']); // El admin asignará el rol después
 
         return redirect()->route('admin.users.index')->with('success', 'Usuario creado correctamente.');
     }
@@ -107,5 +109,56 @@ class UserController extends Controller
         $user->restore();
 
         return redirect()->route('admin.users.index')->with('success', 'Usuario restaurado correctamente.');
+    }
+
+    public function pendent()
+    {
+        $users = User::where('status', 'pendiente')->get();
+        $roles = \Spatie\Permission\Models\Role::all();
+        return view('admin.users.pendent', compact('users', 'roles'));
+    }
+
+    public function validateBulk(Request $request)
+    {
+        // Si viene user_id y role, es validación individual
+        if ($request->has(['user_id', 'role'])) {
+            $user = User::find($request->input('user_id'));
+            if ($user && $user->status === 'pendiente') {
+                $user->status = 'activo';
+                $user->save();
+                $user->syncRoles([$request->input('role')]);
+                return redirect()->route('admin.users.pendent')->with('success', 'Usuario validado correctamente.');
+            }
+            return redirect()->route('admin.users.pendent')->with('error', 'No se pudo validar el usuario.');
+        }
+        // Si viene roles[] es validación masiva
+        $request->validate([
+            'roles' => 'required|array',
+        ]);
+        foreach ($request->input('roles') as $userId => $role) {
+            $user = User::find($userId);
+            if ($user && $user->status === 'pendiente') {
+                $user->status = 'activo';
+                $user->save();
+                $user->syncRoles([$role]);
+            }
+        }
+        return redirect()->route('admin.users.pendent')->with('success', 'Usuarios validados correctamente.');
+    }
+
+    public function toggleStatus($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        if ($user->trashed()) {
+            return redirect()->back()->with('error', 'No se puede cambiar el estado de un usuario eliminado.');
+        }
+        $user->status = $user->status === 'activo' ? 'pendiente' : 'activo';
+        $user->save();
+        return redirect()->back()->with('success', 'Estado actualizado correctamente.');
+    }
+
+    public function homePendiente()
+    {
+        return view('pendientes.home');
     }
 }

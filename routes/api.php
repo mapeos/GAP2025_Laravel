@@ -30,3 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('tipos-evento', TipoEventoController::class); 
     Route::apiResource('evento-participante', EventoParticipanteController::class); 
 });
+
+// Rutas para administración de usuarios pendientes (solo admin)
+Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
+    Route::get('admin/users/pending', [AuthController::class, 'pendingUsers']); // Listar usuarios pendientes
+    Route::post('admin/users/{user}/validate', [AuthController::class, 'validateAndAssignRole']); // Validar y asignar rol
+});

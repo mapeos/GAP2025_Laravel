@@ -28,7 +28,9 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'status' => 'pendiente', // Nuevo campo para estado de validación
         ]);
+        // No asignar rol por defecto, el admin lo hará manualmente
 
         $token = $user->createToken('mobile')->plainTextToken;
 
@@ -135,5 +137,27 @@ class AuthController extends Controller
         );
 
         return response()->json($device, 201);
+    }
+
+    // Listar usuarios pendientes de validar (solo admin)
+    public function pendingUsers()
+    {
+        // La protección de acceso debe hacerse en la ruta con middleware 'role:Administrador'
+        $users = User::where('status', 'pendiente')->get();
+        return response()->json($users);
+    }
+
+    // Asignar rol y activar usuario (solo admin)
+    public function validateAndAssignRole(Request $request, $userId)
+    {
+        // La protección de acceso debe hacerse en la ruta con middleware 'role:Administrador'
+        $request->validate([
+            'role' => 'required|string|exists:roles,name',
+        ]);
+        $user = User::findOrFail($userId);
+        $user->status = 'activo';
+        $user->save();
+        $user->syncRoles([$request->role]);
+        return response()->json(['message' => 'Usuario validado y rol asignado', 'user' => $user]);
     }
 }
