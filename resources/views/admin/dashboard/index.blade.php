@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 @section('title', 'Dashboard')
 @section('title-sidebar', 'Dashboard Admin')
 @section('title-page', 'Dashboard')
@@ -12,7 +12,7 @@
 @endpush
 
 @section('content')
-    @include('template.partials.dashboard')
+    @include('template.partials.content')
 @endsection
 
 
