@@ -139,4 +139,102 @@ class EventoController extends Controller
         return redirect()->route('admin.events.index')
             ->with('success', 'Evento eliminado exitosamente.');
     }
+
+    /**
+     * Muestra el formulario para crear un recordatorio personal
+     */
+    public function createReminder()
+    {
+        return view('events.reminders.create');
+    }
+
+    /**
+     * Guarda un nuevo recordatorio personal
+     */
+    public function storeReminder(Request $request)
+    {
+        $request->validate([
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        ]);
+
+        $evento = Evento::create([
+            'titulo' => $request->titulo,
+            'descripcion' => $request->descripcion,
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+            'tipo_evento_id' => 1, // ID del tipo "Recordatorio Personal"
+            'creado_por' => Auth::id(),
+            'status' => true,
+        ]);
+
+        // Añadir al usuario como participante
+        $evento->participantes()->attach(Auth::id(), [
+            'rol' => 'Creador',
+            'estado_asistencia' => 'confirmado',
+            'status' => true,
+        ]);
+
+        return redirect()->route('events.calendar')
+            ->with('success', 'Recordatorio creado exitosamente.');
+    }
+
+    /**
+     * Muestra el formulario para editar un recordatorio personal
+     */
+    public function editReminder(Evento $evento)
+    {
+        // Verificar que el usuario es el creador del recordatorio
+        if ($evento->creado_por !== Auth::id()) {
+            abort(403, 'No tienes permiso para editar este recordatorio.');
+        }
+
+        return view('events.reminders.edit', compact('evento'));
+    }
+
+    /**
+     * Actualiza un recordatorio personal
+     */
+    public function updateReminder(Request $request, Evento $evento)
+    {
+        // Verificar que el usuario es el creador del recordatorio
+        if ($evento->creado_por !== Auth::id()) {
+            abort(403, 'No tienes permiso para editar este recordatorio.');
+        }
+
+        $request->validate([
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        ]);
+
+        $evento->update([
+            'titulo' => $request->titulo,
+            'descripcion' => $request->descripcion,
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+        ]);
+
+        return redirect()->route('events.calendar')
+            ->with('success', 'Recordatorio actualizado exitosamente.');
+    }
+
+    /**
+     * Elimina un recordatorio personal
+     */
+    public function destroyReminder(Evento $evento)
+    {
+        // Verificar que el usuario es el creador del recordatorio
+        if ($evento->creado_por !== Auth::id()) {
+            abort(403, 'No tienes permiso para eliminar este recordatorio.');
+        }
+
+        $evento->delete();
+
+        return redirect()->route('events.calendar')
+            ->with('success', 'Recordatorio eliminado exitosamente.');
+    }
 }

@@ -74,6 +74,8 @@ Route::middleware(['auth'])->group(function () {
 // Rutas administración de usuarios con prefijo y nombre de ruta
 Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Administrador'])->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('index');           // Lista de usuarios
+    // Ruta para ver usuarios pendientes de validar (debe ir antes de las rutas con parámetros)
+    Route::get('pendent', [UserController::class, 'pendent'])->name('pendent');
     Route::get('/create', [UserController::class, 'create'])->name('create');   // Formulario de creación
     Route::post('/', [UserController::class, 'store'])->name('store');          // Guardar nuevo usuario
     Route::get('/{user}', [UserController::class, 'show'])->name('show');       // Ver detalle (opcional)
@@ -81,6 +83,9 @@ Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Ad
     Route::put('/{user}', [UserController::class, 'update'])->name('update');   // Actualizar usuario
     Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy'); // Eliminar usuario
     Route::post('/{id}/restore', [UserController::class, 'restore'])->name('restore'); // Restaurar usuario eliminado
+    // Ruta para validar y asignar rol a usuarios pendientes (bulk)
+    Route::post('validate-bulk', [UserController::class, 'validateBulk'])->name('validate.bulk');
+    Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggleStatus');
 });
 
 require __DIR__ . '/auth.php';
@@ -109,6 +114,11 @@ Route::put('admin/categorias/{categoria}', [CategoriasController::class, 'update
 Route::delete('admin/categorias/{categoria}', [CategoriasController::class, 'destroy'])->name('admin.categorias.destroy');
 
 //--------------------------------------------
+// TODO : Rutas para usuarios pendientes de validar
+// Ruta para home de usuarios pendientes
+Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('pendiente.home');
+
+
 // Rutas para el rol Alumno
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
     Route::view('/alumno/home', 'alumno.home')->name('alumno.home');
@@ -150,11 +160,22 @@ Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:
     });
 });
 
-// Rutas para todos los usuarios autenticados
+// Rutas para usuarios autenticados (incluyendo alumnos)
 Route::prefix('events')->name('events.')->middleware(['auth'])->group(function () {
+    // Rutas comunes para todos los usuarios autenticados
     Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
     Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
     Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
+
+    // Rutas específicas para alumnos (recordatorios personales)
+    Route::middleware(['role:Alumno'])->group(function () {
+        Route::get('/reminders/create', [EventoController::class, 'createReminder'])->name('reminders.create');
+        Route::post('/reminders', [EventoController::class, 'storeReminder'])->name('reminders.store');
+        Route::get('/reminders/{evento}/edit', [EventoController::class, 'editReminder'])->name('reminders.edit');
+        Route::put('/reminders/{evento}', [EventoController::class, 'updateReminder'])->name('reminders.update');
+        Route::delete('/reminders/{evento}', [EventoController::class, 'destroyReminder'])->name('reminders.destroy');
+    });
 });
+
 
 

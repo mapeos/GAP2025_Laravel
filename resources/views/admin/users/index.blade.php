@@ -50,7 +50,15 @@
                             @if($user->trashed())
                                 <span class="badge bg-danger">Eliminado</span>
                             @else
-                                <span class="badge bg-success">Activo</span>
+                                <form action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm {{ $user->status === 'activo' ? 'btn-outline-warning' : 'btn-outline-success' }}">
+                                        {{ $user->status === 'activo' ? 'Marcar como pendiente' : 'Marcar como activo' }}
+                                    </button>
+                                </form>
+                                <span class="badge bg-{{ $user->status === 'activo' ? 'success' : 'warning' }}">
+                                    {{ ucfirst($user->status) }}
+                                </span>
                             @endif
                         </td>
                         <td>

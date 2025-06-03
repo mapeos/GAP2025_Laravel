@@ -52,8 +52,11 @@ class RolesAndUsersSeeder extends Seeder
                 [
                     'name' => $data['name'],
                     'password' => Hash::make($data['password']),
+                    'status' => 'activo', // Siempre crear usuarios seed con status activo
                 ]
             );
+            $user->status = 'activo'; // Forzar status activo si el usuario ya existía
+            $user->save();
             $user->assignRole($data['role']);
         }
     }

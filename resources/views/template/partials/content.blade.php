@@ -34,11 +34,11 @@
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-warning">
                       <div class="inner">
-                        <h3>{{ $stats['publishedNews'] }}</h3>
-                        <p>Noticias Publicadas</p>
+                        <h3>{{ $stats['pendingUsers'] }}</h3>
+                        <p>Usuarios Pendientes</p>
                       </div>
-                      <div class="small-box-icon"><i class="ri-article-fill"></i></div>
-                      <a href="{{ route('admin.news.index') }}" class="small-box-footer">Ver Publicadas <i class="ri-arrow-right-line"></i></a>
+                      <div class="small-box-icon"><i class="ri-user-add-fill"></i></div>
+                      <a href="{{ route('admin.users.pendent') }}" class="small-box-footer">Ver Pendientes <i class="ri-arrow-right-line"></i></a>
                     </div>
                   </div>
                 </div>

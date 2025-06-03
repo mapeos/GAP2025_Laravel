@@ -178,10 +178,30 @@ Se han desarrollado tres modelos principales que gestionan las relaciones entre 
 - Soft deletes para mantener historial
 - Timestamps automáticos
 - Relaciones Eloquent optimizadas
+- Recordatorios personales para alumnos
+- API RESTful para aplicación móvil
 
 ---
 
-## 5. Próximos Pasos
+## 5. Rutas y Permisos
+### Rutas Web
+- **Administradores y Profesores**:
+  - Gestión completa de eventos (`/admin/events/*`)
+  - Gestión de tipos de evento (`/admin/events/types/*`)
+  - Gestión de participantes (`/admin/events/{evento}/participants/*`)
+
+- **Alumnos**:
+  - Visualización de calendario (`/events/calendar`)
+  - Gestión de recordatorios personales (`/events/reminders/*`)
+
+### Rutas API (App Móvil)
+- Endpoints protegidos con Sanctum
+- Recursos API para eventos, tipos y participantes
+- Autenticación mediante tokens
+
+---
+
+## 6. Próximos Pasos
 - Desarrollo de la interfaz de calendario
 - Implementación de vistas para:
   - Vista mensual
@@ -194,6 +214,146 @@ Se han desarrollado tres modelos principales que gestionan las relaciones entre 
 - Exportación de calendario
 - Integración con calendarios externos
 
+## 7. Documentación de la API
+
+### Autenticación
+- Todas las rutas requieren autenticación mediante Sanctum
+- Token de acceso requerido en el header: `Authorization: Bearer {token}`
+
+### Endpoints Disponibles
+
+#### Eventos
+```
+GET /api/eventos
+- Lista todos los eventos
+- Filtros disponibles: fecha_inicio, fecha_fin, tipo_evento_id
+- Incluye relaciones: tipoEvento, participantes
+
+GET /api/eventos/{id}
+- Detalle de un evento específicp
+- Incluye todas las relaciones
+
+POST /api/eventos
+- Crea un nuevo evento
+- Requiere: titulo, fecha_inicio, fecha_fin, tipo_evento_id
+- Opcional: descripcion, ubicacion, url_virtual
+
+PUT /api/eventos/{id}
+- Actualiza un evento existente
+- Mismos campos que POST
+
+DELETE /api/eventos/{id}
+- Elimina un evento (soft delete)
+```
+
+#### Tipos de Evento
+```
+GET /api/tipos-evento
+- Lista todos los tipos de evento
+- Incluye: id, nombre, color, status
+
+POST /api/tipos-evento
+- Crea un nuevo tipo
+- Requiere: nombre, color
+
+PUT /api/tipos-evento/{id}
+- Actualiza un tipo existente
+- Mismos campos que POST
+
+DELETE /api/tipos-evento/{id}
+- Elimina un tipo (soft delete)
+```
+
+#### Participantes
+```
+GET /api/evento-participante
+- Lista participantes de eventos
+- Filtros: evento_id, user_id
+
+POST /api/evento-participante
+- Añade un participante
+- Requiere: evento_id, user_id, rol
+
+PUT /api/evento-participante/{id}
+- Actualiza estado de participante
+- Campos: estado_asistencia, notas
+
+DELETE /api/evento-participante/{id}
+- Elimina un participante
+```
+
+### Formatos de Respuesta
+
+#### Evento
+```json
+{
+    "id": 1,
+    "titulo": "Clase de Laravel",
+    "descripcion": "Introducción a Laravel",
+    "fecha_inicio": "2024-03-20T10:00:00Z",
+    "fecha_fin": "2024-03-20T12:00:00Z",
+    "ubicacion": "Aula 101",
+    "url_virtual": "https://meet.google.com/xxx",
+    "tipo_evento": {
+        "id": 1,
+        "nombre": "Clase",
+        "color": "#4CAF50"
+    },
+    "participantes": [
+        {
+            "id": 1,
+            "nombre": "Juan Pérez",
+            "rol": "Profesor",
+            "estado_asistencia": "confirmado"
+        }
+    ],
+    "created_at": "2024-03-19T15:00:00Z",
+    "updated_at": "2024-03-19T15:00:00Z"
+}
+```
+
+#### Tipo de Evento
+```json
+{
+    "id": 1,
+    "nombre": "Clase",
+    "color": "#4CAF50",
+    "status": true,
+    "created_at": "2024-03-19T15:00:00Z",
+    "updated_at": "2024-03-19T15:00:00Z"
+}
+```
+
+#### Participante
+```json
+{
+    "id": 1,
+    "evento_id": 1,
+    "user_id": 1,
+    "rol": "Profesor",
+    "estado_asistencia": "confirmado",
+    "notas": "Profesor principal",
+    "status": true,
+    "created_at": "2024-03-19T15:00:00Z",
+    "updated_at": "2024-03-19T15:00:00Z"
+}
+```
+
+### Código de Estado
+- 200: Éxito
+- 201: Creado
+- 400: Error de validación
+- 401: No autenticado
+- 403: No autorizado
+- 404: No encontrado
+- 500: Error del servidor
+
+### Próximos Endpoints a Implementar
+- GET /api/eventos/usuario/{id} - Eventos de un usuario específico
+- GET /api/eventos/recordatorios - Recordatorios personales
+- PUT /api/evento-participante/{id}/asistencia - Actualizar asistencia
+- GET /api/eventos/tipo/{id} - Eventos por tipo
+- GET /api/eventos/fecha/{fecha} - Eventos por fecha
 
 # Gestión de usuarios y roles (Miguel)
 
@@ -280,6 +440,85 @@ php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 ```bash
 php artisan migrate
 ```
+---
+
+# Flujo de autenticación y registro para la app móvil
+
+Este es el flujo completo para la autenticación y registro de dispositivos móviles en el backend:
+
+---
+
+### 1. Solicitud desde la app móvil
+
+- El usuario se registra o inicia sesión desde la app móvil enviando sus credenciales (y opcionalmente datos del dispositivo) a:
+  - POST `/api/auth/register` o `/api/auth/login`
+
+#### Datos enviados:
+```json
+{
+  "name": "Nombre",         // solo en registro
+  "email": "usuario@dom.com",
+  "password": "secreto",
+  "device_id": "uuid-dispositivo",
+  "device_name": "iPhone 15",
+  "device_os": "iOS 17",
+  "device_token": "token_push",
+  "app_version": "1.0.0",
+  "extra_data": { "foo": "bar" }
+}
+```
+
+---
+
+### 2. Backend procesa la solicitud
+
+- Valida credenciales.
+- Si son correctas:
+  - Crea o actualiza el usuario.
+  - Crea o actualiza el registro del dispositivo en la tabla `devices` (asociado al usuario).
+  - Genera un token de acceso (Sanctum) para el usuario.
+
+---
+
+### 3. Respuesta del backend
+
+- Devuelve un JSON con:
+  - Los datos del usuario.
+  - El token de acceso para autenticación API.
+  - (Opcional) Los datos del dispositivo.
+
+```json
+{
+  "user": { ... },
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOi...",
+  "device": { ... } // si lo implementas así
+}
+```
+
+---
+
+### 4. Uso del token en la app móvil
+
+- La app almacena el token recibido.
+- Para futuras peticiones protegidas, la app envía el token en la cabecera:
+  ```
+  Authorization: Bearer <token>
+  ```
+
+---
+
+### 5. Guardar/actualizar info del dispositivo
+
+- Si la app quiere actualizar la info del dispositivo, puede hacer un POST a:
+  - `/api/auth/device` (con el token en la cabecera)
+- El backend actualiza o crea el registro en la tabla `devices`.
+
+---
+
+### 6. Otros equipos pueden usar la tabla `api_tokens`
+
+- Si otro equipo necesita gestionar tokens independientes, puede usar la tabla `api_tokens` para almacenar y consultar tokens asociados a usuarios y/o dispositivos.
+
 ---
 
 # Gestión de Noticias (Jorge)
