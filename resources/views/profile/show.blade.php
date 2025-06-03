@@ -10,36 +10,25 @@
             <h5 class="mb-0"><i class="ri-user-line me-2"></i>Datos de mi perfil</h5>
         </div>
         <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-4">Nombre</dt>
-                <dd class="col-sm-8">{{ $persona->nombre }}</dd>
-                <dt class="col-sm-4">Primer Apellido</dt>
-                <dd class="col-sm-8">{{ $persona->apellido1 }}</dd>
-                <dt class="col-sm-4">Segundo Apellido</dt>
-                <dd class="col-sm-8">{{ $persona->apellido2 }}</dd>
-                <dt class="col-sm-4">DNI</dt>
-                <dd class="col-sm-8">{{ $persona->dni }}</dd>
-                <dt class="col-sm-4">Teléfono</dt>
-                <dd class="col-sm-8">{{ $persona->tfno }}</dd>
-                <dt class="col-sm-4">Email</dt>
-                <dd class="col-sm-8">{{ $user->email }}</dd>
-                @if($persona->direccion)
-                    <dt class="col-sm-4">Calle</dt>
-                    <dd class="col-sm-8">{{ $persona->direccion->calle }}</dd>
-                    <dt class="col-sm-4">Número</dt>
-                    <dd class="col-sm-8">{{ $persona->direccion->numero }}</dd>
-                    <dt class="col-sm-4">Piso</dt>
-                    <dd class="col-sm-8">{{ $persona->direccion->piso }}</dd>
-                    <dt class="col-sm-4">Código Postal</dt>
-                    <dd class="col-sm-8">{{ $persona->direccion->cp }}</dd>
-                    <dt class="col-sm-4">Ciudad</dt>
-                    <dd class="col-sm-8">{{ $persona->direccion->ciudad }}</dd>
-                    <dt class="col-sm-4">Provincia</dt>
-                    <dd class="col-sm-8">{{ $persona->direccion->provincia }}</dd>
-                    <dt class="col-sm-4">País</dt>
-                    <dd class="col-sm-8">{{ $persona->direccion->pais }}</dd>
-                @endif
-            </dl>
+            <table class="table table-bordered table-striped">
+                <tbody>
+                    <tr><th>Nombre</th><td>{{ $persona->nombre }}</td></tr>
+                    <tr><th>Primer Apellido</th><td>{{ $persona->apellido1 }}</td></tr>
+                    <tr><th>Segundo Apellido</th><td>{{ $persona->apellido2 }}</td></tr>
+                    <tr><th>DNI</th><td>{{ $persona->dni }}</td></tr>
+                    <tr><th>Teléfono</th><td>{{ $persona->tfno }}</td></tr>
+                    <tr><th>Email</th><td>{{ $user->email }}</td></tr>
+                    @if($persona->direccion)
+                        <tr><th>Calle</th><td>{{ $persona->direccion->calle }}</td></tr>
+                        <tr><th>Número</th><td>{{ $persona->direccion->numero }}</td></tr>
+                        <tr><th>Piso</th><td>{{ $persona->direccion->piso }}</td></tr>
+                        <tr><th>Código Postal</th><td>{{ $persona->direccion->cp }}</td></tr>
+                        <tr><th>Ciudad</th><td>{{ $persona->direccion->ciudad }}</td></tr>
+                        <tr><th>Provincia</th><td>{{ $persona->direccion->provincia }}</td></tr>
+                        <tr><th>País</th><td>{{ $persona->direccion->pais }}</td></tr>
+                    @endif
+                </tbody>
+            </table>
             <div class="mt-4">
                 <a href="{{ route('profile.edit') }}" class="btn btn-secondary">
                     <i class="ri-user-settings-line me-1"></i> Editar Perfil
