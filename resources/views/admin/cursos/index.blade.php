@@ -5,7 +5,7 @@
 @section('content')
     <h1>Cursos</h1>
 
-    <a href="{{ route('cursos.create') }}" class="btn btn-primary mb-3">Crear curso</a>
+    <a href="{{ route('admin.cursos.create') }}" class="btn btn-primary mb-3">Crear curso</a>
 
     <table class="table table-bordered">
         <thead>
@@ -31,8 +31,8 @@
                     <td>{{ $curso->plazas }}</td>
                     <td>{{ $curso->estado }}</td>
                     <td>
-                        <a href="{{ route('cursos.edit', $curso->id) }}" class="btn btn-sm btn-warning">Modificar</a>
-                        <form action="{{ route('cursos.destroy', $curso->id) }}" method="POST" style="display:inline;">
+                        <a href="{{ route('admin.cursos.edit', $curso->id) }}" class="btn btn-sm btn-warning">Modificar</a>
+                        <form action="{{ route('admin.cursos.destroy', $curso->id) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar este curso?')">Eliminar</button>
