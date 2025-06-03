@@ -18,7 +18,9 @@ class NewsController extends Controller
         // $news = News::paginate(10);
 
         // Carga las noticias junto con sus categorías relacionadas, paginando de 10 en 10
-        $news = News::with('categorias')->paginate(10);
+        // $news = News::with('categorias')->paginate(10);
+        $news = News::withTrashed()->with('categorias')->paginate(10);
+
         return view('admin.news.index', compact('news'));
     }
 
@@ -104,5 +106,16 @@ class NewsController extends Controller
 
         // Enviar mensaje de éxito a la vista usando session
         return redirect()->route('admin.news.index')->with('success', 'Noticia eliminada exitosamente.');
+    }
+
+    /**
+     * REstaurar noticia de la base de datos (que estan eliminadas).
+     */
+    public function restore($id)
+    {
+        $news = News::onlyTrashed()->findOrFail($id);
+        $news->restore();
+
+        return redirect()->route('admin.news.index')->with('success', 'Noticia restaurada correctamente.');
     }
 }
