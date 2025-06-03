@@ -68,7 +68,7 @@
             @enderror
         </div>
 
-        <div class="form-group mb-3">
+        <!-- <div class="form-group mb-3">
             <label for="categorias">Categorías</label>
             <div>
                 @foreach($categorias as $categoria)
@@ -81,10 +81,20 @@
                 </div>
                 @endforeach
             </div>
+        </div> -->
+
+        <div class="form-group mb-3">
+            <label for="categorias">Categorías</label>
+            <select class="form-control js-example-basic-multiple" name="categorias[]" id="categorias">
+                <option value="" disabled selected>Seleccionar Categorías...</option>
+                @foreach($categorias as $categoria)
+                <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
+                @endforeach
+            </select>
         </div>
 
         <button type="submit" class="btn btn-success mt-3">Crear Noticia</button>
-        <a href="{{ route('admin.news.index') }}" class="btn btn-secondary">Cancelar</a>
+        <a href="{{ route('admin.news.index') }}" class="btn btn-secondary mt-3">Cancelar</a>
 
     </form>
 </div>

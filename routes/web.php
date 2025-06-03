@@ -95,6 +95,7 @@ Route::get('admin/news/{news}', [NewsController::class, 'show'])->name('admin.ne
 Route::get('admin/news/{news}/edit', [NewsController::class, 'edit'])->name('admin.news.edit');
 Route::put('admin/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
 Route::delete('admin/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
+Route::put('admin/news/{id}/restore', [NewsController::class, 'restore'])->name('admin.news.restore');
 
 //-------------------------------------------
 // Rutas de Categorias - CRUD

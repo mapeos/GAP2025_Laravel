@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('descripcion', 255)->nullable(); // Descripción puede ser nula
             $table->timestamps();
             $table->softDeletes(); // La columna 'deleted_at' para soft deletes
-
-            $table->primary('id');
         });
     }
 
