@@ -363,7 +363,7 @@ El sistema de gestión de usuarios permite administrar el acceso a las diferente
 ---
 
 #  Documentación de Gestión de Roles y Permisos (Spatie)
-
+> **ÚLTIMA ACTUALIZACIÓN**: Se ha actualizado el paquete de Spatie. Asegurate de ejectuar las migraciones y seeders necesarios para mantener la base de datos actualizada.
 Este documento detalla la instalación, configuración e integración del paquete [`spatie/laravel-permission`](https://spatie.be/docs/laravel-permission) para la gestión de **roles y permisos** en nuestra aplicación de gestión de academia.
 
 ---
