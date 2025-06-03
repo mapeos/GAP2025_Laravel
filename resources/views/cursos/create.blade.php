@@ -1,4 +1,4 @@
-{{-- filepath: c:\ProgramacionWeb\GAP2025_laravel\www\resources\views\cursos\create.blade.php --}}
+
 @extends('template.base')
 
 @section('title', 'Crear Curso')
