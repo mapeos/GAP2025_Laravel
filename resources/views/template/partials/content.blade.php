@@ -14,11 +14,11 @@
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-success">
                       <div class="inner">
-                        <h3>{{ $stats['activeUsers'] }}</h3>
-                        <p>Usuarios Activos</p>
+                        <h3>{{ $stats['totalCursos'] }}</h3>
+                        <p>Cursos Totales</p>
                       </div>
-                      <div class="small-box-icon"><i class="ri-user-heart-fill"></i></div>
-                      <a href="{{ route('admin.users.index') }}" class="small-box-footer">Ver Detalles <i class="ri-arrow-right-line"></i></a>
+                      <div class="small-box-icon"><i class="ri-book-open-fill"></i></div>
+                      <a href="{{ route('admin.cursos.index') }}" class="small-box-footer">Ver Cursos <i class="ri-arrow-right-line"></i></a>
                     </div>
                   </div>
                   <div class="col-xl-3 col-md-6">
@@ -101,114 +101,31 @@
                   <div class="col-xl-4">
                     <div class="card h-100">
                       <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">System Activities</h5>
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Last 24 Hours
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Last 24 Hours</a></li>
-                            <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                            <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                          </ul>
-                        </div>
+                        <h5 class="card-title mb-0">Usuarios Pendientes</h5>
+                        <a href="{{ route('admin.users.pendent') }}" class="btn btn-sm btn-warning">Ver todos</a>
                       </div>
                       <div class="card-body d-flex flex-column">
                         <div class="position-relative px-3 flex-grow-1 overflow-y-auto" data-simplebar>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-primary"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>Security Patch Installed</span> <small class="text-muted">Just Now</small>
+                          @php
+                            $pendientes = \App\Models\User::where('status', 'pendiente')->orderBy('created_at', 'desc')->get();
+                          @endphp
+                          @forelse($pendientes as $user)
+                            <div class="position-relative pb-4 border-start border-1">
+                              <div class="position-absolute start-0 translate-middle-x rounded-circle bg-warning" style="width: 10px; height: 10px; top: 6px"></div>
+                              <div class="ms-4">
+                                <div class="d-flex justify-content-between">
+                                  <span>{{ $user->name }} <small class="text-muted">({{ $user->email }})</small></span>
+                                  <small class="text-muted">{{ $user->created_at->format('d/m/Y H:i') }}</small>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-success"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>New Premium User Signup</span> <small class="text-muted">2 min ago</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-danger"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>Database Backup Complete</span> <small class="text-muted">10:30</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-warning"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>Payment System Updated</span> <small class="text-muted">11:15</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-info"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>Enterprise Order Received</span> <small class="text-muted">12:30</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-primary"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>Database Optimization</span> <small class="text-muted">13:45</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-success"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>API Integration Success</span> <small class="text-muted">14:20</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="position-relative pb-4 border-start border-1">
-                            <div
-                              class="position-absolute start-0 translate-middle-x rounded-circle bg-warning"
-                              style="width: 10px; height: 10px; top: 6px"
-                            ></div>
-                            <div class="ms-4">
-                              <div class="d-flex justify-content-between">
-                                <span>Security Audit Initiated</span> <small class="text-muted">15:00</small>
-                              </div>
-                            </div>
-                          </div>
+                          @empty
+                            <div class="text-center text-muted">No hay usuarios pendientes.</div>
+                          @endforelse
                         </div>
                       </div>
                       <div class="card-footer text-center">
-                        <a href="#" class="btn btn-sm btn-light"
-                          >View All Activities <i class="ri-arrow-right-line"></i
-                        ></a>
+                        <a href="{{ route('admin.users.pendent') }}" class="btn btn-sm btn-light">Ver todos <i class="ri-arrow-right-line"></i></a>
                       </div>
                     </div>
                   </div>
@@ -216,116 +133,35 @@
                   <div class="col-xl-4">
                     <div class="card h-100">
                       <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Financial Transactions</h5>
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Current Week
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Today</a></li>
-                            <li><a class="dropdown-item" href="#">Current Week</a></li>
-                            <li><a class="dropdown-item" href="#">Current Month</a></li>
-                          </ul>
-                        </div>
+                        <h5 class="card-title mb-0">Cursos</h5>
+                        <a href="{{ route('admin.cursos.index') }}" class="btn btn-sm btn-primary">Ver todos</a>
                       </div>
                       <div class="card-body d-flex flex-column" style="max-height: 440px; overflow-y: auto">
                         <div class="flex-grow-1 px-3" data-simplebar>
-                          <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex align-items-center">
-                              <div class="p-2 rounded bg-warning bg-opacity-10">
-                                <i class="ri-building-2-fill text-warning fs-4"></i>
-                              </div>
-                              <div class="ms-3 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <h6 class="mb-0">Office Utilities</h6>
-                                    <small class="text-muted">Today, 10:30 AM</small>
+                          @php
+                            $cursos = \App\Models\Curso::orderBy('fechaInicio', 'desc')->get();
+                          @endphp
+                          @forelse($cursos as $curso)
+                            <div class="mb-3 pb-3 border-bottom">
+                              <div class="d-flex align-items-center">
+                                <div class="p-2 rounded bg-success bg-opacity-10">
+                                  <i class="ri-book-open-fill text-success fs-4"></i>
+                                </div>
+                                <div class="ms-3 flex-grow-1">
+                                  <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                      <h6 class="mb-0">{{ $curso->titulo }}</h6>
+                                      <small class="text-muted">{{ $curso->fechaInicio }} - {{ $curso->fechaFin }}</small>
+                                    </div>
+                                    <span class="text-primary">Plazas: {{ $curso->plazas }}</span>
                                   </div>
-                                  <span class="text-danger">-$125.00</span>
+                                  <div class="text-muted small">{{ $curso->descripcion }}</div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                          <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex align-items-center">
-                              <div class="p-2 rounded bg-success bg-opacity-10">
-                                <i class="ri-bank-card-fill text-success fs-4"></i>
-                              </div>
-                              <div class="ms-3 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <h6 class="mb-0">Monthly Salary</h6>
-                                    <small class="text-muted">Today, 9:00 AM</small>
-                                  </div>
-                                  <span class="text-success">+$2,450.00</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex align-items-center">
-                              <div class="p-2 rounded bg-primary bg-opacity-10">
-                                <i class="ri-shopping-cart-2-fill text-primary fs-4"></i>
-                              </div>
-                              <div class="ms-3 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <h6 class="mb-0">Office Supplies</h6>
-                                    <small class="text-muted">Yesterday, 2:15 PM</small>
-                                  </div>
-                                  <span class="text-danger">-$86.22</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex align-items-center">
-                              <div class="p-2 rounded bg-info bg-opacity-10">
-                                <i class="ri-taxi-fill text-info fs-4"></i>
-                              </div>
-                              <div class="ms-3 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <h6 class="mb-0">Travel Expenses</h6>
-                                    <small class="text-muted">Yesterday, 1:30 PM</small>
-                                  </div>
-                                  <span class="text-danger">-$24.50</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex align-items-center">
-                              <div class="p-2 rounded bg-success bg-opacity-10">
-                                <i class="ri-briefcase-4-fill text-success fs-4"></i>
-                              </div>
-                              <div class="ms-3 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <h6 class="mb-0">Project Payment</h6>
-                                    <small class="text-muted">Yesterday, 11:45 AM</small>
-                                  </div>
-                                  <span class="text-success">+$350.00</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex align-items-center">
-                              <div class="p-2 rounded bg-warning bg-opacity-10">
-                                <i class="ri-restaurant-2-fill text-warning fs-4"></i>
-                              </div>
-                              <div class="ms-3 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <h6 class="mb-0">Team Lunch</h6>
-                                    <small class="text-muted">Yesterday, 8:30 AM</small>
-                                  </div>
-                                  <span class="text-danger">-$45.80</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          @empty
+                            <div class="text-center text-muted">No hay cursos registrados.</div>
+                          @endforelse
                         </div>
                       </div>
                     </div>

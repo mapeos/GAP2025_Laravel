@@ -32,9 +32,13 @@
                 <i class="ri-add-circle-line me-2"></i>
                 <h5 class="card-title mb-0">Cursos disponibles</h5>
             </div>
-            <div class="card-body text-center text-muted">
-                <i class="ri-booklet-line display-4 mb-3"></i>
-                <p class="mb-0">Aquí aparecerán los cursos a los que puedes apuntarte.</p>
+            <div class="card-body text-center">
+                @php
+                    $cursosCount = \App\Models\Curso::where('estado', 'abierto')->count();
+                @endphp
+                <i class="ri-booklet-line display-4 mb-3 text-success"></i>
+                <h2 class="fw-bold mb-2">{{ $cursosCount }}</h2>
+                <p class="mb-0">Curso{{ $cursosCount == 1 ? '' : 's' }} disponible{{ $cursosCount == 1 ? '' : 's' }}</p>
             </div>
         </div>
     </div>
