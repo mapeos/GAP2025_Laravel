@@ -720,8 +720,10 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 
 ### 4. Últimas noticias
 
-- **GET** `/api/news/latest`
-- **Descripción:** Devuelve las 5 noticias más recientes.
+- **GET** `/api/news/latest/{number?}`
+- **Descripción:** Devuelve las noticias más recientes.
+**Parámetro de ruta (opcional):**  
+  - `number` (integer): Número de noticias a devolver (por defecto 5).
 - **Respuesta exitosa:**
     ```json
     {
@@ -762,185 +764,105 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 
 ---
 
-## Notas para el Frontend
+### 6. Listar todos los cursos
 
-- Todas las respuestas están en formato JSON.
-- Los campos principales de las noticias son: `id`, `titulo`, `contenido`, `fecha_publicacion`, `categoria`.
-- Si ocurre un error, revisa el campo `status` y el mensaje.
-- No requieren autenticación.
-- Si necesitas ejemplos de consumo en JavaScript, puedes usar `fetch` o Axios para consumir estos endpoints.
+- **GET** `/api/cursos`
+- **Descripción:** Devuelve todos los cursos.
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": [
+        {
+          "id": 1,
+          "titulo": "Curso de Laravel Básico",
+          "descripcion": "Aprende los fundamentos de Laravel.",
+          "fechainicio": "2025-07-01",
+          "fechafin": "2025-07-15",
+          "plazas": 30,
+          "estado": "activo",
+          "created_at": "...",
+          "updated_at": "..."
+        },
+        ...
+      ]
+    }
+    ```
 
 ---
 
-# Documentación de la API de Eventos
+### 7. Obtener un curso por ID
 
-Esta API permite gestionar eventos, tipos de evento y participantes. Todas las rutas requieren autenticación mediante Sanctum.
-
-## Autenticación
-- Todas las rutas requieren token de acceso en el header: `Authorization: Bearer {token}`
-- Obtener token mediante `/api/auth/login` o `/api/auth/register`
-
-## Endpoints Disponibles
-
-### Eventos
-
-#### Listar eventos
-- **GET** `/api/eventos`
-- **Descripción:** Devuelve todos los eventos
-- **Filtros disponibles:**
-  - `fecha_inicio`: Filtrar desde fecha
-  - `fecha_fin`: Filtrar hasta fecha
-  - `tipo_evento_id`: Filtrar por tipo
+- **GET** `/api/cursos/curso/{id}`
+- **Parámetro de ruta:**  
+  - `id` (integer): ID del curso.
+- **Descripción:** Devuelve los detalles de un curso específico.
 - **Respuesta exitosa:**
-```json
-{
-    "data": [
-        {
-            "id": 1,
-            "titulo": "Clase de Laravel",
-            "descripcion": "Introducción a Laravel",
-            "fecha_inicio": "2024-03-20T10:00:00Z",
-            "fecha_fin": "2024-03-20T12:00:00Z",
-            "ubicacion": "Aula 101",
-            "url_virtual": "https://meet.google.com/xxx",
-            "tipo_evento": {
-                "id": 1,
-                "nombre": "Clase",
-                "color": "#4CAF50"
-            },
-            "participantes": [
-                {
-                    "id": 1,
-                    "nombre": "Juan Pérez",
-                    "rol": "Profesor",
-                    "estado_asistencia": "confirmado"
-                }
-            ]
-        }
-    ]
-}
-```
+    ```json
+    {
+      "status": "200",
+      "data": {
+        "id": 1,
+        "titulo": "Curso de Laravel Básico",
+        "descripcion": "Aprende los fundamentos de Laravel.",
+        "fechainicio": "2025-07-01",
+        "fechafin": "2025-07-15",
+        "plazas": 30,
+        "estado": "activo",
+        "created_at": "...",
+        "updated_at": "..."
+      }
+    }
+    ```
+- **Respuesta si no existe:**  
+  ```json
+  {
+    "status": "error",
+    "message": "Curso no encontrado"
+  }
+  ```
+  Código HTTP 404.
 
-#### Obtener evento específico
-- **GET** `/api/eventos/{id}`
-- **Descripción:** Devuelve detalles de un evento
-- **Respuesta exitosa:** Mismo formato que listar eventos, pero con un solo evento
+---
 
-#### Crear evento
-- **POST** `/api/eventos`
-- **Campos requeridos:**
-  - `titulo`: Título del evento
-  - `fecha_inicio`: Fecha y hora de inicio
-  - `fecha_fin`: Fecha y hora de fin
-  - `tipo_evento_id`: ID del tipo de evento
-- **Campos opcionales:**
-  - `descripcion`: Descripción detallada
-  - `ubicacion`: Lugar del evento
-  - `url_virtual`: Enlace para eventos virtuales
+### 8. Listar cursos activos
 
-#### Actualizar evento
-- **PUT** `/api/eventos/{id}`
-- **Campos:** Mismos que crear evento
-- **Respuesta exitosa:** Evento actualizado
+- **GET** `/api/cursos/activos`
+- **Descripción:** Devuelve todos los cursos con estado "activo".
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos activos.
 
-#### Eliminar evento
-- **DELETE** `/api/eventos/{id}`
-- **Descripción:** Elimina un evento (soft delete)
-- **Respuesta exitosa:**
-```json
-{
-    "message": "Evento eliminado correctamente"
-}
-```
+---
 
-### Tipos de Evento
+### 9. Listar cursos inactivos
 
-#### Listar tipos
-- **GET** `/api/tipos-evento`
-- **Descripción:** Devuelve todos los tipos de evento
-- **Respuesta exitosa:**
-```json
-{
-    "data": [
-        {
-            "id": 1,
-            "nombre": "Clase",
-            "color": "#4CAF50",
-            "status": true
-        }
-    ]
-}
-```
+- **GET** `/api/cursos/inactivos`
+- **Descripción:** Devuelve todos los cursos con estado "inactivos".
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos inactivos.
 
-#### Crear tipo
-- **POST** `/api/tipos-evento`
-- **Campos requeridos:**
-  - `nombre`: Nombre del tipo
-  - `color`: Color en formato hexadecimal
+---
 
-#### Actualizar tipo
-- **PUT** `/api/tipos-evento/{id}`
-- **Campos:** Mismos que crear tipo
+### 10. Listar cursos ordenados por fecha de inicio descendente
 
-#### Eliminar tipo
-- **DELETE** `/api/tipos-evento/{id}`
-- **Descripción:** Elimina un tipo (soft delete)
+- **GET** `/api/cursos/ordenados/fecha-inicio-desc`
+- **Descripción:** Devuelve todos los cursos ordenados por la columna `fechainicio` de más reciente a más antiguo.
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero ordenados.
 
-### Participantes
+---
 
-#### Listar participantes
-- **GET** `/api/evento-participante`
-- **Filtros:**
-  - `evento_id`: Filtrar por evento
-  - `user_id`: Filtrar por usuario
-- **Respuesta exitosa:**
-```json
-{
-    "data": [
-        {
-            "id": 1,
-            "evento_id": 1,
-            "user_id": 1,
-            "rol": "Profesor",
-            "estado_asistencia": "confirmado",
-            "notas": "Profesor principal",
-            "status": true
-        }
-    ]
-}
-```
+### 11. Listar los últimos N cursos
 
-#### Añadir participante
-- **POST** `/api/evento-participante`
-- **Campos requeridos:**
-  - `evento_id`: ID del evento
-  - `user_id`: ID del usuario
-  - `rol`: Rol en el evento
+- **GET** `/api/cursos/ultimos/{number?}`
+- **Parámetro de ruta (opcional):**  
+  - `number` (integer): Número de cursos a devolver (por defecto 5).
+- **Descripción:** Devuelve los últimos cursos creados.
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero limitado a los últimos N cursos.
 
-#### Actualizar participante
-- **PUT** `/api/evento-participante/{id}`
-- **Campos:**
-  - `estado_asistencia`: Estado de asistencia
-  - `notas`: Notas adicionales
+---
 
-#### Eliminar participante
-- **DELETE** `/api/evento-participante/{id}`
-- **Descripción:** Elimina un participante
 
-### Códigos de Estado
-- 200: Éxito
-- 201: Creado
-- 400: Error de validación
-- 401: No autenticado
-- 403: No autorizado
-- 404: No encontrado
-- 500: Error del servidor
+## Notas para el Frontend
 
-### Notas para el Frontend
-- Todas las respuestas están en formato JSON
-- Los campos de fecha usan formato ISO 8601
-- Los colores deben ser hexadecimales válidos
-- Los estados de asistencia pueden ser: "pendiente", "confirmado", "cancelado"
-- Los roles comunes son: "Profesor", "Alumno", "Invitado"
-
+- Todas las respuestas están en formato JSON.
+- Si ocurre un error, revisa el campo `status` y el mensaje.
+- No requieren autenticación.
 ---

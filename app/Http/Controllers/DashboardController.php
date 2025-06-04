@@ -17,7 +17,6 @@ class DashboardController extends Controller
             'pendingUsers' => User::where('status', 'pendiente')->count(),
             'totalNews' => News::count(),
             'publishedNews' => 0, // No filtrar por status, ya que la columna no existe
-            'totalCursos' => \App\Models\Curso::count(),
         ];
 
         return view('admin.dashboard.index', compact('stats'));

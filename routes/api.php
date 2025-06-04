@@ -2,25 +2,12 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\api\CategoriasController;
+use App\Http\Controllers\api\CursoController;
 use App\Http\Controllers\api\NewsController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use Illuminate\Support\Facades\Route;
-
-//mensaje de prueba para verificar que la API está funcionando
-Route::get('/', function () {
-    return response()->json(['message' => 'API is running']);
-});
-
-// Rutas para la gestión de noticias
-Route::get('/news', [NewsController::class, 'index']); // Listar noticias
-Route::get('/news/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
-Route::get('/news/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
-Route::get('/news/latest', [NewsController::class, 'latest']); // Obtener últimas noticias
-
-// Rutas para la gestión de categorías de noticias
-Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
 
 
 /*
@@ -55,3 +42,26 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
     Route::get('admin/users/pending', [AuthController::class, 'pendingUsers']); // Listar usuarios pendientes
     Route::post('admin/users/{user}/validate', [AuthController::class, 'validateAndAssignRole']); // Validar y asignar rol
 });
+
+//mensaje de prueba para verificar que la API está funcionando
+Route::get('/', function () {
+    return response()->json(['message' => 'API is running']);
+});
+
+// Rutas para la gestión de noticias
+Route::get('/news', [NewsController::class, 'index']); // Listar noticias
+Route::get('/news/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
+Route::get('/news/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
+Route::get('/news/latest/{number?}', [NewsController::class, 'latest']); // Obtener últimas noticias
+
+// Rutas para la gestión de categorías de noticias
+Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
+
+
+// rutas de cursos
+Route::get('/curso', [CursoController::class, 'index']); // Listar de cursos
+Route::get('/cursos/curso/{id?}', [CursoController::class, 'show']); // Obtener curso por ID
+Route::get('/cursos/activos', [CursoController::class, 'activos']); // Obtener cursos activos
+Route::get('/cursos/inactivos', [CursoController::class, 'inactivos']); // Obtener cursos inactivos
+Route::get('/cursos/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Obtener cursos ordenados por fecha de inicio descendente
+Route::get('/cursos/ultimos/{number?}', [CursoController::class, 'ultimosCursos']); // Obtener últimos cursos (por defecto 5)
