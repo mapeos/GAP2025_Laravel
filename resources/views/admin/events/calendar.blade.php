@@ -27,7 +27,7 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
-                events: @json($eventos),
+                events: JSON.parse('{!! json_encode($eventos) !!}'),
                 eventClick: function(info) {
                     window.location.href = '/admin/eventos/' + info.event.id;
                 }
