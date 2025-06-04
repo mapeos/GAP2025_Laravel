@@ -132,24 +132,25 @@
                 </li>
             </ul>
         </li>
-        <!-- Forms And Tables Section -->
-        <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Forms And Tables</span></li>
-        <!-- Forms Section -->
+        <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
+        <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
+        <!-- CURSOS Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
-                <i class="ri-file-list-3-line"></i> <span>Forms</span> <i class="ri-arrow-right-s-line ms-auto"></i>
+                <i class="ri-file-list-3-line"></i> <span>Cursos</span> <i class="ri-arrow-right-s-line ms-auto"></i>
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/form-controls"> <span>Form controls</span> </a>
+                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
+                        <span>Ver Cursos</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/select"> <span>Select</span> </a>
+                    <a class="nav-link" href="{{ route('admin.cursos.create') }}"> 
+                        <span>Crear Cursos</span>
+                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/radio-checkbox"> <span>Radio & Checkbox</span> </a>
-                </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="/pages/forms/switches"> <span>Switches</span> </a>
                 </li>
                 <li class="nav-item">
@@ -160,26 +161,40 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/forms/validation"> <span>Validation</span> </a>
-                </li>
+                </li>  -->
             </ul>
         </li>
-        <!-- Tables Section -->
+        <!-- PARTICIPANTES Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
-                <i class="ri-table-line"></i> <span>Tables</span> <i class="ri-arrow-right-s-line ms-auto"></i>
+                <i class="ri-table-line"></i> <span>Participantes</span> <i class="ri-arrow-right-s-line ms-auto"></i>
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/tables/basic"> <span>Basic Tables</span> </a>
+                    <a class="nav-link" href="/pages/tables/basic"> <span>Listar Participantes</span> </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/tables/enhanced"> <span>Enhanced Tables</span> </a>
+                    <a class="nav-link" href="/pages/tables/enhanced"> <span>Crear Participantes</span> </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/tables/advanced"> <span>Advanced Tables</span> </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/tables/datatable"> <span>Datatable</span> </a>
+                </li>
+            </ul>
+        </li>
+        <!-- INSCRIPCIONES Section -->
+        <li class="nav-item has-submenu parent">
+            <a class="nav-link" href="#">
+                <i class="ri-file-list-3-line"></i> <span>Inscripciones</span> <i class="ri-arrow-right-s-line ms-auto"></i>
+            </a>
+            <ul class="submenu">
+                <li class="nav-item">
+                    <a class="nav-link" href="/pages/forms/form-controls"> <span>Inscribir</span> </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/pages/forms/select"> <span>Bajas</span> </a>
                 </li>
             </ul>
         </li>

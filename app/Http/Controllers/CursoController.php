@@ -11,12 +11,12 @@ class CursoController extends Controller
     public function index()
     {
         $cursos = Curso::all();
-        return view('cursos.index', compact('cursos'));
+        return view('admin.cursos.index', compact('cursos'));
     }
 
     public function create()
     {
-        return view('cursos.create');
+        return view('admin.cursos.create');
     }
 
     public function store(Request $request)
@@ -32,6 +32,6 @@ class CursoController extends Controller
 
         Curso::create($request->all());
 
-        return redirect()->route('cursos.index')->with('success', 'Curso creado exitosamente.');
+        return redirect()->route('admin.cursos.index')->with('success', 'Curso creado exitosamente.');
     }
 }

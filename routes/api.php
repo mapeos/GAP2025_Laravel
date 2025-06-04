@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('auth/register', [AuthController::class, 'register']); // Registro de usuario móvil
 Route::post('auth/login', [AuthController::class, 'login']);       // Login de usuario móvil
+Route::post('device/register', [AuthController::class, 'registerDevice']); // Registro de dispositivo sin usuario
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']); // Logout y revocación de token

@@ -9,6 +9,7 @@ use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoParticipanteController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
@@ -27,9 +28,12 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::view('profile', 'profile')
-    ->middleware(['auth'])
-    ->name('profile');
+// Rutas para el perfil de usuario
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
 
 require __DIR__ . '/auth.php';
 
@@ -59,16 +63,18 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Rutas de Cursos Públicas
-Route::get('/cursos', [CursoController::class, 'index'])->name('cursos.index');
-Route::get('/cursos/create', [CursoController::class, 'create'])->name('cursos.create');
 Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
+Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
+Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
+Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
+Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
 
 // Rutas protegidas para Cursos
 Route::middleware(['auth'])->group(function () {
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
-    Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
+   // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
     Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
-    Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
+    //Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
 });
 
 // Rutas administración de usuarios con prefijo y nombre de ruta
