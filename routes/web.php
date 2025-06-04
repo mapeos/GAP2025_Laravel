@@ -10,6 +10,7 @@ use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\InscripcionController;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
@@ -68,13 +69,30 @@ Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.curs
 Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
 Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
 Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
+Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('admin.cursos.update');
+
 
 // Rutas protegidas para Cursos
-Route::middleware(['auth'])->group(function () {
-    Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
+//Route::middleware(['auth'])->group(function () {
+   // Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
    // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
-    Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
+   // Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
     //Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
+//});,
+
+// Rutas de PARTICIPANTES
+Route::prefix('admin/participantes')->name('admin.participantes.')->group(function () {
+    Route::get('/', [ProfileController::class, 'index'])->name('index'); // Listar participantes
+    Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
+    Route::get('/crear', function (){return view('admin.participantes.create'); })->name('create'); // Formulario de creación de participante
+});
+
+// Rutas de INSCRIPCIONES a Cursos
+Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->group(function () {
+    Route::get('/cursos-activos', [CursoController::class, 'listarCursosActivos'])->name('cursos.activos'); // Listar cursos activos
+    Route::get('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir.form');
+    Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir'); // Inscribir personas
+    Route::get('/cursos/{curso}/inscritos', [InscripcionController::class, 'verInscritos'])->name('cursos.inscritos'); // Ver inscritos
 });
 
 // Rutas administración de usuarios con prefijo y nombre de ruta

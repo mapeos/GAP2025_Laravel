@@ -29,7 +29,15 @@ class Persona extends Model
     // Método para obtener el nombre completo
     public function getNombreCompletoAttribute()
     {
-        return $this->nombre . ' ' . $this->apellido1 . 
-               ($this->apellido2 ? ' ' . $this->apellido2 : '');
+        return $this->nombre . ' ' . $this->apellido1 .
+            ($this->apellido2 ? ' ' . $this->apellido2 : '');
+    }
+
+    // Relación many-to-many con Curso usando la tabla intermedia 'participacion'
+    public function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'participacion', 'persona_id', 'curso_id')
+            ->withPivot('rol_participacion_id', 'estado')
+            ->withTimestamps();
     }
 }
