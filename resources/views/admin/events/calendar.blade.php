@@ -9,6 +9,8 @@
     <!-- FullCalendar JS -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <script>
+        // Nota: Los errores del linter en este archivo son falsos positivos
+        // debido a la mezcla de sintaxis Blade (@json) con JavaScript
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
