@@ -13,15 +13,8 @@
 <div class="container">
     <h1 class="mb-4">Crear Nueva Categoría</h1>
 
-    @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
+    {{-- Alertas de sesión (éxito, error, info, warning) --}}
+    @include('template.partials.alerts')
 
     <form action="{{ route('admin.categorias.store') }}" method="POST">
         @csrf

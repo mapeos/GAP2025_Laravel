@@ -11,7 +11,25 @@
 
 @section('content')
 <div class="container">
+    @include('template.partials.alerts')
+
     <h1 class="mb-4">{{ $news->titulo }}</h1>
+
+    @if ($news->trashed())
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="ri-close-circle-fill text-danger me-2 fs-4"></i>
+        <div>
+            Esta noticia ha sido <strong>dada de baja</strong>.
+        </div>
+    </div>
+    @else
+    <div class="alert alert-success d-flex align-items-center" role="alert">
+        <i class="ri-checkbox-circle-fill text-success me-2 fs-4"></i>
+        <div>
+            Esta noticia está <strong>publicada</strong>.
+        </div>
+    </div>
+    @endif
 
     @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
