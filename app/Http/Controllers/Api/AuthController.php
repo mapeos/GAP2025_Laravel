@@ -11,6 +11,57 @@ use App\Models\Device;
 
 class AuthController extends Controller
 {
+    /**
+     * Endpoint para registrar un dispositivo móvil sin usuario asociado.
+     * Permite identificar la primera comunicación de la app móvil.
+     * Si el dispositivo ya existe, solo actualiza los datos básicos.
+     * Si es nuevo, lo crea con user_id = null.
+     *
+     * POST /api/device/register
+     * Body: device_id, device_name, device_os, etc.
+     */
+    public function registerDevice(Request $request)
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'device_name' => 'nullable|string',
+            'device_os' => 'nullable|string',
+            'device_token' => 'nullable|string',
+            'app_version' => 'nullable|string',
+            'extra_data' => 'nullable|array',
+        ]);
+
+        // Busca el dispositivo por device_id y user_id null
+        $device = Device::where('device_id', $request->device_id)
+            ->whereNull('user_id')
+            ->first();
+
+        if (!$device) {
+            // Primer contacto de este dispositivo
+            $device = Device::create([
+                'device_id' => $request->device_id,
+                'device_name' => $request->device_name,
+                'device_os' => $request->device_os,
+                'device_token' => $request->device_token,
+                'app_version' => $request->app_version,
+                'extra_data' => $request->extra_data ?? null,
+                'first_seen_at' => now(), // Campo nuevo en la tabla devices
+                'user_id' => null,
+            ]);
+        } else {
+            // El dispositivo ya existe, solo actualiza info básica
+            $device->update([
+                'device_name' => $request->device_name,
+                'device_os' => $request->device_os,
+                'device_token' => $request->device_token,
+                'app_version' => $request->app_version,
+                'extra_data' => $request->extra_data ?? null,
+            ]);
+        }
+
+        return response()->json($device, 201);
+    }
+
     // Registro de usuario móvil
     public function register(Request $request)
     {
@@ -29,27 +80,39 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'status' => 'pendiente', // Nuevo campo para estado de validación
+            'status' => 'pendiente',
         ]);
         // No asignar rol por defecto, el admin lo hará manualmente
 
         $token = $user->createToken('mobile')->plainTextToken;
 
-        // Guardar datos del dispositivo si vienen
+        // Si viene device_id, asociar el dispositivo existente al usuario
         if ($request->has('device_id')) {
-            Device::updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'device_id' => $request->device_id,
-                ],
-                [
-                    'device_name' => $request->device_name,
-                    'device_os' => $request->device_os,
-                    'device_token' => $request->device_token,
-                    'app_version' => $request->app_version,
-                    'extra_data' => $request->extra_data ?? null,
-                ]
-            );
+            $device = Device::where('device_id', $request->device_id)
+                ->whereNull('user_id')
+                ->first();
+            if ($device) {
+                // Asociar el dispositivo al usuario y guardar el token
+                $device->user_id = $user->id;
+                $device->first_token = $token; // Campo nuevo en la tabla devices
+                $device->save();
+            } else {
+                // Si no existe, crear el registro como antes
+                Device::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'device_id' => $request->device_id,
+                    ],
+                    [
+                        'device_name' => $request->device_name,
+                        'device_os' => $request->device_os,
+                        'device_token' => $request->device_token,
+                        'app_version' => $request->app_version,
+                        'extra_data' => $request->extra_data ?? null,
+                        'first_token' => $token,
+                    ]
+                );
+            }
         }
 
         return response()->json([
@@ -107,7 +170,6 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada']);
     }
 
-    // Obtener información del usuario autenticado
     public function me(Request $request)
     {
         return response()->json($request->user());

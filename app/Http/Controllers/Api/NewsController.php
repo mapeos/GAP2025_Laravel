@@ -26,7 +26,6 @@ class NewsController extends Controller
 
         return response()->json([
             'status' => '200',
-            'message' => 'Noticias recuperadas exitosamente',
             'data' => $data
         ]);
     }
@@ -48,7 +47,6 @@ class NewsController extends Controller
 
         return response()->json([
             'status' => '200',
-            'message' => 'Noticia recuperada exitosamente',
             'data' => $data
         ]);
     }
@@ -78,13 +76,12 @@ class NewsController extends Controller
 
         return response()->json([
             'status' => '200',
-            'message' => 'Noticias recuperadas exitosamente',
             'data' => $data
         ]);
     }
 
     /* get latest news */
-    public function latest($number = 5)
+    public function latest()
     {
         $data = News::leftJoin('news_has_categorias', 'news.id', '=', 'news_has_categorias.news_id')
         ->leftJoin('categorias', 'news_has_categorias.categorias_id', '=', 'categorias.id')
@@ -96,12 +93,11 @@ class NewsController extends Controller
             'categorias.nombre as categoria'
         )
         ->orderBy('news.fecha_publicacion', 'desc')
-        ->take($number)
+        ->take(5)
         ->get();
 
         return response()->json([
             'status' => '200',
-            'message' => 'Últimas noticias recuperadas exitosamente',
             'data' => $data
         ]);
     }

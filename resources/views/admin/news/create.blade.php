@@ -14,7 +14,24 @@
     <h1>Crear Noticia</h1>
 
     {{-- Mensajes de éxito y errores --}}
-    @include('template.partials.alerts')
+    @if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Por favor corrige los siguientes errores:</strong>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
 
     <form action="{{ route('admin.news.store') }}" method="POST">
         @csrf
@@ -51,7 +68,7 @@
             @enderror
         </div>
 
-        <div class="form-group mb-3">
+        <!-- <div class="form-group mb-3">
             <label for="categorias">Categorías</label>
             <div>
                 @foreach($categorias as $categoria)
@@ -64,9 +81,9 @@
                 </div>
                 @endforeach
             </div>
-        </div>
+        </div> -->
 
-        <!-- <div class="form-group mb-3">
+        <div class="form-group mb-3">
             <label for="categorias">Categorías</label>
             <select class="form-control js-example-basic-multiple" name="categorias[]" id="categorias">
                 <option value="" disabled selected>Seleccionar Categorías...</option>
@@ -74,7 +91,7 @@
                 <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
                 @endforeach
             </select>
-        </div> -->
+        </div>
 
         <button type="submit" class="btn btn-success mt-3">Crear Noticia</button>
         <a href="{{ route('admin.news.index') }}" class="btn btn-secondary mt-3">Cancelar</a>

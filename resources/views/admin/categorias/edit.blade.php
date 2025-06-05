@@ -13,8 +13,15 @@
 <div class="container">
     <h1 class="mb-4">Editar Categoría</h1>
 
-    {{-- Alertas de éxito, error y validación --}}
-    @include('template.partials.alerts')
+    @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
 
     <form action="{{ route('admin.categorias.update', $categoria) }}" method="POST">
         @csrf

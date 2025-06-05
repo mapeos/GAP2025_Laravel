@@ -59,12 +59,10 @@ class NewsController extends Controller
     /**
      * Mostrar los detalles de una noticia.
      */
-    public function show($id)
+    public function show(News $news)
     {
-        $news = News::withTrashed()->with('categorias')->findOrFail($id);
         return view('admin.news.show', compact('news'));
     }
-
 
     /**
      * Mostrar el formulario para editar una noticia.
