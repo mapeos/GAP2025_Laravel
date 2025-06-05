@@ -9,7 +9,8 @@ class CategoriasController extends Controller
 {
     public function index()
     {
-        $categorias = Categorias::all();
+        $categorias = Categorias::withTrashed()->paginate(10);
+
         return view('admin.categorias.index', compact('categorias'));
     }
 
@@ -55,4 +56,14 @@ class CategoriasController extends Controller
         Categorias::findOrFail($id)->delete();
         return redirect()->route('admin.categorias.index')->with('success', 'Categoría eliminada');
     }
+
+
+    public function restore($id)
+    {
+        $categoria = Categorias::onlyTrashed()->findOrFail($id);
+        $categoria->restore();
+
+        return redirect()->route('admin.categorias.index')->with('success', 'Categoría restaurada correctamente.');
+    }
+
 }
