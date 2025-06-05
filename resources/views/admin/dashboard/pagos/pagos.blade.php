@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 @section('title', 'Dashboard')
 @section('title-sidebar', 'Dashboard Admin')
 @section('title-page', 'Gestión de pagos')
@@ -9,20 +9,6 @@
 
 
 @section('content')
-
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academia - Cursos Disponibles</title>
-
-  <link rel="stylesheet" href="assets/css/style.css" />
-  <link rel="stylesheet" href="assets/css/estilosss.css" />
-</head>
-<body>
-
 <div class="container my-5">
 
   <!-- Lista de cursos -->
@@ -244,12 +230,4 @@
     });
   };
 </script>
-
-</body>
-</html>
-
-
-
-
-
 @endsection
