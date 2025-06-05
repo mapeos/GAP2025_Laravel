@@ -11,28 +11,31 @@ use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\ProfileController;
 
+// --------------------------------------------
+// Rutas públicas y generales
+// --------------------------------------------
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::view('astro', 'template.base')->name('astro');
 
-Route::view('astro', 'template.base')
-    ->name('astro');
-
+// --------------------------------------------
+// Dashboard y páginas de administración
+// --------------------------------------------
 Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'role:Administrador'])
     ->name('admin.dashboard');
-
 Route::get('/admin/pagina-test', function () {
     return view('admin.dashboard.test');
 });
 Route::get('/admin/pagos', function () {
     return view('admin.dashboard.pagos.pagos');
 });
-
-
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// Rutas para el perfil de usuario
+// --------------------------------------------
+// Perfil de usuario
+// --------------------------------------------
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -41,22 +44,21 @@ Route::middleware(['auth'])->group(function () {
 
 require __DIR__ . '/auth.php';
 
-// Rutas para el módulo de Agenda/Calendario
+// --------------------------------------------
+// Módulo de Agenda/Calendario y Eventos
+// --------------------------------------------
 Route::middleware(['auth'])->group(function () {
     // Rutas para tipos de evento (solo administradores)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('tipos-evento', TipoEventoController::class);
     });
-
     // Rutas para eventos
     Route::get('calendario', [EventoController::class, 'calendario'])->name('calendario');
     Route::get('eventos/json', [EventoController::class, 'getEventos'])->name('eventos.json');
-
     // Rutas CRUD de eventos (solo administradores y profesores)
     Route::middleware(['role:Administrador|Profesor'])->group(function () {
         Route::resource('eventos', EventoController::class);
     });
-
     // Rutas para participantes
     Route::prefix('eventos/{evento}/participantes')->group(function () {
         Route::post('asistencia', [EventoParticipanteController::class, 'updateAsistencia'])->name('eventos.participantes.asistencia');
@@ -66,14 +68,16 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-// Rutas de Cursos Públicas
+// --------------------------------------------
+// Rutas de Cursos
+// --------------------------------------------
+// Rutas públicas de cursos
 Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
 Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
 Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
 Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
 Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
-
-// Rutas protegidas para Cursos
+// Rutas protegidas para cursos
 Route::middleware(['auth'])->group(function () {
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
     // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
@@ -81,7 +85,9 @@ Route::middleware(['auth'])->group(function () {
     //Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
 });
 
-// Rutas administración de usuarios con prefijo y nombre de ruta
+// --------------------------------------------
+// Administración de usuarios
+// --------------------------------------------
 Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Administrador'])->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('index');           // Lista de usuarios
     // Ruta para ver usuarios pendientes de validar (debe ir antes de las rutas con parámetros)
@@ -99,11 +105,9 @@ Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Ad
     Route::post('/{id}/change-role', [UserController::class, 'changeRole'])->name('changeRole');
 });
 
-require __DIR__ . '/auth.php';
-
-//-------------------------------------------
+//--------------------------------------------
 // Rutas de News - CRUD
-
+//--------------------------------------------
 Route::get('admin/news', [NewsController::class, 'index'])->name('admin.news.index');
 Route::get('admin/news/create', [NewsController::class, 'create'])->name('admin.news.create');
 Route::post('admin/news', [NewsController::class, 'store'])->name('admin.news.store');
@@ -113,9 +117,9 @@ Route::put('admin/news/{news}', [NewsController::class, 'update'])->name('admin.
 Route::delete('admin/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
 Route::put('admin/news/{id}/restore', [NewsController::class, 'restore'])->name('admin.news.restore');
 
-//-------------------------------------------
+//--------------------------------------------
 // Rutas de Categorias - CRUD
-
+//--------------------------------------------
 Route::get('admin/categorias', [CategoriasController::class, 'index'])->name('admin.categorias.index');
 Route::get('admin/categorias/create', [CategoriasController::class, 'create'])->name('admin.categorias.create');
 Route::post('admin/categorias', [CategoriasController::class, 'store'])->name('admin.categorias.store');
@@ -126,23 +130,21 @@ Route::delete('admin/categorias/{categoria}', [CategoriasController::class, 'des
 Route::put('admin/categorias/{id}/restore', [CategoriasController::class, 'restore'])->name('admin.categorias.restore');
 
 //--------------------------------------------
-// TODO : Rutas para usuarios pendientes de validar
-// Ruta para home de usuarios pendientes
+// Rutas para usuarios pendientes de validar y roles específicos
+//--------------------------------------------
 Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('pendiente.home');
-
-
 // Rutas para el rol Alumno
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
     Route::view('/alumno/home', 'alumno.home')->name('alumno.home');
 });
-
 // Rutas para el rol Profesor
 Route::middleware(['auth', 'role:Profesor'])->group(function () {
     Route::view('/profesor/home', 'profesor.home')->name('profesor.home');
 });
 
-//-------------------------------------------
-// Rutas de Events - CRUD
+//--------------------------------------------
+// Rutas de Events - CRUD (legacy o duplicadas, revisar si se usan)
+//--------------------------------------------
 Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:Administrador|Profesor'])->group(function () {
     // Rutas para tipos de evento (solo administradores)
     Route::middleware(['role:Administrador'])->group(function () {
@@ -153,7 +155,6 @@ Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:
         Route::put('/types/{tipoEvento}', [TipoEventoController::class, 'update'])->name('types.update');
         Route::delete('/types/{tipoEvento}', [TipoEventoController::class, 'destroy'])->name('types.destroy');
     });
-
     // Rutas CRUD de eventos
     Route::get('/', [EventoController::class, 'index'])->name('index');
     Route::get('/create', [EventoController::class, 'create'])->name('create');
@@ -162,7 +163,6 @@ Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:
     Route::get('/{evento}/edit', [EventoController::class, 'edit'])->name('edit');
     Route::put('/{evento}', [EventoController::class, 'update'])->name('update');
     Route::delete('/{evento}', [EventoController::class, 'destroy'])->name('destroy');
-
     // Rutas para participantes
     Route::prefix('{evento}/participants')->name('participants.')->group(function () {
         Route::post('/attendance', [EventoParticipanteController::class, 'updateAsistencia'])->name('attendance');
@@ -172,13 +172,14 @@ Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:
     });
 });
 
+//--------------------------------------------
 // Rutas para usuarios autenticados (incluyendo alumnos)
+//--------------------------------------------
 Route::prefix('events')->name('events.')->middleware(['auth'])->group(function () {
     // Rutas comunes para todos los usuarios autenticados
     Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
     Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
     Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
-
     // Rutas específicas para alumnos (recordatorios personales)
     Route::middleware(['role:Alumno'])->group(function () {
         Route::get('/reminders/create', [EventoController::class, 'createReminder'])->name('reminders.create');
