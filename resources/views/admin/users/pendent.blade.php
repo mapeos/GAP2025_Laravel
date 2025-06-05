@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 @section('title', 'Usuarios pendientes de validar')
 @section('title-sidebar', 'Usuarios pendientes')
 @section('title-page', 'Usuarios pendientes de validar')

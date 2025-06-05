@@ -96,6 +96,7 @@ Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Ad
     // Ruta para validar y asignar rol a usuarios pendientes (bulk)
     Route::post('validate-bulk', [UserController::class, 'validateBulk'])->name('validate.bulk');
     Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggleStatus');
+    Route::post('/{id}/change-role', [UserController::class, 'changeRole'])->name('changeRole');
 });
 
 require __DIR__ . '/auth.php';

@@ -11,14 +11,20 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    // Listar usuarios (incluidos los eliminados)
-    public function index()
+    // Listar usuarios (incluidos los eliminados), ordenados por más recientes y filtrados por estado si se solicita
+    public function index(Request $request)
     {
-        $users = User::with(['roles', 'creator', 'updater', 'deleter'])
-                     ->withTrashed()
-                     ->paginate(10);
+        $roles = \Spatie\Permission\Models\Role::all();
+        $query = User::with(['roles', 'creator', 'updater', 'deleter'])
+            ->withTrashed()
+            ->orderBy('created_at', 'desc');
 
-        return view('admin.users.index', compact('users'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $users = $query->paginate(10);
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     
@@ -146,15 +152,31 @@ class UserController extends Controller
         return redirect()->route('admin.users.pendent')->with('success', 'Usuarios validados correctamente.');
     }
 
+    // Cambiar estado de usuario (AJAX)
     public function toggleStatus($id)
     {
         $user = User::withTrashed()->findOrFail($id);
         if ($user->trashed()) {
-            return redirect()->back()->with('error', 'No se puede cambiar el estado de un usuario eliminado.');
+            return response()->json(['error' => 'No se puede cambiar el estado de un usuario eliminado.'], 400);
         }
         $user->status = $user->status === 'activo' ? 'pendiente' : 'activo';
         $user->save();
-        return redirect()->back()->with('success', 'Estado actualizado correctamente.');
+        return response()->json(['status' => $user->status]);
+    }
+
+    // Cambiar rol de usuario (AJAX)
+    public function changeRole(Request $request, $id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        if ($user->trashed()) {
+            return response()->json(['error' => 'No se puede cambiar el rol de un usuario eliminado.'], 400);
+        }
+        $role = $request->input('role');
+        if (!$role) {
+            return response()->json(['error' => 'Rol no especificado.'], 400);
+        }
+        $user->syncRoles([$role]);
+        return response()->json(['success' => true]);
     }
 
     public function homePendiente()

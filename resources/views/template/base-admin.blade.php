@@ -44,6 +44,8 @@
 
     @stack('css')
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
      <!-- CSS compilado por Vite -->
     @vite('resources/css/app.css')
 

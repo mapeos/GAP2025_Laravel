@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 
 @section('title', 'Listado de Usuarios')
 @section('title-sidebar', 'Usuarios')
@@ -20,6 +20,15 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        <div class="mb-3">
+            <label for="filter-status" class="form-label">Filtrar por estado:</label>
+            <select id="filter-status" class="form-select" style="width:auto;display:inline-block">
+                <option value="">Todos</option>
+                <option value="activo" {{ request('status') == 'activo' ? 'selected' : '' }}>Activos</option>
+                <option value="pendiente" {{ request('status') == 'pendiente' ? 'selected' : '' }}>Pendientes</option>
+            </select>
+        </div>
+
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -35,14 +44,18 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Muestra la lista de usuarios con información y estado (activo/eliminado).  
-                    Permite editar o eliminar usuarios activos y restaurar usuarios eliminados. -->
                 @forelse ($users as $user)
                     <tr @if($user->trashed()) class="table-secondary" @endif>
                         <td>{{ $user->id }}</td>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
-                        <td>{{ $user->getRoleNames()->implode(', ') }}</td>
+                        <td>
+                            <select class="form-select form-select-sm user-role-select" data-id="{{ $user->id }}" @if($user->trashed()) disabled @endif>
+                                @foreach($roles as $role)
+                                    <option value="{{ $role->name }}" {{ $user->getRoleNames()->contains($role->name) ? 'selected' : '' }}>{{ $role->name }}</option>
+                                @endforeach
+                            </select>
+                        </td>
                         <td>{{ optional($user->creator)->name ?? '—' }}</td>
                         <td>{{ optional($user->updater)->name ?? '—' }}</td>
                         <td>{{ optional($user->deleter)->name ?? '—' }}</td>
@@ -50,13 +63,7 @@
                             @if($user->trashed())
                                 <span class="badge bg-danger">Eliminado</span>
                             @else
-                                <form action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm {{ $user->status === 'activo' ? 'btn-outline-warning' : 'btn-outline-success' }}">
-                                        {{ $user->status === 'activo' ? 'Marcar como pendiente' : 'Marcar como activo' }}
-                                    </button>
-                                </form>
-                                <span class="badge bg-{{ $user->status === 'activo' ? 'success' : 'warning' }}">
+                                <span class="badge status-badge bg-{{ $user->status === 'activo' ? 'success' : 'warning' }}" data-id="{{ $user->id }}" style="cursor:pointer">
                                     {{ ucfirst($user->status) }}
                                 </span>
                             @endif
@@ -91,3 +98,69 @@
     </div>
 </div>
 @endsection
+
+@push('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filtro de estado
+        document.getElementById('filter-status').addEventListener('change', function() {
+            let status = this.value;
+            let url = new URL(window.location.href);
+            if(status) {
+                url.searchParams.set('status', status);
+            } else {
+                url.searchParams.delete('status');
+            }
+            window.location.href = url.toString();
+        });
+
+        // Cambio de estado AJAX
+        document.querySelectorAll('.status-badge').forEach(function(badge) {
+            badge.addEventListener('click', function() {
+                let userId = this.dataset.id;
+                let badgeEl = this;
+                fetch(`/admin/users/${userId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status) {
+                        badgeEl.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                        badgeEl.classList.toggle('bg-success');
+                        badgeEl.classList.toggle('bg-warning');
+                    }
+                });
+            });
+        });
+
+        // Cambio de rol AJAX
+        document.querySelectorAll('.user-role-select').forEach(function(select) {
+            select.addEventListener('change', function() {
+                let userId = this.dataset.id;
+                let newRole = this.value;
+                fetch(`/admin/users/${userId}/change-role`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ role: newRole })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        // Opcional: feedback visual
+                        select.classList.add('border-success');
+                        setTimeout(() => select.classList.remove('border-success'), 1000);
+                    }
+                });
+            });
+        });
+    });
+</script>
+@endpush

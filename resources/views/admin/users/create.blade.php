@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 @section('title', 'Dashboard')
 @section('title-sidebar', 'Dashboard Admin')
 @section('title-page', 'Añadir usuario')
