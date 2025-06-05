@@ -9,7 +9,6 @@ use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoParticipanteController;
-use App\Http\Controllers\ProfileController;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
@@ -28,14 +27,11 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// Rutas para el perfil de usuario
-Route::middleware(['auth'])->group(function () {
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-});
+Route::view('profile', 'profile')
+    ->middleware(['auth'])
+    ->name('profile');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // Rutas para el módulo de Agenda/Calendario
 Route::middleware(['auth'])->group(function () {
@@ -43,16 +39,16 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('tipos-evento', TipoEventoController::class);
     });
-
+    
     // Rutas para eventos
     Route::get('calendario', [EventoController::class, 'calendario'])->name('calendario');
     Route::get('eventos/json', [EventoController::class, 'getEventos'])->name('eventos.json');
-
+    
     // Rutas CRUD de eventos (solo administradores y profesores)
     Route::middleware(['role:Administrador|Profesor'])->group(function () {
         Route::resource('eventos', EventoController::class);
     });
-
+    
     // Rutas para participantes
     Route::prefix('eventos/{evento}/participantes')->group(function () {
         Route::post('asistencia', [EventoParticipanteController::class, 'updateAsistencia'])->name('eventos.participantes.asistencia');
@@ -118,7 +114,6 @@ Route::post('admin/categorias', [CategoriasController::class, 'store'])->name('a
 Route::get('admin/categorias/{categoria}/edit', [CategoriasController::class, 'edit'])->name('admin.categorias.edit');
 Route::put('admin/categorias/{categoria}', [CategoriasController::class, 'update'])->name('admin.categorias.update');
 Route::delete('admin/categorias/{categoria}', [CategoriasController::class, 'destroy'])->name('admin.categorias.destroy');
-Route::put('admin/categorias/{id}/restore', [CategoriasController::class, 'restore'])->name('admin.categorias.restore');
 
 //--------------------------------------------
 // TODO : Rutas para usuarios pendientes de validar
@@ -183,3 +178,6 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
         Route::delete('/reminders/{evento}', [EventoController::class, 'destroyReminder'])->name('reminders.destroy');
     });
 });
+
+
+
