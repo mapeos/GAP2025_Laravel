@@ -1,3 +1,4 @@
+
 @extends('template.base')
 
 @section('content')
@@ -5,7 +6,6 @@
     <h1 class="mb-4">Calendario de eventos</h1>
     <div id="calendar"></div>
 
-    <!-- Modal para editar/eliminar evento -->
     <div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -53,6 +53,8 @@
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 events: @json($eventos ?? []),
+                editable: true, // Habilita drag & drop
+
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
                     // Cargar datos en el modal
@@ -61,11 +63,39 @@
                     document.getElementById('descripcion').value = info.event.extendedProps.descripcion || '';
                     var modal = new bootstrap.Modal(document.getElementById('eventoModal'));
                     modal.show();
+                },
+
+                eventDrop: function(info) {
+                    // Cuando se arrastra y suelta un evento
+                    fetch(`/admin/eventos/${info.event.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fecha_inicio: info.event.start.toISOString().slice(0, 19).replace('T', ' '),
+                            fecha_fin: info.event.end
+                                ? info.event.end.toISOString().slice(0, 19).replace('T', ' ')
+                                : info.event.start.toISOString().slice(0, 19).replace('T', ' ')
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            alert('Error al actualizar la fecha del evento.');
+                            info.revert(); // Revierte el cambio en el calendario
+                        }
+                    })
+                    .catch(() => {
+                        alert('Error de conexión.');
+                        info.revert();
+                    });
                 }
             });
             calendar.render();
 
-            // Eliminar evento
             document.getElementById('btnEliminar').onclick = function() {
                 let id = document.getElementById('eventoId').value;
                 if (confirm('¿Seguro que deseas eliminar este evento?')) {
@@ -89,7 +119,6 @@
                 }
             };
 
-            // Editar evento
             document.getElementById('btnGuardar').onclick = function() {
                 let id = document.getElementById('eventoId').value;
                 let titulo = document.getElementById('titulo').value;

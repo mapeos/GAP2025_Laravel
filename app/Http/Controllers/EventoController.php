@@ -96,7 +96,7 @@ class EventoController extends Controller
         }
 
         $data = $request->all();
-        $data['creado_por'] = Auth::id(); // <-- Añade el usuario autenticado
+        $data['creado_por'] = Auth::id();
 
         $evento = Evento::create($data);
 
