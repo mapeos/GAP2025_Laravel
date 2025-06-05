@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\api\CategoriasController;
-use App\Http\Controllers\api\NewsController;
+use App\Http\Controllers\Api\CategoriasController;
+use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
