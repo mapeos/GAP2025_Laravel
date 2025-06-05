@@ -27,12 +27,15 @@ new #[Layout('layouts.guest')] class extends Component
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+        $validated['status'] = 'pendiente'; // Estado pendiente
 
         event(new Registered($user = User::create($validated)));
+        // No asignar rol aquí
 
         Auth::login($user);
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        // Redirigir a la vista de cuenta pendiente
+        $this->redirect(route('pendiente.home', absolute: false), navigate: true);
     }
 }; ?>
 
