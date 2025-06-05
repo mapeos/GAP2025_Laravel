@@ -23,6 +23,10 @@ Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class,
 Route::get('/admin/pagina-test', function () {
     return view('admin.dashboard.test');
 });
+Route::get('/admin/pagos', function () {
+    return view('admin.dashboard.pagos.pagos');
+});
+
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])

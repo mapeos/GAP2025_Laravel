@@ -33,6 +33,7 @@ class EventoController extends Controller
                     'start' => $evento->fecha_inicio,
                     'end' => $evento->fecha_fin,
                     'color' => $evento->tipoEvento->color,
+                    'descripcion' => $evento->descripcion,
                     'url' => route('events.show', $evento->id)
                 ];
             });
@@ -54,6 +55,7 @@ class EventoController extends Controller
                     'start' => $evento->fecha_inicio,
                     'end' => $evento->fecha_fin,
                     'color' => $evento->tipoEvento->color,
+                    'descripcion' => $evento->descripcion,
                     'url' => route('admin.events.show', $evento->id)
                 ];
             });
@@ -93,7 +95,11 @@ class EventoController extends Controller
                 ->withInput();
         }
 
-        $evento = Evento::create($request->all());
+        $data = $request->all();
+        $data['creado_por'] = Auth::id();
+
+        $evento = Evento::create($data);
+
         return redirect()->route('admin.events.index')
             ->with('success', 'Evento creado exitosamente.');
     }
@@ -116,10 +122,30 @@ class EventoController extends Controller
     }
 
     /**
-     * Actualiza un evento específico
+     * Actualiza un evento específico (soporta AJAX y formulario)
      */
     public function update(Request $request, Evento $evento)
     {
+        // Si la petición es AJAX, responde con JSON
+        if ($request->expectsJson()) {
+            $validator = Validator::make($request->all(), [
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+
+            $evento->update([
+                'titulo' => $request->titulo,
+                'descripcion' => $request->descripcion,
+            ]);
+
+            return response()->json(['success' => true]);
+        }
+
+        // Petición normal (formulario)
         $validator = Validator::make($request->all(), [
             'titulo' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -144,10 +170,17 @@ class EventoController extends Controller
     }
 
     /**
-     * Elimina un evento específico
+     * Elimina un evento específico (soporta AJAX y formulario)
      */
     public function destroy(Evento $evento)
     {
+        // Si la petición es AJAX, responde con JSON
+        if (request()->expectsJson()) {
+            $evento->delete();
+            return response()->json(['success' => true]);
+        }
+
+        // Petición normal (formulario)
         $evento->delete();
         return redirect()->route('admin.events.index')
             ->with('success', 'Evento eliminado exitosamente.');

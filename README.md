@@ -204,9 +204,7 @@ Se han desarrollado tres modelos principales que gestionan las relaciones entre 
 ## 6. Próximos Pasos
 - Desarrollo de la interfaz de calendario
 - Implementación de vistas para:
-  - Vista mensual
-  - Vista semanal
-  - Vista diaria
+
   - Lista de eventos
 - Sistema de notificaciones para eventos
 - Filtros por tipo de evento
@@ -386,7 +384,30 @@ php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvid
 ```bash
 php artisan migrate
 ```
-4. Ejecutar los seeders para crear los usuarios con roles asignados para pruebas 
+4. Ejecución de Seeders
+
+Para poblar la base de datos con datos de prueba, puedes ejecutar los siguientes comandos:
+
+## Ejecutar todos los seeders en orden
+```bash
+php artisan db:seed
+```
+
+Este comando ejecutará todos los seeders en el siguiente orden:
+1. DatabaseSeeder (base)
+2. RolesAndUsersSeeder (roles y usuarios de prueba)
+3. TipoEventoSeeder (categorías de eventos)
+4. EventoSeeder (eventos de ejemplo)
+5. EventoParticipanteSeeder (asignación de participantes)
+6. CategoriaSeeder (categorías de noticias)
+
+## Ejecutar seeders específicos
+Si necesitas ejecutar solo ciertos seeders, puedes usar:
+```bash
+php artisan db:seed --class=NombreDelSeeder
+```
+
+Por ejemplo:
 ```bash
 php artisan db:seed --class=RolesAndUsersSeeder
 ```
