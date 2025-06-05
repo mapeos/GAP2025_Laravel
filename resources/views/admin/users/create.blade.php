@@ -67,6 +67,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                        <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary ms-2">Cancelar</a>
                     </form>
                 </div>
             </div>

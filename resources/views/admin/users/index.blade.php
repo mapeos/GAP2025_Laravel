@@ -11,9 +11,12 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Usuarios</h5>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
-            Añadir Usuario
-        </a>
+        <div>
+            <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
+                Añadir Usuario
+            </a>
+            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary ms-2">Volver</a>
+        </div>
     </div>
     <div class="card-body">
         @if(session('success'))
@@ -92,8 +95,17 @@
             </tbody>
         </table>
 
-        <div class="d-flex justify-content-center mt-3">
-            {{ $users->links() }}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+            <div class="mb-2 mb-md-0 text-muted">
+                @if($users->total() > 0)
+                    Mostrando {{ $users->firstItem() }} a {{ $users->lastItem() }} de {{ $users->total() }} resultados
+                @else
+                    Sin resultados
+                @endif
+            </div>
+            <div>
+                {{ $users->links() }}
+            </div>
         </div>
     </div>
 </div>

@@ -95,9 +95,8 @@
                     </div>
                   </div>
                 </div>
-                <!-- Activity and Transaction Section -->
+                <!-- Usuarios Pendientes -->
                 <div class="row g-4 mb-4">
-                  <!-- System Activities Log -->
                   <div class="col-xl-4">
                     <div class="card h-100">
                       <div class="card-header d-flex justify-content-between align-items-center">
@@ -123,9 +122,6 @@
                             <div class="text-center text-muted">No hay usuarios pendientes.</div>
                           @endforelse
                         </div>
-                      </div>
-                      <div class="card-footer text-center">
-                        <a href="{{ route('admin.users.pendent') }}" class="btn btn-sm btn-light">Ver todos <i class="ri-arrow-right-line"></i></a>
                       </div>
                     </div>
                   </div>
@@ -169,18 +165,8 @@
                   <!-- Lead Source Analytics -->
                   <div class="col-xl-4">
                     <div class="card h-100">
-                      <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Lead Acquisition</h5>
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Current Day
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Current Day</a></li>
-                            <li><a class="dropdown-item" href="#">Current Week</a></li>
-                            <li><a class="dropdown-item" href="#">Current Month</a></li>
-                          </ul>
-                        </div>
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">Procedencia de Usuarios Registrados</h5>
                       </div>
                       <div class="card-body">
                         <div class="chart-container" style="position: relative; height: 250px">
@@ -189,19 +175,15 @@
                         <div class="mt-4">
                           <div class="d-flex align-items-center mb-2">
                             <div class="legend-dot bg-primary"></div>
-                            <span class="ms-2">Social Media</span> <span class="ms-auto">25%</span>
+                            <span class="ms-2">Web</span> <span class="ms-auto" id="percent-web">0%</span>
                           </div>
                           <div class="d-flex align-items-center mb-2">
                             <div class="legend-dot bg-success"></div>
-                            <span class="ms-2">Organic Search</span> <span class="ms-auto">35%</span>
-                          </div>
-                          <div class="d-flex align-items-center mb-2">
-                            <div class="legend-dot bg-info"></div>
-                            <span class="ms-2">Direct Calls</span> <span class="ms-auto">20%</span>
+                            <span class="ms-2">API</span> <span class="ms-auto" id="percent-api">0%</span>
                           </div>
                           <div class="d-flex align-items-center">
                             <div class="legend-dot bg-warning"></div>
-                            <span class="ms-2">Email Campaign</span> <span class="ms-auto">20%</span>
+                            <span class="ms-2">Otro</span> <span class="ms-auto" id="percent-otro">0%</span>
                           </div>
                         </div>
                       </div>

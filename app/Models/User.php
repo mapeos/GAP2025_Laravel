@@ -27,6 +27,7 @@ class User extends Authenticatable
         'created_by',
         'updated_by',
         'deleted_by',
+        'user_agent', // Permite asignación masiva del user-agent
     ];
 
     /**

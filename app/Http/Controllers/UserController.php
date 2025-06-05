@@ -50,6 +50,8 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
             'created_by' => Auth::id(),
             'status' => 'pendiente', // El usuario web también queda pendiente
+            // Guarda automáticamente el user-agent (navegador, app, etc.) para análisis de procedencia
+            'user_agent' => $request->userAgent(),
         ]);
 
         // No asignar rol por defecto, el admin lo hará manualmente
