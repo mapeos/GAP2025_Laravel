@@ -13,12 +13,8 @@
 <div class="container">
     <h1 class="mb-4">Listado de Categorías</h1>
 
-    @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    </div>
-    @endif
+    {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
+    @include('template.partials.alerts')
 
     <div class="mb-3">
         <a href="{{ route('admin.categorias.create') }}" class="btn btn-primary">Crear Nueva Categoría</a>
@@ -27,7 +23,7 @@
 
     </div>
 
-    <table class="table table-striped align-middle">
+    <table class="table align-middle">
         <thead>
             <tr>
                 <th>Nombre</th>

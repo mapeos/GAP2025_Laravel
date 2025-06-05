@@ -20,7 +20,6 @@ class NewsController extends Controller
         // Carga las noticias junto con sus categorías relacionadas, paginando de 10 en 10
         // $news = News::with('categorias')->paginate(10);
         $news = News::withTrashed()->with('categorias')->paginate(10);
-
         return view('admin.news.index', compact('news'));
     }
 
@@ -59,16 +58,19 @@ class NewsController extends Controller
     /**
      * Mostrar los detalles de una noticia.
      */
-    public function show(News $news)
+    public function show($id)
     {
+        $news = News::withTrashed()->with('categorias')->findOrFail($id);
         return view('admin.news.show', compact('news'));
     }
+
 
     /**
      * Mostrar el formulario para editar una noticia.
      */
-    public function edit(News $news)
+    public function edit($id)
     {
+        $news = News::withTrashed()->findOrFail($id);
         $categorias = Categorias::all();
         return view('admin.news.edit', compact('news', 'categorias'));
     }
@@ -76,8 +78,9 @@ class NewsController extends Controller
     /**
      * Actualizar una noticia en la base de datos.
      */
-    public function update(Request $request, News $news)
+    public function update(Request $request, $id)
     {
+        $news = News::withTrashed()->findOrFail($id);
         $request->validate([
             'titulo' => 'required|max:50|unique:news,titulo,' . $news->id,
             'contenido' => 'required',

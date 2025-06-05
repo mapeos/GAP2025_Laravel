@@ -12,16 +12,9 @@
 @section('content')
 <div class="container">
     <h1 class="mb-4">Editar Categoría</h1>
-
-    @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
+    
+    {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
+    @include('template.partials.alerts')
 
     <form action="{{ route('admin.categorias.update', $categoria) }}" method="POST">
         @csrf

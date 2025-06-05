@@ -13,25 +13,8 @@
 <div class="container">
     <h1>Editar Noticia</h1>
 
-
-    @if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    </div>
-    @endif
-
-    @if ($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <strong>Por favor corrige los siguientes errores:</strong>
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    </div>
-    @endif
+    {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
+    @include('template.partials.alerts')
 
     <form action="{{ route('admin.news.update', $news) }}" method="POST">
         @csrf

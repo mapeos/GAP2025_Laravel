@@ -12,12 +12,8 @@
 @section('content')
 <div class="container">
 
-    @if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    </div>
-    @endif
+    {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
+    @include('template.partials.alerts')
 
     <h1 class="mb-4">Listado de Noticias</h1>
 
@@ -28,7 +24,7 @@
 
     </div>
 
-    <table class="table table-striped align-middle table-responsive">
+    <table class="table align-middle table-responsive">
         <thead>
             <tr>
                 <th>Título</th>
@@ -44,7 +40,12 @@
         <tbody>
             @forelse ($news as $item)
             <tr @if ($item->trashed()) class="table-danger" @endif>
-                <td>{{ $item->titulo }}</td>
+                <td>
+                    {{ $item->titulo }}
+                    @if ($item->trashed())
+                    <i class="ri-alert-line text-danger" title="Noticia eliminada"></i>
+                    @endif
+                </td>
                 <td style="white-space: normal; overflow-wrap: break-word;">
                     @if ($item->categorias->isNotEmpty())
                     @foreach ($item->categorias as $categoria)

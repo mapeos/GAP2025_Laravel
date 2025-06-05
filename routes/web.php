@@ -72,7 +72,7 @@ Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('adm
 // Rutas protegidas para Cursos
 Route::middleware(['auth'])->group(function () {
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
-   // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
+    // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
     Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
     //Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
 });
@@ -103,7 +103,7 @@ Route::get('admin/news', [NewsController::class, 'index'])->name('admin.news.ind
 Route::get('admin/news/create', [NewsController::class, 'create'])->name('admin.news.create');
 Route::post('admin/news', [NewsController::class, 'store'])->name('admin.news.store');
 Route::get('admin/news/{news}', [NewsController::class, 'show'])->name('admin.news.show');
-Route::get('admin/news/{news}/edit', [NewsController::class, 'edit'])->name('admin.news.edit');
+Route::get('admin/news/{id}/edit', [NewsController::class, 'edit'])->name('admin.news.edit');
 Route::put('admin/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
 Route::delete('admin/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
 Route::put('admin/news/{id}/restore', [NewsController::class, 'restore'])->name('admin.news.restore');
