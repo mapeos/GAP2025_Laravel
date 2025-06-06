@@ -58,7 +58,7 @@
       <div class="sidebar-header">
         <a href="/pages/dashboard" class="sidebar-brand">
           <img src="{{ asset('/admin/img/gap_ico.png') }}" alt="Logo" class="brand-image" />
-          <span class="mb-0 opacity-80">@yield('title-sidebar', 'XXXX')</span>
+          <span class="mb-0 opacity-80">{{ auth()->user()?->name ?? 'Usuario' }}</span>
         </a>
         <!-- Sidebar Toggle Button -->
         <div class="toggle-mini ms-auto">

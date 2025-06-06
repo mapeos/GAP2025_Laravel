@@ -1,7 +1,7 @@
 @extends('template.base')
 @section('title', 'Dashboard')
-@section('title-sidebar', 'Dashboard Admin')
-@section('title-page', 'Dashboard')
+@section('title-sidebar', auth()->user()?->name ?? 'Dashboard Admin')
+@section('title-page', 'Administración')
 
 @section('breadcrumb')
     <li class="breadcrumb-item "> <a href="#">Forms</a> </li>
