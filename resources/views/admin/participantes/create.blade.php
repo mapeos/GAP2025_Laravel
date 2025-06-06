@@ -1,4 +1,4 @@
-extends('template.base')
+@extends('template.base')
 
 @section('title', 'Creación de Participantes')
 

@@ -104,9 +104,10 @@ Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.particip
 // Rutas de INSCRIPCIONES a Cursos
 Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->group(function () {
     Route::get('/cursos-activos', [CursoController::class, 'listarCursosActivos'])->name('cursos.activos'); // Listar cursos activos
-    Route::get('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir.form');
+    Route::get('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir.form'); // Formulario de inscripción
     Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir'); // Inscribir personas
     Route::get('/cursos/{curso}/inscritos', [InscripcionController::class, 'verInscritos'])->name('cursos.inscritos'); // Ver inscritos
+    Route::delete('/cursos/{curso}/baja/{persona}', [InscripcionController::class, 'darBaja'])->name('cursos.baja'); // Dar de baja a un alumno
 });
 
 // --------------------------------------------

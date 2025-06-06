@@ -15,7 +15,7 @@ class ParticipacionSeeder extends Seeder
     {
         $participaciones = [
             [
-                'curso_id' => 1,
+                'curso_id' => 3,
                 'persona_id' => 3, // nombre Luz
                 'rol_participacion_id' => 2, //  = Profesor
                 'estado' => 'activo',

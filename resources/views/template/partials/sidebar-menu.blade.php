@@ -170,18 +170,7 @@
                         <span>Crear Cursos</span>
                     </a>
                 </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/switches"> <span>Switches</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/vertical"> <span>Vertical</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/horizontal"> <span>Horizontal</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/validation"> <span>Validation</span> </a>
-                </li>  -->
+
             </ul>
         </li>
         <!-- PARTICIPANTES Section -->
@@ -193,9 +182,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.participantes.index') }}"> <span>Listar Participantes</span> </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.participantes.create') }}"> <span>Crear Participantes</span> </a>
-                </li>
+                </li> -->
             </ul>
         </li>
         <!-- INSCRIPCIONES Section -->
@@ -207,9 +196,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.inscripciones.cursos.activos') }}"> <span>Inscribir</span> </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="/pages/forms/select"> <span>Bajas</span> </a>
-                </li>
+                </li> -->
             </ul>
         </li>
         <!-- Pages Section -->
