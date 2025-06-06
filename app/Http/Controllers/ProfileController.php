@@ -24,9 +24,9 @@ class ProfileController extends Controller
     }
 
     public function showPersona(Persona $persona)
-{
-    return view('admin.participantes.show', compact('persona'));
-}
+    {
+        return view('admin.participantes.show', compact('persona'));
+    }
 
     public function edit()
     {
@@ -34,6 +34,21 @@ class ProfileController extends Controller
         $persona = $user->persona ?? new Persona();
 
         return view('profile.edit', compact('user', 'persona'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido1' => 'required|string|max:255',
+            'apellido2' => 'nullable|string|max:255',
+            'email' => 'required|email|unique:personas,email',
+            'telefono' => 'nullable|string|max:15',
+        ]);
+
+        Persona::create($request->all());
+
+        return redirect()->route('admin.participantes.index')->with('success', 'Participante creado correctamente.');
     }
 
     public function update(Request $request)

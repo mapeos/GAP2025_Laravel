@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
-use App\Http\Controllers\CursoController;
+use App\Http\Controllers\Api\CursoController;
 use Illuminate\Support\Facades\Route;
 
 //mensaje de prueba para verificar que la API está funcionando

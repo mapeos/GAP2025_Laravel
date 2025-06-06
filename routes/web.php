@@ -72,13 +72,6 @@ Route::middleware(['auth'])->group(function () {
 // --------------------------------------------
 // Rutas de Cursos
 // --------------------------------------------
-// Rutas públicas de cursos
-        // Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
-        // Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
-        // Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
-        // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
-        // Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
-
 
 // Rutas protegidas para cursos
 Route::middleware(['auth'])->group(function () {
@@ -94,10 +87,11 @@ Route::middleware(['auth'])->group(function () {
 // Rutas de PARTICIPANTES
 Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.participantes.')->group(function () {
     Route::get('/', [ProfileController::class, 'index'])->name('index'); // Listar participantes
-    Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
     Route::get('/crear', function () {
         return view('admin.participantes.create');
     })->name('create'); // Formulario de creación de participante
+    Route::post('/', [ProfileController::class, 'store'])->name('store'); // Guardar participante
+    Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
 });
 
 // Rutas de INSCRIPCIONES a Cursos
