@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-alumno')
 
 @section('title', 'Alumno')
 @section('title-page', 'Home')
