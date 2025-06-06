@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
+use App\Http\Controllers\CursoController;
 use Illuminate\Support\Facades\Route;
 
 //mensaje de prueba para verificar que la API está funcionando
@@ -54,4 +55,16 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
     Route::get('admin/users/pending', [AuthController::class, 'pendingUsers']); // Listar usuarios pendientes
     Route::post('admin/users/{user}/validate', [AuthController::class, 'validateAndAssignRole']); // Validar y asignar rol
+});
+
+///Rutas para cursos
+
+Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
+    Route::post('/', [CursoController::class, 'store'])->name('store'); // Crear un curso
+    Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
+    Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
+    Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
+    Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
+    Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
+    Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
 });

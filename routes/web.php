@@ -73,24 +73,31 @@ Route::middleware(['auth'])->group(function () {
 // Rutas de Cursos
 // --------------------------------------------
 // Rutas públicas de cursos
-Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
-Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
-Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
-Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
-Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
+        // Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
+        // Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
+        // Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
+        // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
+        // Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
+
+
 // Rutas protegidas para cursos
 Route::middleware(['auth'])->group(function () {
+    Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
+    Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
+    Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
+    Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
+    Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
-    // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
     Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
-    //Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
 });
 
 // Rutas de PARTICIPANTES
-Route::prefix('admin/participantes')->name('admin.participantes.')->group(function () {
+Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.participantes.')->group(function () {
     Route::get('/', [ProfileController::class, 'index'])->name('index'); // Listar participantes
     Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
-    Route::get('/crear', function (){return view('admin.participantes.create'); })->name('create'); // Formulario de creación de participante
+    Route::get('/crear', function () {
+        return view('admin.participantes.create');
+    })->name('create'); // Formulario de creación de participante
 });
 
 // Rutas de INSCRIPCIONES a Cursos
