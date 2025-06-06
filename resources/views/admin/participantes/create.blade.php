@@ -1,4 +1,4 @@
-extends('template.base')
+extends('template.base-admin')
 
 @section('title', 'Creacion de Participantes')
 
