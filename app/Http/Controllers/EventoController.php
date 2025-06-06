@@ -38,6 +38,8 @@ class EventoController extends Controller
                 ];
             });
 
+        $profesores = \App\Models\User::where('role', 'Profesor')->get();
+
         return view('events.calendar', compact('eventos'));
     }
 
@@ -56,7 +58,7 @@ class EventoController extends Controller
                     'end' => $evento->fecha_fin,
                     'color' => $evento->tipoEvento->color,
                     'descripcion' => $evento->descripcion,
-                    'url' => route('admin.events.show', $evento->id)
+                    'url' => route('events.show', $evento->id)
                 ];
             });
 
@@ -129,20 +131,38 @@ class EventoController extends Controller
         // Si la petición es AJAX, responde con JSON
         if ($request->expectsJson()) {
             $validator = Validator::make($request->all(), [
-                'titulo' => 'required|string|max:255',
+                'titulo' => 'sometimes|required|string|max:255',
                 'descripcion' => 'nullable|string',
+                'fecha_inicio' => 'sometimes|required|date',
+                'fecha_fin' => 'sometimes|required|date|after_or_equal:fecha_inicio',
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
-            $evento->update([
-                'titulo' => $request->titulo,
-                'descripcion' => $request->descripcion,
-            ]);
+            try {
+                $evento->update($request->only([
+                    'titulo',
+                    'descripcion',
+                    'fecha_inicio',
+                    'fecha_fin'
+                ]));
 
-            return response()->json(['success' => true]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Evento actualizado exitosamente'
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al actualizar el evento: ' . $e->getMessage()
+                ], 500);
+            }
         }
 
         // Petición normal (formulario)
