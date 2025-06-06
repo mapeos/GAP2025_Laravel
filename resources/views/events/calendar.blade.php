@@ -1,8 +1,48 @@
-@extends('template.base-admin')
+@extends('template.base')
 
 @section('content')
 <div class="container">
     <h1 class="mb-4">Calendario de eventos</h1>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal">
+        Solicitar cita/consulta con profesor
+    </button>
+
+    <div class="modal fade" id="solicitudCitaModal" tabindex="-1" aria-labelledby="solicitudCitaModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ route('solicitud-cita.store') }}">
+      @csrf
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="solicitudCitaModalLabel">Solicitar cita/consulta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="profesor_id" class="form-label">Profesor</label>
+            <select class="form-select" name="profesor_id" required>
+              <option value="">Seleccione un profesor</option>
+              @foreach($profesores as $profesor)
+                <option value="{{ $profesor->id }}">{{ $profesor->name }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="motivo" class="form-label">Motivo</label>
+            <input type="text" class="form-control" name="motivo" required>
+          </div>
+          <div class="mb-3">
+            <label for="fecha_propuesta" class="form-label">Fecha y hora propuesta</label>
+            <input type="datetime-local" class="form-control" name="fecha_propuesta" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
     <div id="calendar"></div>
 
     <div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
@@ -80,16 +120,21 @@
                                 : info.event.start.toISOString().slice(0, 19).replace('T', ' ')
                         })
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al actualizar la fecha del evento.');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (!data.success) {
-                            alert('Error al actualizar la fecha del evento.');
-                            info.revert(); // Revierte el cambio en el calendario
+                            throw new Error(data.message || 'Error al actualizar la fecha del evento');
                         }
                     })
-                    .catch(() => {
-                        alert('Error de conexión.');
-                        info.revert();
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al actualizar la fecha del evento.');
+                        info.revert(); // Revierte el cambio en el calendario
                     });
                 }
             });
@@ -102,7 +147,8 @@
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
                         }
                     })
                     .then(response => {
@@ -112,8 +158,14 @@
                             calendar.getEventById(id).remove();
                             alert('Evento eliminado exitosamente.');
                         } else {
-                            alert('Error al eliminar el evento.');
+                            response.json().then(data => {
+                                alert(data.message || 'Error al eliminar el evento.');
+                            });
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al eliminar el evento.');
                     });
                 }
             };

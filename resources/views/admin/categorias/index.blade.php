@@ -1,4 +1,4 @@
-@extends('template.base-admin')
+@extends('template.base')
 
 @section('title', 'Listado de Categorías')
 @section('title-sidebar', 'Categorías')

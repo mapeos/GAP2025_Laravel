@@ -50,6 +50,8 @@ require __DIR__ . '/auth.php';
 // --------------------------------------------
 Route::middleware(['auth'])->group(function () {
     // Rutas para tipos de evento (solo administradores)
+    Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
+        ->name('solicitud-cita.store');
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('tipos-evento', TipoEventoController::class);
     });
@@ -72,27 +74,32 @@ Route::middleware(['auth'])->group(function () {
 // --------------------------------------------
 // Rutas de Cursos
 // --------------------------------------------
-// Rutas públicas de cursos
-Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
-Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
-Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
-Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
-Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
+
 // Rutas protegidas para cursos
 Route::middleware(['auth'])->group(function () {
+    Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
+    Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
+    Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
+    Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
+    Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
-    // Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('cursos.edit');
     Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
-    //Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('cursos.destroy');
 });
 
 // Rutas de PARTICIPANTES
-Route::prefix('admin/participantes')->name('admin.participantes.')->group(function () {
+Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.participantes.')->group(function () {
     Route::get('/', [ProfileController::class, 'index'])->name('index'); // Listar participantes
-    Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
     Route::get('/crear', function () {
         return view('admin.participantes.create');
     })->name('create'); // Formulario de creación de participante
+    Route::post('/', [ProfileController::class, 'store'])->name('store'); // Guardar participante
+    Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
+<<<<<<< HEAD
+    Route::get('/crear', function () {
+        return view('admin.participantes.create');
+    })->name('create'); // Formulario de creación de participante
+=======
+>>>>>>> 77377a05b9a308c736020b16aea44db89286a698
 });
 
 // Rutas de INSCRIPCIONES a Cursos
@@ -161,9 +168,43 @@ Route::middleware(['auth', 'role:Profesor'])->group(function () {
 });
 
 //--------------------------------------------
-// Rutas de Events - CRUD (legacy o duplicadas, revisar si se usan)
+// Rutas de Events - CRUD
 //--------------------------------------------
-Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:Administrador|Profesor'])->group(function () {
+// Rutas públicas de eventos (accesibles para usuarios autenticados)
+Route::prefix('eventos')->name('events.')->middleware(['auth'])->group(function () {
+    // Rutas comunes para todos los usuarios autenticados
+    Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
+    Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
+    Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
+    
+    // Rutas específicas para alumnos (recordatorios personales)
+    Route::middleware(['role:Alumno'])->group(function () {
+        Route::get('/reminders/create', [EventoController::class, 'createReminder'])->name('reminders.create');
+        Route::post('/reminders', [EventoController::class, 'storeReminder'])->name('reminders.store');
+        Route::get('/reminders/{evento}/edit', [EventoController::class, 'editReminder'])->name('reminders.edit');
+        Route::put('/reminders/{evento}', [EventoController::class, 'updateReminder'])->name('reminders.update');
+        Route::delete('/reminders/{evento}', [EventoController::class, 'destroyReminder'])->name('reminders.destroy');
+    });
+});
+
+// Rutas administrativas de eventos (solo para administradores y profesores)
+Route::prefix('admin/eventos')->name('admin.events.')->middleware(['auth', 'role:Administrador|Profesor'])->group(function () {
+    // Rutas CRUD de eventos
+    Route::get('/', [EventoController::class, 'index'])->name('index');
+    Route::get('/create', [EventoController::class, 'create'])->name('create');
+    Route::post('/', [EventoController::class, 'store'])->name('store');
+    Route::get('/{evento}/edit', [EventoController::class, 'edit'])->name('edit');
+    Route::put('/{evento}', [EventoController::class, 'update'])->name('update');
+    Route::delete('/{evento}', [EventoController::class, 'destroy'])->name('destroy');
+
+    // Rutas para participantes
+    Route::prefix('{evento}/participants')->name('participants.')->group(function () {
+        Route::post('/attendance', [EventoParticipanteController::class, 'updateAsistencia'])->name('attendance');
+        Route::post('/add', [EventoParticipanteController::class, 'addParticipantes'])->name('add');
+        Route::post('/remove', [EventoParticipanteController::class, 'removeParticipantes'])->name('remove');
+        Route::post('/role', [EventoParticipanteController::class, 'updateRol'])->name('role');
+    });
+
     // Rutas para tipos de evento (solo administradores)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::get('/types', [TipoEventoController::class, 'index'])->name('types.index');
@@ -172,38 +213,5 @@ Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:
         Route::get('/types/{tipoEvento}/edit', [TipoEventoController::class, 'edit'])->name('types.edit');
         Route::put('/types/{tipoEvento}', [TipoEventoController::class, 'update'])->name('types.update');
         Route::delete('/types/{tipoEvento}', [TipoEventoController::class, 'destroy'])->name('types.destroy');
-    });
-    // Rutas CRUD de eventos
-    Route::get('/', [EventoController::class, 'index'])->name('index');
-    Route::get('/create', [EventoController::class, 'create'])->name('create');
-    Route::post('/', [EventoController::class, 'store'])->name('store');
-    Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
-    Route::get('/{evento}/edit', [EventoController::class, 'edit'])->name('edit');
-    Route::put('/{evento}', [EventoController::class, 'update'])->name('update');
-    Route::delete('/{evento}', [EventoController::class, 'destroy'])->name('destroy');
-    // Rutas para participantes
-    Route::prefix('{evento}/participants')->name('participants.')->group(function () {
-        Route::post('/attendance', [EventoParticipanteController::class, 'updateAsistencia'])->name('attendance');
-        Route::post('/add', [EventoParticipanteController::class, 'addParticipantes'])->name('add');
-        Route::post('/remove', [EventoParticipanteController::class, 'removeParticipantes'])->name('remove');
-        Route::post('/role', [EventoParticipanteController::class, 'updateRol'])->name('role');
-    });
-});
-
-//--------------------------------------------
-// Rutas para usuarios autenticados (incluyendo alumnos)
-//--------------------------------------------
-Route::prefix('events')->name('events.')->middleware(['auth'])->group(function () {
-    // Rutas comunes para todos los usuarios autenticados
-    Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
-    Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
-    Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
-    // Rutas específicas para alumnos (recordatorios personales)
-    Route::middleware(['role:Alumno'])->group(function () {
-        Route::get('/reminders/create', [EventoController::class, 'createReminder'])->name('reminders.create');
-        Route::post('/reminders', [EventoController::class, 'storeReminder'])->name('reminders.store');
-        Route::get('/reminders/{evento}/edit', [EventoController::class, 'editReminder'])->name('reminders.edit');
-        Route::put('/reminders/{evento}', [EventoController::class, 'updateReminder'])->name('reminders.update');
-        Route::delete('/reminders/{evento}', [EventoController::class, 'destroyReminder'])->name('reminders.destroy');
     });
 });
