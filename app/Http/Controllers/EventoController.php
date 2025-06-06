@@ -38,9 +38,11 @@ class EventoController extends Controller
                 ];
             });
 
-        $profesores = \App\Models\User::where('role', 'Profesor')->get();
+       $profesores = \App\Models\User::all();
 
-        return view('events.calendar', compact('eventos'));
+         return view('events.calendar', compact('eventos', 'profesores'));
+
+
     }
 
     /**
@@ -139,7 +141,7 @@ class EventoController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Error de validación',
                     'errors' => $validator->errors()
                 ], 422);
