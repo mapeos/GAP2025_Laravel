@@ -80,16 +80,21 @@
                                 : info.event.start.toISOString().slice(0, 19).replace('T', ' ')
                         })
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al actualizar la fecha del evento.');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (!data.success) {
-                            alert('Error al actualizar la fecha del evento.');
-                            info.revert(); // Revierte el cambio en el calendario
+                            throw new Error(data.message || 'Error al actualizar la fecha del evento');
                         }
                     })
-                    .catch(() => {
-                        alert('Error de conexión.');
-                        info.revert();
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al actualizar la fecha del evento.');
+                        info.revert(); // Revierte el cambio en el calendario
                     });
                 }
             });
@@ -102,7 +107,8 @@
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
                         }
                     })
                     .then(response => {
@@ -112,8 +118,14 @@
                             calendar.getEventById(id).remove();
                             alert('Evento eliminado exitosamente.');
                         } else {
-                            alert('Error al eliminar el evento.');
+                            response.json().then(data => {
+                                alert(data.message || 'Error al eliminar el evento.');
+                            });
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al eliminar el evento.');
                     });
                 }
             };

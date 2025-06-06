@@ -37,12 +37,12 @@
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('events.calendar') }}">
+                    <a class="nav-link" href="{{ route('eventos.calendar') }}">
                         <i class="ri-calendar-2-line"></i> <span>Calendario</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.events.create') }}">
+                    <a class="nav-link" href="{{ route('admin.eventos.create') }}">
                         <i class="ri-calendar-schedule-line"></i> <span>Crear evento</span>
                     </a>
                 </li>

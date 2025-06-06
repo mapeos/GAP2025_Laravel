@@ -168,7 +168,7 @@ Route::middleware(['auth', 'role:Profesor'])->group(function () {
 //--------------------------------------------
 // Rutas de Events - CRUD (legacy o duplicadas, revisar si se usan)
 //--------------------------------------------
-Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:Administrador|Profesor'])->group(function () {
+Route::prefix('admin/eventos')->name('admin.events.')->middleware(['auth', 'role:Administrador|Profesor'])->group(function () {
     // Rutas para tipos de evento (solo administradores)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::get('/types', [TipoEventoController::class, 'index'])->name('types.index');
@@ -198,7 +198,7 @@ Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:
 //--------------------------------------------
 // Rutas para usuarios autenticados (incluyendo alumnos)
 //--------------------------------------------
-Route::prefix('events')->name('events.')->middleware(['auth'])->group(function () {
+Route::prefix('eventos')->name('events.')->middleware(['auth'])->group(function () {
     // Rutas comunes para todos los usuarios autenticados
     Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
     Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
