@@ -44,8 +44,6 @@
 
     @stack('css')
 
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
      <!-- CSS compilado por Vite -->
     @vite('resources/css/app.css')
 
@@ -60,9 +58,9 @@
       <aside class="sidebar">
         <!-- Sticky Header -->
         <div class="sidebar-header">
-          <a href="/pages/dashboard" class="sidebar-brand">
+          <a href="/alumno/home" class="sidebar-brand">
             <img src="{{ asset('/admin/img/gap_ico.png') }}" alt="Logo" class="brand-image" />
-            <span class="mb-0 opacity-80">@yield('title-sidebar', 'XXXX')</span>
+            <span class="mb-0 opacity-80">@yield('title-sidebar', 'Alumno')</span>
           </a>
           <!-- Sidebar Toggle Button -->
           <div class="toggle-mini ms-auto">
@@ -71,10 +69,32 @@
             </button>
           </div>
         </div>
-       
         <!-- Scrollable Navigation -->
         <div class="sidebar-content" data-simplebar>
-          @include('template.partials.sidebar-menu')
+          <nav class="nav-tree">
+            <ul class="nav flex-column">
+              <li class="nav-item has-submenu {{ request()->routeIs('profile.*') ? 'open' : '' }}">
+                <a class="nav-link d-flex align-items-center justify-content-between" data-bs-toggle="collapse" href="#perfilMenu" role="button" aria-expanded="{{ request()->routeIs('profile.*') ? 'true' : 'false' }}" aria-controls="perfilMenu">
+                  <span><i class="ri-user-line nav-icon me-2"></i>Mi perfil</span>
+                  <i class="ri-arrow-down-s-line"></i>
+                </a>
+                <div class="collapse submenu {{ request()->routeIs('profile.*') ? 'show' : '' }}" id="perfilMenu">
+                  <ul class="nav flex-column ms-3">
+                    <li class="nav-item">
+                      <a class="nav-link {{ request()->routeIs('profile.show') ? 'active' : '' }}" href="{{ route('profile.show') }}">
+                        <i class="ri-eye-line nav-icon me-2"></i> Ver mi perfil
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}" href="{{ route('profile.edit') }}">
+                        <i class="ri-edit-2-line nav-icon me-2"></i> Editar perfil
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </nav>
         </div>
 
         <!-- Sticky Footer -->
@@ -93,7 +113,7 @@
               <button class="btn sidebar-toggle d-md-block d-lg-block d-xl-none p-0 border-0" id="sidebar-toggle">
                 <i class="ri-menu-line fs-5"></i>
               </button>
-              <!-- Search Modal Toggle Button -->
+              <!-- Search Modal Toggle Button --><!--
               <button
                 class="btn search-toggle w-100 text-start d-flex align-items-center gap-2 border shadow-none"
                 id="search-toggle"
@@ -104,7 +124,7 @@
                 <i class="ri-search-line"></i> <span class="search-placeholder d-none d-sm-inline">Search </span>
                 <span class="search-shortcut d-none d-sm-inline">Ctrl + K</span>
               </button>
-            </div>
+            </div> -->
             <!-- Right section -->
             <div class="d-flex align-items-center gap-4">
               @include('template.partials.top-right-buttons')

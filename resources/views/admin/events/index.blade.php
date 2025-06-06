@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 
 @section('content')
 <div class="container">

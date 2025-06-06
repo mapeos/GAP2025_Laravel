@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 @section('title', 'Dashboard')
 @section('title-sidebar', 'Dashboard Admin')
 @section('title-page', 'Añadir usuario')
@@ -67,6 +67,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                        <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary ms-2">Cancelar</a>
                     </form>
                 </div>
             </div>

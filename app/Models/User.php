@@ -7,11 +7,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -22,9 +23,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'status',
         'created_by',
         'updated_by',
         'deleted_by',
+        'user_agent', // Permite asignación masiva del user-agent
     ];
 
     /**
@@ -72,6 +75,11 @@ class User extends Authenticatable
     public function deleter()
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    public function persona()
+    {
+        return $this->hasOne(Persona::class);
     }
 
 }

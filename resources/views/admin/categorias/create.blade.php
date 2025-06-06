@@ -1,4 +1,4 @@
-@extends('template.base')
+@extends('template.base-admin')
 
 @section('title', 'Crear Categoría')
 @section('title-sidebar', 'Categorías')
@@ -12,16 +12,9 @@
 @section('content')
 <div class="container">
     <h1 class="mb-4">Crear Nueva Categoría</h1>
-
-    @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
+    
+    {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
+    @include('template.partials.alerts')
 
     <form action="{{ route('admin.categorias.store') }}" method="POST">
         @csrf
