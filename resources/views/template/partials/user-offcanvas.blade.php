@@ -1,4 +1,4 @@
-   <!-- Top Section -->
+<!-- Top Section -->
    <div class="offcanvas-top">
        <div class="user-profile-header text-center">
            <div class="user-profile-cover"></div>
@@ -56,7 +56,11 @@
        
        <!-- Logout Button -->
        <div class="logout-section">
-           <a href="/pages#" class="btn-logout d-flex align-items-center justify-content-center">
+           <form id="logout-form-offcanvas" action="{{ route('logout') }}" method="POST" style="display: none;">
+               @csrf
+           </form>
+           <a href="#" class="btn-logout d-flex align-items-center justify-content-center"
+              onclick="event.preventDefault(); document.getElementById('logout-form-offcanvas').submit();">
                <i class="ri-logout-box-r-line"></i> <span>Log Out</span>
            </a>
        </div>

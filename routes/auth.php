@@ -30,6 +30,11 @@ Route::middleware('auth')->group(function () {
     Volt::route('confirm-password', 'pages.auth.confirm-password')
         ->name('password.confirm');
 
-    Volt::route('logout', 'pages.auth.logout')
-        ->name('logout');
+    // Cambia logout a POST para soporte de formulario
+    Route::post('logout', function() {
+        // Ejecuta el método logout manualmente
+        $logout = app(\App\Livewire\Actions\Logout::class);
+        $logout();
+        return redirect('/');
+    })->name('logout');
 });
