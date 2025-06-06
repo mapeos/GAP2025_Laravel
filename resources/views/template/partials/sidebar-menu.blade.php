@@ -30,6 +30,26 @@
             </ul>
         </li>
 
+        <!-- Seccion de Calendario -->
+                <li class="nav-item has-submenu parent">
+            <a class="nav-link" href="#">
+                <i class="ri-calendar-event-fill"></i></i> <span>Eventos</span> <i class="ri-arrow-right-s-line"></i>
+            </a>
+            <ul class="submenu">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('events.calendar') }}">
+                        <i class="ri-calendar-2-line"></i> <span>Calendario</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.events.create') }}">
+                        <i class="ri-calendar-schedule-line"></i> <span>Crear evento</span>
+                    </a>
+                </li>
+                <!-- A espera de agregar más enlaces de ser necesarios -->
+
+            </ul>
+        </li>
 
         <!-- Analytics -->
         <li class="nav-item">
@@ -324,7 +344,7 @@
                             <a class="nav-link" href="/pages/authentication/basic/register" target="_blank">
                                 <span>Lista</span>
                             </a>
-                        </li>  
+                        </li>
                     </ul>
                 </li>
             </ul>
