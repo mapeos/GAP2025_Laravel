@@ -174,8 +174,6 @@
                     </div>
                   </div>
                 </div>
-                {{-- Inyectar el calendario como un componente Blade o sección --}}
-                @include('admin.events.calendar-dashboard')
               </div>
 
 
