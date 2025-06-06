@@ -183,7 +183,7 @@
                           </div>
                           <div class="d-flex align-items-center">
                             <div class="legend-dot bg-warning"></div>
-                            <span class="ms-2">Otro</span> <span class="ms-auto" id="percent-otro">0%</span>
+                            <span class="ms-2">Admin</span> <span class="ms-auto" id="percent-otro">0%</span>
                           </div>
                         </div>
                       </div>

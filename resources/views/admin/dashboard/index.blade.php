@@ -18,37 +18,52 @@
 
 @push('js')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-   
-<script>
+    {{--
+      NOTA PARA EL EQUIPO:
+      Si ves un warning en Visual Studio Code como:
+      "Decorators are not valid here.javascript" en la línea de @json($leadSources),
+      es un falso error del editor. Esto ocurre porque VSCode intenta analizar el archivo como JavaScript,
+      pero realmente es Blade (PHP) y la directiva @json es válida y funciona correctamente en Laravel.
+      Puedes ignorar este warning, el código funciona bien.
+    --}}
+    <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // Lead Acquisition Chart - Visualizes lead sources distribution
-        const leadAcquisitionCtx = document.getElementById("leadSourceChart");
-        new Chart(leadAcquisitionCtx, {
-          type: "doughnut",
+        // Datos de procedencia de usuarios desde PHP
+        const leadSources = @json($leadSources);
+        const total = leadSources.Web + leadSources.API + leadSources.Otro;
+        // Evitar división por cero
+        const percentWeb = total ? Math.round((leadSources.Web / total) * 100) : 0;
+        const percentApi = total ? Math.round((leadSources.API / total) * 100) : 0;
+        const percentAdmin = total ? 100 - percentWeb - percentApi : 0;
+
+        // Actualizar los porcentajes en la UI
+        document.getElementById('percent-web').textContent = percentWeb + '%';
+        document.getElementById('percent-api').textContent = percentApi + '%';
+        document.getElementById('percent-otro').textContent = percentAdmin + '%';
+
+        // Gráfica de procedencia de usuarios
+        const ctx = document.getElementById('leadSourceChart');
+        new Chart(ctx, {
+          type: 'doughnut',
           data: {
-            labels: ["Social Media", "Organic Search", "Direct Calls", "Email Campaign"],
-            datasets: [
-              {
-                data: [25, 35, 20, 20],
-                backgroundColor: [
-                  "#0d6efd", // Primary blue
-                  "#198754", // Success green
-                  "#0dcaf0", // Info cyan
-                  "#ffc107", // Warning yellow
-                ],
-                borderWidth: 0,
-              },
-            ],
+            labels: ['Web', 'API', 'Admin'],
+            datasets: [{
+              data: [leadSources.Web, leadSources.API, leadSources.Otro],
+              backgroundColor: [
+                '#0d6efd', // Web - azul
+                '#198754', // API - verde
+                '#ffc107'  // Admin - amarillo
+              ],
+              borderWidth: 0,
+            }],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: {
-                display: false,
-              },
+              legend: { display: false },
             },
-            cutout: "70%",
+            cutout: '70%',
           },
         });
 
