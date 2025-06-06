@@ -50,6 +50,8 @@ require __DIR__ . '/auth.php';
 // --------------------------------------------
 Route::middleware(['auth'])->group(function () {
     // Rutas para tipos de evento (solo administradores)
+    Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
+        ->name('solicitud-cita.store');
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('tipos-evento', TipoEventoController::class);
     });
