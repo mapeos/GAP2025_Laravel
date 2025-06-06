@@ -22,7 +22,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'status',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -73,11 +72,6 @@ class User extends Authenticatable
     public function deleter()
     {
         return $this->belongsTo(User::class, 'deleted_by');
-    }
-
-    public function persona()
-    {
-        return $this->hasOne(Persona::class);
     }
 
 }

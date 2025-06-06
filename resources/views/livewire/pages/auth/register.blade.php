@@ -27,15 +27,16 @@ new #[Layout('layouts.guest')] class extends Component
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['status'] = 'pendiente'; // Estado pendiente
 
         event(new Registered($user = User::create($validated)));
-        // No asignar rol aquí
+        // Asignar rol Alumno por defecto
+        // TODO redirigir a la vista de perfil de usuario para completar información adicional
+        $user->assignRole('Alumno');
 
         Auth::login($user);
 
-        // Redirigir a la vista de cuenta pendiente
-        $this->redirect(route('pendiente.home', absolute: false), navigate: true);
+        // Redirigir a la vista de usuario (por ejemplo, 'alumno.home')
+        $this->redirect(route('alumno.home', absolute: false), navigate: true);
     }
 }; ?>
 

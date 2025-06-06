@@ -363,7 +363,7 @@ El sistema de gestión de usuarios permite administrar el acceso a las diferente
 ---
 
 #  Documentación de Gestión de Roles y Permisos (Spatie)
-> **ÚLTIMA ACTUALIZACIÓN**: Se ha actualizado el paquete de Spatie. Asegurate de ejectuar las migraciones y seeders necesarios para mantener la base de datos actualizada.
+
 Este documento detalla la instalación, configuración e integración del paquete [`spatie/laravel-permission`](https://spatie.be/docs/laravel-permission) para la gestión de **roles y permisos** en nuestra aplicación de gestión de academia.
 
 ---
@@ -448,27 +448,7 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ---
 
-### 1. Registro de dispositivo (primera comunicación)
-
-- Antes de que el usuario se registre o inicie sesión, la app puede enviar los datos del dispositivo a:
-  - POST `/api/device/register`
-- Esto permite identificar el dispositivo aunque aún no haya usuario asociado.
-- El backend crea (o actualiza) el registro en la tabla `devices` con `user_id = null` y guarda la fecha de primer contacto (`first_seen_at`).
-- Ejemplo de datos enviados:
-```json
-{
-  "device_id": "uuid-dispositivo",
-  "device_name": "iPhone 15",
-  "device_os": "iOS 17",
-  "device_token": "token_push",
-  "app_version": "1.0.0",
-  "extra_data": { "foo": "bar" }
-}
-```
-
----
-
-### 2. Solicitud desde la app móvil
+### 1. Solicitud desde la app móvil
 
 - El usuario se registra o inicia sesión desde la app móvil enviando sus credenciales (y opcionalmente datos del dispositivo) a:
   - POST `/api/auth/register` o `/api/auth/login`
@@ -490,18 +470,17 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ---
 
-### 3. Backend procesa la solicitud
+### 2. Backend procesa la solicitud
 
 - Valida credenciales.
 - Si son correctas:
   - Crea o actualiza el usuario.
-  - Si existe un dispositivo con ese `device_id` y sin usuario, lo asocia al usuario y guarda el primer token (`first_token`).
-  - Si no existe, crea el registro del dispositivo asociado al usuario y guarda el token.
+  - Crea o actualiza el registro del dispositivo en la tabla `devices` (asociado al usuario).
   - Genera un token de acceso (Sanctum) para el usuario.
 
 ---
 
-### 4. Respuesta del backend
+### 3. Respuesta del backend
 
 - Devuelve un JSON con:
   - Los datos del usuario.
@@ -518,7 +497,7 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ---
 
-### 5. Uso del token en la app móvil
+### 4. Uso del token en la app móvil
 
 - La app almacena el token recibido.
 - Para futuras peticiones protegidas, la app envía el token en la cabecera:
@@ -528,7 +507,7 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ---
 
-### 6. Guardar/actualizar info del dispositivo
+### 5. Guardar/actualizar info del dispositivo
 
 - Si la app quiere actualizar la info del dispositivo, puede hacer un POST a:
   - `/api/auth/device` (con el token en la cabecera)
@@ -536,7 +515,7 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ---
 
-### 7. Otros equipos pueden usar la tabla `api_tokens`
+### 6. Otros equipos pueden usar la tabla `api_tokens`
 
 - Si otro equipo necesita gestionar tokens independientes, puede usar la tabla `api_tokens` para almacenar y consultar tokens asociados a usuarios y/o dispositivos.
 
@@ -646,3 +625,244 @@ php artisan migrate
 ```bash
 php artisan db:seed --class=CategoriaSeeder
 ```
+
+---
+
+# API
+
+# Documentación de la API de Noticias
+
+Esta API permite a los desarrolladores frontend consultar noticias y categorías de manera sencilla. Todas las respuestas están en formato JSON.
+
+---
+
+## Endpoints Disponibles
+
+### 1. Listar todas las noticias
+
+- **GET** `/api/news`
+- **Descripción:** Devuelve todas las noticias con su categoría.
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": [
+        {
+          "id": 1,
+          "titulo": "Título de la noticia",
+          "contenido": "Texto de la noticia",
+          "fecha_publicacion": "2024-06-04",
+          "categoria": "General"
+        },
+        ...
+      ]
+    }
+    ```
+
+---
+
+### 2. Obtener noticia por ID
+
+- **GET** `/api/news/{id}`
+- **Parámetro de ruta:**  
+  - `id` (integer): ID de la noticia.
+- **Descripción:** Devuelve los detalles de una noticia específica.
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": {
+        "id": 1,
+        "titulo": "Título de la noticia",
+        "contenido": "Texto de la noticia",
+        "fecha_publicacion": "2024-06-04",
+        "categoria": "General"
+      }
+    }
+    ```
+- **Respuesta si no existe:**  
+  Código HTTP 404.
+
+---
+
+### 3. Listar noticias por categoría
+
+- **GET** `/api/news/category/{category}`
+- **Parámetro de ruta:**  
+  - `category` (string): Nombre de la categoría.
+- **Descripción:** Devuelve todas las noticias de una categoría.
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": [
+        {
+          "id": 2,
+          "titulo": "Otra noticia",
+          "contenido": "Texto...",
+          "fecha_publicacion": "2024-06-04",
+          "categoria": "Deportes"
+        },
+        ...
+      ]
+    }
+    ```
+- **Respuesta si no hay noticias:**  
+    ```json
+    {
+      "status": "error",
+      "message": "No news found for this category"
+    }
+    ```
+  Código HTTP 404.
+
+---
+
+### 4. Últimas noticias
+
+- **GET** `/api/news/latest/{number?}`
+- **Descripción:** Devuelve las noticias más recientes.
+**Parámetro de ruta (opcional):**  
+  - `number` (integer): Número de noticias a devolver (por defecto 5).
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": [
+        {
+          "id": 5,
+          "titulo": "Noticia reciente",
+          "contenido": "Texto...",
+          "fecha_publicacion": "2024-06-04",
+          "categoria": "General"
+        },
+        ...
+      ]
+    }
+    ```
+
+---
+
+### 5. Listar todas las categorías
+
+- **GET** `/api/categorias`
+- **Descripción:** Devuelve todas las categorías disponibles.
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": [
+        {
+          "id": 1,
+          "nombre": "General",
+          "descripcion": "Noticias generales"
+        },
+        ...
+      ]
+    }
+    ```
+
+---
+
+### 6. Listar todos los cursos
+
+- **GET** `/api/cursos`
+- **Descripción:** Devuelve todos los cursos.
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": [
+        {
+          "id": 1,
+          "titulo": "Curso de Laravel Básico",
+          "descripcion": "Aprende los fundamentos de Laravel.",
+          "fechainicio": "2025-07-01",
+          "fechafin": "2025-07-15",
+          "plazas": 30,
+          "estado": "activo",
+          "created_at": "...",
+          "updated_at": "..."
+        },
+        ...
+      ]
+    }
+    ```
+
+---
+
+### 7. Obtener un curso por ID
+
+- **GET** `/api/cursos/curso/{id}`
+- **Parámetro de ruta:**  
+  - `id` (integer): ID del curso.
+- **Descripción:** Devuelve los detalles de un curso específico.
+- **Respuesta exitosa:**
+    ```json
+    {
+      "status": "200",
+      "data": {
+        "id": 1,
+        "titulo": "Curso de Laravel Básico",
+        "descripcion": "Aprende los fundamentos de Laravel.",
+        "fechainicio": "2025-07-01",
+        "fechafin": "2025-07-15",
+        "plazas": 30,
+        "estado": "activo",
+        "created_at": "...",
+        "updated_at": "..."
+      }
+    }
+    ```
+- **Respuesta si no existe:**  
+  ```json
+  {
+    "status": "error",
+    "message": "Curso no encontrado"
+  }
+  ```
+  Código HTTP 404.
+
+---
+
+### 8. Listar cursos activos
+
+- **GET** `/api/cursos/activos`
+- **Descripción:** Devuelve todos los cursos con estado "activo".
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos activos.
+
+---
+
+### 9. Listar cursos inactivos
+
+- **GET** `/api/cursos/inactivos`
+- **Descripción:** Devuelve todos los cursos con estado "inactivos".
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos inactivos.
+
+---
+
+### 10. Listar cursos ordenados por fecha de inicio descendente
+
+- **GET** `/api/cursos/ordenados/fecha-inicio-desc`
+- **Descripción:** Devuelve todos los cursos ordenados por la columna `fechainicio` de más reciente a más antiguo.
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero ordenados.
+
+---
+
+### 11. Listar los últimos N cursos
+
+- **GET** `/api/cursos/ultimos/{number?}`
+- **Parámetro de ruta (opcional):**  
+  - `number` (integer): Número de cursos a devolver (por defecto 5).
+- **Descripción:** Devuelve los últimos cursos creados.
+- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero limitado a los últimos N cursos.
+
+---
+
+
+## Notas para el Frontend
+
+- Todas las respuestas están en formato JSON.
+- Si ocurre un error, revisa el campo `status` y el mensaje.
+- No requieren autenticación.
+---

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Persona extends Model
 {
+
     protected $fillable = [
         'nombre',
         'apellido1',
@@ -15,6 +16,7 @@ class Persona extends Model
         'direccion_id',
         'user_id',
     ];
+<<<<<<< HEAD
 
     public function user()
     {
@@ -40,4 +42,6 @@ class Persona extends Model
             ->withPivot('rol_participacion_id', 'estado')
             ->withTimestamps();
     }
+=======
+>>>>>>> 6e57177b5ebae2dadc800db475bd1472927909ca
 }

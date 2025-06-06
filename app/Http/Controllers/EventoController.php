@@ -24,7 +24,20 @@ class EventoController extends Controller
      */
     public function calendario()
     {
-        return view('admin.events.calendar');
+        $eventos = Evento::with(['tipoEvento', 'participantes'])
+            ->get()
+            ->map(function ($evento) {
+                return [
+                    'id' => $evento->id,
+                    'title' => $evento->titulo,
+                    'start' => $evento->fecha_inicio,
+                    'end' => $evento->fecha_fin,
+                    'color' => $evento->tipoEvento->color,
+                    'url' => route('events.show', $evento->id)
+                ];
+            });
+
+        return view('events.calendar', compact('eventos'));
     }
 
     /**

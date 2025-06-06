@@ -4,16 +4,13 @@
 <div class="container">
     <h1 class="mb-4">Calendario de eventos</h1>
     <div id="calendar"></div>
-</div>
-@endsection
-
-@push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
-@endpush
-
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js"></script>
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <script>
+        // Nota: Los errores del linter en este archivo son falsos positivos
+        // debido a la mezcla de sintaxis Blade (@json) con JavaScript
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -32,4 +29,5 @@
             calendar.render();
         });
     </script>
-@endpush
+</div>
+@endsection
