@@ -9,8 +9,8 @@
                </div>
            </div>
            <div class="user-profile-info">
-               <h5 class="user-name">Amara Evans</h5>
-               <p class="user-email">amara@example.com</p>
+               <h5 class="user-name">{{ auth()->user()?->name ?? '' }}</h5>
+               <p class="user-email">{{ auth()->user()?->email ?? '' }}</p>
            </div>
            <button
                type="button"

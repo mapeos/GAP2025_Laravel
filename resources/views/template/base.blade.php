@@ -73,10 +73,12 @@
         @include('template.partials.sidebar-menu')
       </div>
 
-      <!-- Sticky Footer -->
+      <!-- Sticky Footer NO SE VA A USAR-->
+       <!--s
       <div class="sidebar-footer mt-2">
         @include('template.partials.sidebar-footer-user')
       </div>
+      -->
     </aside>
 
     <!-- Main Content -->
