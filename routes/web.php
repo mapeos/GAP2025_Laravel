@@ -90,7 +90,9 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('admin/participantes')->name('admin.participantes.')->group(function () {
     Route::get('/', [ProfileController::class, 'index'])->name('index'); // Listar participantes
     Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
-    Route::get('/crear', function (){return view('admin.participantes.create'); })->name('create'); // Formulario de creación de participante
+    Route::get('/crear', function () {
+        return view('admin.participantes.create');
+    })->name('create'); // Formulario de creación de participante
 });
 
 // Rutas de INSCRIPCIONES a Cursos
@@ -126,7 +128,7 @@ Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Ad
 //--------------------------------------------
 Route::get('admin/news', [NewsController::class, 'index'])->name('admin.news.index');
 Route::get('admin/news/create', [NewsController::class, 'create'])->name('admin.news.create');
-Route::post('admin/news', [NewsController::class, 'store'])->name('admin.news.store');
+Route::post('admin/news/{id}/toggle-status', [NewsController::class, 'toggleStatus'])->name('admin.news.toggle-status');
 Route::get('admin/news/{news}', [NewsController::class, 'show'])->name('admin.news.show');
 Route::get('admin/news/{id}/edit', [NewsController::class, 'edit'])->name('admin.news.edit');
 Route::put('admin/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
@@ -138,7 +140,7 @@ Route::put('admin/news/{id}/restore', [NewsController::class, 'restore'])->name(
 //--------------------------------------------
 Route::get('admin/categorias', [CategoriasController::class, 'index'])->name('admin.categorias.index');
 Route::get('admin/categorias/create', [CategoriasController::class, 'create'])->name('admin.categorias.create');
-Route::post('admin/categorias', [CategoriasController::class, 'store'])->name('admin.categorias.store');
+Route::post('admin/categorias/{id}/toggle-status', [CategoriasController::class, 'toggleStatus'])->name('admin.categorias.toggleStatus');
 // Route::get('admin/categorias/{categoria}', [CategoriasController::class, 'show'])->name('admin.categorias.show'); opcional si quieres mostrar una categoría
 Route::get('admin/categorias/{categoria}/edit', [CategoriasController::class, 'edit'])->name('admin.categorias.edit');
 Route::put('admin/categorias/{categoria}', [CategoriasController::class, 'update'])->name('admin.categorias.update');

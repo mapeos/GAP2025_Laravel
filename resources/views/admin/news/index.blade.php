@@ -13,7 +13,12 @@
 <div class="container">
 
     {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
-    @include('template.partials.alerts')
+    <!-- @include('template.partials.alerts') -->
+
+    {{-- Este contenedor es importante para inyectar dinámicamente --}}
+    <div id="flash-messages">
+        @include('template.partials.alerts')
+    </div>
 
     <h1 class="mb-4">Listado de Noticias</h1>
 
@@ -77,25 +82,17 @@
 
                 <td>
                     <div style="display: flex; gap: 0.3rem; flex-wrap: nowrap; white-space: nowrap;">
-                        @if ($item->trashed())
+
                         <a href="{{ route('admin.news.show', $item) }}" class="btn btn-info btn-sm">Ver</a>
                         <a href="{{ route('admin.news.edit', $item) }}" class="btn btn-warning btn-sm">Editar</a>
 
-                        <form action="{{ route('admin.news.restore', $item->id) }}" method="POST" style="display:inline-flex; margin:0;">
-                            @csrf
-                            @method('PUT')
-                            <button type="submit" class="btn btn-success btn-sm">Publicar</button>
-                        </form>
-                        @else
-                        <a href="{{ route('admin.news.show', $item) }}" class="btn btn-info btn-sm">Ver</a>
-                        <a href="{{ route('admin.news.edit', $item) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <button class="btn btn-sm toggle-status-btn 
+                                 {{ $item->trashed() ? 'btn-success' : 'btn-danger' }}"
+                            data-id="{{ $item->id }}"
+                            data-action="{{ $item->trashed() ? 'restore' : 'delete' }}">
+                            {{ $item->trashed() ? 'Publicar' : 'Eliminar' }}
+                        </button>
 
-                        <form action="{{ route('admin.news.destroy', $item) }}" method="POST" style="display:inline-flex; margin:0;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar esta noticia?')">Eliminar</button>
-                        </form>
-                        @endif
                     </div>
                 </td>
             </tr>
@@ -113,3 +110,103 @@
     </div>
 </div>
 @endsection
+
+@push('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.toggle-status-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                let newsId = this.dataset.id;
+                let action = this.dataset.action;
+                let buttonEl = this;
+                let row = this.closest('tr');
+
+                if (action === 'delete' && !confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
+                    return;
+                }
+
+                fetch(`/admin/news/${newsId}/toggle-status`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status) {
+                            // Obtiene los elementos afectados
+                            let badge = row.querySelector('td:nth-child(7) .badge');
+                            let titleCell = row.querySelector('td:nth-child(1)');
+                            let icon = titleCell.querySelector('i.ri-alert-line');
+
+                            if (data.status === 'publicada') {
+                                // Cambios visuales para "publicada"
+                                badge.textContent = 'Publicada';
+                                badge.className = 'badge bg-success';
+                                buttonEl.textContent = 'Eliminar';
+                                buttonEl.className = 'btn btn-danger btn-sm toggle-status-btn';
+                                buttonEl.dataset.action = 'delete';
+                                row.classList.remove('table-danger');
+
+                                // Elimina el ícono si existe
+                                if (icon) {
+                                    icon.remove();
+                                }
+
+                                showFlashMessage('Noticia publicada correctamente', 'success');
+
+                            } else {
+                                // Cambios visuales para "eliminada"
+                                badge.textContent = 'Dada de baja';
+                                badge.className = 'badge bg-danger';
+                                buttonEl.textContent = 'Publicar';
+                                buttonEl.className = 'btn btn-success btn-sm toggle-status-btn';
+                                buttonEl.dataset.action = 'restore';
+                                row.classList.add('table-danger');
+
+                                // Añade el ícono si no existe
+                                if (!icon) {
+                                    const newIcon = document.createElement('i');
+                                    newIcon.className = 'ri-alert-line text-danger ms-1';
+                                    newIcon.title = 'Noticia eliminada';
+                                    titleCell.appendChild(newIcon);
+                                }
+
+                                showFlashMessage('Noticia eliminada correctamente', 'warning');
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        showFlashMessage('Ocurrió un error inesperado. Inténtalo de nuevo.', 'danger');
+                    });
+            });
+        });
+
+        function showFlashMessage(message, type = 'success') {
+            const icons = {
+                success: 'ri-checkbox-circle-fill text-success',
+                danger: 'ri-close-circle-fill text-danger',
+                warning: 'ri-alert-line text-warning',
+                info: 'ri-information-line text-info'
+            };
+
+            const flashContainer = document.getElementById('flash-messages');
+            if (!flashContainer) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `alert alert-${type} d-flex align-items-center alert-dismissible fade show mt-2`;
+            wrapper.setAttribute('role', 'alert');
+
+            wrapper.innerHTML = `
+            <i class="${icons[type] || icons.success} me-2 fs-4"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        `;
+
+            flashContainer.innerHTML = ''; // Limpia anteriores
+            flashContainer.appendChild(wrapper);
+        }
+    });
+</script>
+@endpush

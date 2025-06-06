@@ -29,6 +29,21 @@ class CategoriasController extends Controller
 
         return redirect()->route('admin.categorias.index')->with('success', 'Categoría creada con éxito');
     }
+    
+    public function toggleStatus($id)
+    {
+        $categoria = Categorias::withTrashed()->findOrFail($id);
+
+        if ($categoria->trashed()) {
+            $categoria->restore();
+            $status = 'activa';
+        } else {
+            $categoria->delete();
+            $status = 'eliminada';
+        }
+
+        return response()->json(['status' => $status]);
+    }
 
     public function edit($id)
     {

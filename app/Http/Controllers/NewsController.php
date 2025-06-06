@@ -99,6 +99,20 @@ class NewsController extends Controller
         return redirect()->route('admin.news.index')->with('success', 'Noticia actualizada exitosamente.');
     }
 
+    // eliminar por medio de Ajax
+    public function toggleStatus($id)
+    {
+        $news = News::withTrashed()->findOrFail($id);
+
+        if ($news->trashed()) {
+            $news->restore();
+            return response()->json(['status' => 'publicada']);
+        } else {
+            $news->delete();
+            return response()->json(['status' => 'eliminada']);
+        }
+    }
+    
     /**
      * Eliminar una noticia de la base de datos.
      */
