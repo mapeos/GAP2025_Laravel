@@ -19,6 +19,33 @@ class CursoController extends Controller
         return view('admin.cursos.create');
     }
 
+    public function edit($id)
+    {
+        $curso = Curso::findOrFail($id);
+        return view('admin.cursos.edit', compact('curso'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $curso = Curso::findOrFail($id);
+        // Validar y actualizar campos
+        $curso->update($request->all());
+        return redirect()->route('admin.cursos.index')->with('success', 'Curso actualizado correctamente.');
+    }
+
+    public function destroy($id)
+    {
+        $curso = Curso::findOrFail($id);
+        $curso->delete();
+        return redirect()->route('admin.cursos.index')->with('success', 'Curso eliminado correctamente.');
+    }
+
+    public function listarCursosActivos()
+    {
+        $cursos = Curso::where('estado', 'activo')->get(); // Obtiene solo los cursos activos
+        return view('admin.inscripciones.cursos_activos', compact('cursos')); // Retorna la vista con los cursos
+    }
+
     public function store(Request $request)
     {
         $request->validate([

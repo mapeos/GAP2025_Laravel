@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Curso extends Model
 {
-        protected $fillable = [
+    protected $fillable = [
         'titulo',
         'descripcion',
         'fechaInicio',
@@ -14,4 +14,13 @@ class Curso extends Model
         'plazas',
         'estado',
     ];
+
+    // Relación many-to-many con Persona
+    // Relación many-to-many con Persona usando la tabla intermedia 'participacion'
+public function personas()
+{
+    return $this->belongsToMany(Persona::class, 'participacion', 'curso_id', 'persona_id')
+                ->withPivot('rol_participacion_id', 'estado')
+                ->withTimestamps();
+}
 }

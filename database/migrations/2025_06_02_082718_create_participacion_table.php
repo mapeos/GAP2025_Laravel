@@ -12,17 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('participacion', function (Blueprint $table) {
-           $table->unsignedBigInteger('curso_id');
-    $table->unsignedBigInteger('persona_id');
-    $table->unsignedBigInteger('rol_participacion_id'); 
-    $table->string('estado')->default('pendiente');
-    $table->timestamps();
+            $table->unsignedBigInteger('curso_id');
+            $table->unsignedBigInteger('persona_id');
+            $table->unsignedBigInteger('rol_participacion_id');
+            $table->string('estado')->default('pendiente');
+            $table->timestamps();
 
-    $table->primary(['curso_id', 'persona_id']);
+            $table->primary(['curso_id', 'persona_id']);
 
-    $table->foreign('curso_id')->references('id')->on('cursos')->onDelete('cascade');
-    $table->foreign('persona_id')->references('id')->on('personas')->onDelete('cascade');
-    $table->foreign('rol_participacion_id')->references('id')->on('roles_participacion')->onDelete('restrict'); 
+            $table->foreign('curso_id')->references('id')->on('cursos')->onDelete('cascade');
+            $table->foreign('persona_id')->references('id')->on('personas')->onDelete('cascade');
+            $table->foreign('rol_participacion_id')->references('id')->on('roles_participacion')->onDelete('restrict');
         });
     }
 

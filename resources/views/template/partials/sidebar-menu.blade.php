@@ -168,7 +168,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.cursos.create') }}">
                         <span>Crear Cursos</span>
-                     </a>
+                    </a>
                 </li>
                 <!-- <li class="nav-item">
                     <a class="nav-link" href="/pages/forms/switches"> <span>Switches</span> </a>
@@ -191,16 +191,10 @@
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/tables/basic"> <span>Listar Participantes</span> </a>
+                    <a class="nav-link" href="{{ route('admin.participantes.index') }}"> <span>Listar Participantes</span> </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/tables/enhanced"> <span>Crear Participantes</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/tables/advanced"> <span>Advanced Tables</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/tables/datatable"> <span>Datatable</span> </a>
+                    <a class="nav-link" href="{{ route('admin.participantes.create') }}"> <span>Crear Participantes</span> </a>
                 </li>
             </ul>
         </li>
@@ -211,7 +205,7 @@
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/form-controls"> <span>Inscribir</span> </a>
+                    <a class="nav-link" href="{{ route('admin.inscripciones.cursos.activos') }}"> <span>Inscribir</span> </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/pages/forms/select"> <span>Bajas</span> </a>

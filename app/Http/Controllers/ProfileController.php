@@ -9,19 +9,30 @@ use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
+    public function index()
+    {
+        $personas = \App\Models\Persona::all(); // Obtiene todas las personas
+        return view('admin.participantes.index', compact('personas')); // Retorna la vista con las personas
+    }
+
     public function show()
     {
         $user = Auth::user();
         $persona = $user->persona ?? new Persona();
-        
+
         return view('profile.show', compact('user', 'persona'));
     }
+
+    public function showPersona(Persona $persona)
+{
+    return view('admin.participantes.show', compact('persona'));
+}
 
     public function edit()
     {
         $user = Auth::user();
         $persona = $user->persona ?? new Persona();
-        
+
         return view('profile.edit', compact('user', 'persona'));
     }
 
@@ -45,11 +56,11 @@ class ProfileController extends Controller
 
         $user = Auth::user();
         $persona = $user->persona ?? new \App\Models\Persona();
-        $persona->fill($request->only(['nombre','apellido1','apellido2','dni','tfno']));
+        $persona->fill($request->only(['nombre', 'apellido1', 'apellido2', 'dni', 'tfno']));
         $persona->user_id = $user->id;
 
         // Dirección
-        $direccionData = $request->only(['calle','numero','piso','cp','ciudad','provincia','pais']);
+        $direccionData = $request->only(['calle', 'numero', 'piso', 'cp', 'ciudad', 'provincia', 'pais']);
         if ($persona->direccion) {
             $persona->direccion->update($direccionData);
             $direccion = $persona->direccion;
