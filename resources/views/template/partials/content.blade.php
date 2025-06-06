@@ -49,25 +49,9 @@
                     <div class="card h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                          <div><h5 class="card-title mb-0">Revenue Performance</h5></div>
-                          <div class="d-flex gap-1 gap-md-3">
-                            <div class="sales-metric">
-                              <h3 class="mb-0">8.5%</h3>
-                              <p class="text-muted mb-0">Conversion Rate</p>
-                            </div>
-                            <div class="sales-metric">
-                              <h3 class="mb-0">$1,200</h3>
-                              <p class="text-muted mb-0">Avg. Transaction</p>
-                            </div>
-                            <div class="sales-metric">
-                              <h3 class="mb-0">$50K</h3>
-                              <p class="text-muted mb-0">Monthly Target</p>
-                            </div>
-                          </div>
+                          <div><h5 class="card-title mb-0">Calendario de eventos</h5></div>
                         </div>
-                        <div class="chart-container" style="position: relative; height: 300px">
-                          <canvas id="salesPerformanceChart"></canvas>
-                        </div>
+                        @include('admin.events.calendar-dashboard')
                       </div>
                     </div>
                   </div>
@@ -190,6 +174,8 @@
                     </div>
                   </div>
                 </div>
+                {{-- Inyectar el calendario como un componente Blade o sección --}}
+                @include('admin.events.calendar-dashboard')
               </div>
 
 
