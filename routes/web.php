@@ -94,12 +94,11 @@ Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.particip
     })->name('create'); // Formulario de creación de participante
     Route::post('/', [ProfileController::class, 'store'])->name('store'); // Guardar participante
     Route::get('/{persona}', [ProfileController::class, 'showPersona'])->name('show'); // Ver detalles de un participante
-<<<<<<< HEAD
+
     Route::get('/crear', function () {
         return view('admin.participantes.create');
     })->name('create'); // Formulario de creación de participante
-=======
->>>>>>> 77377a05b9a308c736020b16aea44db89286a698
+
 });
 
 // Rutas de INSCRIPCIONES a Cursos
@@ -176,7 +175,7 @@ Route::prefix('eventos')->name('events.')->middleware(['auth'])->group(function 
     Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
     Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
     Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
-    
+
     // Rutas específicas para alumnos (recordatorios personales)
     Route::middleware(['role:Alumno'])->group(function () {
         Route::get('/reminders/create', [EventoController::class, 'createReminder'])->name('reminders.create');
