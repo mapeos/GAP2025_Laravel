@@ -58,7 +58,7 @@ class EventoController extends Controller
                     'end' => $evento->fecha_fin,
                     'color' => $evento->tipoEvento->color,
                     'descripcion' => $evento->descripcion,
-                    'url' => route('admin.events.show', $evento->id)
+                    'url' => route('events.show', $evento->id)
                 ];
             });
 
