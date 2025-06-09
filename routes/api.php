@@ -45,10 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']); // Logout y revocación de token
     Route::get('auth/me', [AuthController::class, 'me']);          // Info del usuario autenticado
     Route::post('auth/device', [AuthController::class, 'storeDevice']); // Guardar/actualizar info del dispositivo móvil
-    Route::apiResource('eventos', EventoController::class);        
-    Route::apiResource('tipos-evento', TipoEventoController::class); 
+    Route::apiResource('eventos', EventoController::class);
+    Route::apiResource('tipos-evento', TipoEventoController::class);
     Route::apiResource('evento-participante', EventoParticipanteController::class);
-
 });
 
 // Rutas para administración de usuarios pendientes (solo admin)
@@ -61,10 +60,13 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 
 Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
     Route::post('/', [CursoController::class, 'store'])->name('store'); // Crear un curso
-    Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
+
     Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
     Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
     Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
-    Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
-    Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
+
 });
+
+Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
+Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
+Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
