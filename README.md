@@ -64,13 +64,16 @@ Está disponible una página de ejemplo en la ruta: `admin.dashboard.test`
 ```
 
 # Asistente AI para citas en calendario
-Ejecutar la migración: `php artisan migrate` 
+
+Ejecutar la migración: `php artisan migrate`
 Se ha creado un comando `php artisan appointments:suggest 1 2 "2025-07-01"` para verificar si se genera una fecha mediate IA
 
 ## Motor de IA
-Se utiliza un sistema basado en LLM basado en *Ollama + Mistral 7B*
-- Ollama es una plataforma de LLMs que se ejecuta en local
-- Mistral 7B es un modelo especializado en instrucciones, entiende cosas como "sugiereme un hueco en la agenda"
+
+Se utiliza un sistema basado en LLM basado en _Ollama + Mistral 7B_
+
+-   Ollama es una plataforma de LLMs que se ejecuta en local
+-   Mistral 7B es un modelo especializado en instrucciones, entiende cosas como "sugiereme un hueco en la agenda"
 
 ### Guía de Implementación Local de Ollama
 
@@ -79,304 +82,340 @@ Para implementar Ollama en tu versión local del proyecto, sigue estos pasos seg
 #### Opciones de Implementación
 
 ##### A. Implementación con GPU NVIDIA (Máximo Rendimiento)
+
 Si tienes una GPU NVIDIA, puedes usar esta configuración optimizada:
 
 1. **Crear el Dockerfile.ai.gpu**
    Crea un archivo `Dockerfile.ai.gpu` en la raíz del proyecto con este contenido:
-   ```dockerfile
-   FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
-   # Install system dependencies
-   RUN apt-get update && apt-get install -y \
-       python3 \
-       python3-pip \
-       curl \
-       && rm -rf /var/lib/apt/lists/*
+    ```dockerfile
+    FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
-   # Install Ollama
-   RUN curl -fsSL https://ollama.com/install.sh | sh
+    # Install system dependencies
+    RUN apt-get update && apt-get install -y \
+        python3 \
+        python3-pip \
+        curl \
+        && rm -rf /var/lib/apt/lists/*
 
-   # Set working directory
-   WORKDIR /app
+    # Install Ollama
+    RUN curl -fsSL https://ollama.com/install.sh | sh
 
-   # Expose Ollama port
-   EXPOSE 11434
+    # Set working directory
+    WORKDIR /app
 
-   # Start Ollama with GPU support
-   CMD ["ollama", "serve"]
-   ```
+    # Expose Ollama port
+    EXPOSE 11434
+
+    # Start Ollama with GPU support
+    CMD ["ollama", "serve"]
+    ```
 
 2. **Modificar docker-compose.yml**
    Usa esta configuración para el servicio AI:
-   ```yaml
-   ai:
-     build:
-       context: ./
-       dockerfile: Dockerfile.ai.gpu
-     container_name: gap2025_laravel-ai
-     restart: unless-stopped
-     ports:
-       - "11434:11434"
-     volumes:
-       - ollama_data:/root/.ollama
-     networks:
-       - alumnos-gap
-     deploy:
-       resources:
-         reservations:
-           devices:
-             - driver: nvidia
-               count: 1
-               capabilities: [gpu]
-   ```
+    ```yaml
+    ai:
+        build:
+            context: ./
+            dockerfile: Dockerfile.ai.gpu
+        container_name: gap2025_laravel-ai
+        restart: unless-stopped
+        ports:
+            - "11434:11434"
+        volumes:
+            - ollama_data:/root/.ollama
+        networks:
+            - alumnos-gap
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+    ```
 
 ##### B. Implementación Estándar (CPU o GPU Básica)
+
 Si no tienes GPU NVIDIA o prefieres una configuración más simple:
 
 1. **Crear el Dockerfile.ai**
    Crea un archivo `Dockerfile.ai` en la raíz del proyecto con este contenido:
-   ```dockerfile
-   FROM ubuntu:22.04
 
-   # Install system dependencies
-   RUN apt-get update && apt-get install -y \
-       python3 \
-       python3-pip \
-       curl \
-       && rm -rf /var/lib/apt/lists/*
+    ```dockerfile
+    FROM ubuntu:22.04
 
-   # Install Ollama
-   RUN curl -fsSL https://ollama.com/install.sh | sh
+    # Install system dependencies
+    RUN apt-get update && apt-get install -y \
+        python3 \
+        python3-pip \
+        curl \
+        && rm -rf /var/lib/apt/lists/*
 
-   # Set working directory
-   WORKDIR /app
+    # Install Ollama
+    RUN curl -fsSL https://ollama.com/install.sh | sh
 
-   # Expose Ollama port
-   EXPOSE 11434
+    # Set working directory
+    WORKDIR /app
 
-   # Start Ollama
-   CMD ["ollama", "serve"]
-   ```
+    # Expose Ollama port
+    EXPOSE 11434
+
+    # Start Ollama
+    CMD ["ollama", "serve"]
+    ```
 
 2. **Modificar docker-compose.yml**
    Usa esta configuración para el servicio AI:
-   ```yaml
-   ai:
-     build:
-       context: ./
-       dockerfile: Dockerfile.ai
-     container_name: gap2025_laravel-ai
-     restart: unless-stopped
-     ports:
-       - "11434:11434"
-     volumes:
-       - ollama_data:/root/.ollama
-     networks:
-       - alumnos-gap
-   ```
+    ```yaml
+    ai:
+        build:
+            context: ./
+            dockerfile: Dockerfile.ai
+        container_name: gap2025_laravel-ai
+        restart: unless-stopped
+        ports:
+            - "11434:11434"
+        volumes:
+            - ollama_data:/root/.ollama
+        networks:
+            - alumnos-gap
+    ```
 
 ##### C. Implementación en Linux (Sin GPU NVIDIA)
 
-
 1. **Configurar el servicio**
-   - Usa el mismo `Dockerfile.ai` y configuración de `docker-compose.yml` que en la implementación estándar.
-   - No necesitas configuración adicional para GPU.
+
+    - Usa el mismo `Dockerfile.ai` y configuración de `docker-compose.yml` que en la implementación estándar.
+    - No necesitas configuración adicional para GPU.
 
 2. **Consideraciones de rendimiento**
-   - El modelo funcionará más lento que con GPU NVIDIA
-   - Se recomienda tener al menos 8GB de RAM disponible
-   - Puedes ajustar el uso de memoria en el contenedor añadiendo estas líneas al servicio `ai` en `docker-compose.yml`:
-     ```yaml
-     deploy:
-       resources:
-         limits:
-           memory: 4G
-     ```
+
+    - El modelo funcionará más lento que con GPU NVIDIA
+    - Se recomienda tener al menos 8GB de RAM disponible
+    - Puedes ajustar el uso de memoria en el contenedor añadiendo estas líneas al servicio `ai` en `docker-compose.yml`:
+        ```yaml
+        deploy:
+            resources:
+                limits:
+                    memory: 4G
+        ```
 
 3. **Iniciar el servicio**
-   ```bash
-   docker-compose up -d ai
-   ```
+
+    ```bash
+    docker-compose up -d ai
+    ```
 
 4. **Cargar el modelo Mistral**
-   ```bash
-   docker exec -it gap2025_laravel-ai ollama pull mistral
-   ```
+
+    ```bash
+    docker exec -it gap2025_laravel-ai ollama pull mistral
+    ```
 
 5. **Verificar la instalación**
-   ```bash
-   docker exec -it gap2025_laravel-ai ollama list
-   ```
+    ```bash
+    docker exec -it gap2025_laravel-ai ollama list
+    ```
 
 **Nota**: La versión con GPU NVIDIA ofrecerá un rendimiento significativamente mejor para el procesamiento de inferencias, pero requiere:
-- GPU NVIDIA compatible
-- Drivers NVIDIA actualizados
-- NVIDIA Container Toolkit instalado
+
+-   GPU NVIDIA compatible
+-   Drivers NVIDIA actualizados
+-   NVIDIA Container Toolkit instalado
 
 3. **Configurar variables de entorno**
    Añade estas variables a tu archivo `.env`:
-   ```
-   OLLAMA_HOST=ai
-   OLLAMA_PORT=11434
-   ```
+
+    ```
+    OLLAMA_HOST=ai
+    OLLAMA_PORT=11434
+    ```
 
 4. **Iniciar el servicio**
-   ```bash
-   docker-compose up -d ai
-   ```
+
+    ```bash
+    docker-compose up -d ai
+    ```
 
 5. **Cargar el modelo Mistral**
-   ```bash
-   docker exec -it gap2025_laravel-ai ollama pull mistral
-   ```
+
+    ```bash
+    docker exec -it gap2025_laravel-ai ollama pull mistral
+    ```
 
 6. **Verificar la instalación**
-   ```bash
-   docker exec -it gap2025_laravel-ai ollama list
-   ```
+
+    ```bash
+    docker exec -it gap2025_laravel-ai ollama list
+    ```
 
 7. **Interactuar con la IA**
    Puedes interactuar directamente con Mistral usando el comando:
-   ```bash
-   docker exec -it gap2025_laravel-ai ollama run mistral
-   ```
-   Esto abrirá una consola interactiva donde puedes hacer preguntas directamente a la IA.
 
-   Si necesitas reiniciar el servicio de IA por algún motivo, puedes usar:
-   ```bash
-   docker-compose restart ai
-   ```
+    ```bash
+    docker exec -it gap2025_laravel-ai ollama run mistral
+    ```
 
-   Si has modificado el Dockerfile.ai y necesitas reconstruir solo el servicio de IA:
-   ```bash
-   docker-compose up -d --build ai
-   ```
+    Esto abrirá una consola interactiva donde puedes hacer preguntas directamente a la IA.
+
+    Si necesitas reiniciar el servicio de IA por algún motivo, puedes usar:
+
+    ```bash
+    docker-compose restart ai
+    ```
+
+    Si has modificado el Dockerfile.ai y necesitas reconstruir solo el servicio de IA:
+
+    ```bash
+    docker-compose up -d --build ai
+    ```
 
 Más adelante se podría incluir:
-- Phi-2 (Microsoft): modelo pequeño y muy preciso.
-- Gemma 2B Instruct (Google): excelente para correr en CPU, más pequeño que Mistral.
-- TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
+
+-   Phi-2 (Microsoft): modelo pequeño y muy preciso.
+-   Gemma 2B Instruct (Google): excelente para correr en CPU, más pequeño que Mistral.
+-   TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
 
 Para probar el sistema se puede utilizar el comando:
+
 ```
-php artisan appointments:suggest-ai 1 2 5 "2025-07-01"   
+php artisan appointments:suggest-ai 1 2 5 "2025-07-01"
 ```
 
 # Agenda/Calendario (Arnaldo y Víctor)
 
 ## 1. Introducción
+
 El módulo de Agenda/Calendario permite gestionar y visualizar todos los eventos y actividades del curso. Este sistema está diseñado para facilitar la organización de clases, reuniones, entregas y otros eventos importantes, permitiendo una gestión eficiente del tiempo y los recursos.
 
 ---
 
 ## 2. Estructura de la Base de Datos
+
 El sistema está compuesto por tres tablas principales que permiten una gestión flexible de eventos:
 
 ### Tabla `tipos_evento`
-- Define las diferentes categorías de eventos en el calendario
-- Campos principales:
-  - `nombre`: Tipo de evento (ej: Clase, Entrega, Reunión)
-  - `color`: Color para identificación visual en el calendario
-  - `status`: Estado activo/inactivo del tipo de evento
+
+-   Define las diferentes categorías de eventos en el calendario
+-   Campos principales:
+    -   `nombre`: Tipo de evento (ej: Clase, Entrega, Reunión)
+    -   `color`: Color para identificación visual en el calendario
+    -   `status`: Estado activo/inactivo del tipo de evento
 
 ### Tabla `eventos`
-- Almacena la información de cada evento en el calendario
-- Campos principales:
-  - `titulo`: Título del evento
-  - `descripcion`: Descripción detallada
-  - `fecha_inicio`: Fecha y hora de inicio
-  - `fecha_fin`: Fecha y hora de finalización
-  - `ubicacion`: Lugar del evento (para eventos presenciales)
-  - `url_virtual`: Enlace para eventos virtuales
-  - `tipo_evento_id`: Categoría del evento
-  - `creado_por`: Usuario que crea el evento
-  - `status`: Estado activo/inactivo
+
+-   Almacena la información de cada evento en el calendario
+-   Campos principales:
+    -   `titulo`: Título del evento
+    -   `descripcion`: Descripción detallada
+    -   `fecha_inicio`: Fecha y hora de inicio
+    -   `fecha_fin`: Fecha y hora de finalización
+    -   `ubicacion`: Lugar del evento (para eventos presenciales)
+    -   `url_virtual`: Enlace para eventos virtuales
+    -   `tipo_evento_id`: Categoría del evento
+    -   `creado_por`: Usuario que crea el evento
+    -   `status`: Estado activo/inactivo
 
 ### Tabla `evento_participante`
-- Gestiona la participación de usuarios en los eventos
-- Campos principales:
-  - `evento_id`: ID del evento
-  - `user_id`: ID del participante
-  - `rol`: Rol en el evento (ej: Profesor, Alumno, Invitado)
-  - `estado_asistencia`: Estado de asistencia
-  - `notas`: Notas adicionales
-  - `status`: Estado activo/inactivo
+
+-   Gestiona la participación de usuarios en los eventos
+-   Campos principales:
+    -   `evento_id`: ID del evento
+    -   `user_id`: ID del participante
+    -   `rol`: Rol en el evento (ej: Profesor, Alumno, Invitado)
+    -   `estado_asistencia`: Estado de asistencia
+    -   `notas`: Notas adicionales
+    -   `status`: Estado activo/inactivo
 
 ---
 
 ## 3. Modelos Implementados
+
 Se han desarrollado tres modelos principales que gestionan las relaciones entre eventos y usuarios:
 
 ### Modelo `TipoEvento`
-- Gestiona las categorías de eventos
-- Relación uno a muchos con `Evento`
-- Permite filtrar y organizar eventos por tipo
+
+-   Gestiona las categorías de eventos
+-   Relación uno a muchos con `Evento`
+-   Permite filtrar y organizar eventos por tipo
 
 ### Modelo `Evento`
-- Gestiona la información principal de los eventos
-- Relaciones:
-  - Pertenece a un `TipoEvento`
-  - Pertenece a un `User` (creador)
-  - Tiene muchos `User` a través de `EventoParticipante`
+
+-   Gestiona la información principal de los eventos
+-   Relaciones:
+    -   Pertenece a un `TipoEvento`
+    -   Pertenece a un `User` (creador)
+    -   Tiene muchos `User` a través de `EventoParticipante`
 
 ### Modelo `EventoParticipante`
-- Gestiona la participación en eventos
-- Relación muchos a muchos entre `Evento` y `User`
-- Permite seguimiento de asistencia y roles
+
+-   Gestiona la participación en eventos
+-   Relación muchos a muchos entre `Evento` y `User`
+-   Permite seguimiento de asistencia y roles
 
 ---
 
 ## 4. Características Implementadas
-- Sistema de categorización de eventos con colores
-- Soporte para eventos presenciales y virtuales
-- Gestión de participantes y roles
-- Seguimiento de asistencia
-- Soft deletes para mantener historial
-- Timestamps automáticos
-- Relaciones Eloquent optimizadas
-- Recordatorios personales para alumnos
-- API RESTful para aplicación móvil
+
+-   Sistema de categorización de eventos con colores
+-   Soporte para eventos presenciales y virtuales
+-   Gestión de participantes y roles
+-   Seguimiento de asistencia
+-   Soft deletes para mantener historial
+-   Timestamps automáticos
+-   Relaciones Eloquent optimizadas
+-   Recordatorios personales para alumnos
+-   API RESTful para aplicación móvil
 
 ---
 
 ## 5. Rutas y Permisos
-### Rutas Web
-- **Administradores y Profesores**:
-  - Gestión completa de eventos (`/admin/events/*`)
-  - Gestión de tipos de evento (`/admin/events/types/*`)
-  - Gestión de participantes (`/admin/events/{evento}/participants/*`)
 
-- **Alumnos**:
-  - Visualización de calendario (`/events/calendar`)
-  - Gestión de recordatorios personales (`/events/reminders/*`)
+### Rutas Web
+
+-   **Administradores y Profesores**:
+
+    -   Gestión completa de eventos (`/admin/events/*`)
+    -   Gestión de tipos de evento (`/admin/events/types/*`)
+    -   Gestión de participantes (`/admin/events/{evento}/participants/*`)
+
+-   **Alumnos**:
+    -   Visualización de calendario (`/events/calendar`)
+    -   Gestión de recordatorios personales (`/events/reminders/*`)
 
 ### Rutas API (App Móvil)
-- Endpoints protegidos con Sanctum
-- Recursos API para eventos, tipos y participantes
-- Autenticación mediante tokens
+
+-   Endpoints protegidos con Sanctum
+-   Recursos API para eventos, tipos y participantes
+-   Autenticación mediante tokens
 
 ---
 
 ## 6. Próximos Pasos
-- Desarrollo de la interfaz de calendario
-- Implementación de vistas para:
 
-  - Lista de eventos
-- Sistema de notificaciones para eventos
-- Filtros por tipo de evento
-- Búsqueda de eventos
-- Exportación de calendario
-- Integración con calendarios externos
+-   Desarrollo de la interfaz de calendario
+-   Implementación de vistas para:
+
+    -   Lista de eventos
+
+-   Sistema de notificaciones para eventos
+-   Filtros por tipo de evento
+-   Búsqueda de eventos
+-   Exportación de calendario
+-   Integración con calendarios externos
 
 ## 7. Documentación de la API
 
 ### Autenticación
-- Todas las rutas requieren autenticación mediante Sanctum
-- Token de acceso requerido en el header: `Authorization: Bearer {token}`
+
+-   Todas las rutas requieren autenticación mediante Sanctum
+-   Token de acceso requerido en el header: `Authorization: Bearer {token}`
 
 ### Endpoints Disponibles
 
 #### Eventos
+
 ```
 GET /api/eventos
 - Lista todos los eventos
@@ -401,6 +440,7 @@ DELETE /api/eventos/{id}
 ```
 
 #### Tipos de Evento
+
 ```
 GET /api/tipos-evento
 - Lista todos los tipos de evento
@@ -419,6 +459,7 @@ DELETE /api/tipos-evento/{id}
 ```
 
 #### Participantes
+
 ```
 GET /api/evento-participante
 - Lista participantes de eventos
@@ -439,6 +480,7 @@ DELETE /api/evento-participante/{id}
 ### Formatos de Respuesta
 
 #### Evento
+
 ```json
 {
     "id": 1,
@@ -467,6 +509,7 @@ DELETE /api/evento-participante/{id}
 ```
 
 #### Tipo de Evento
+
 ```json
 {
     "id": 1,
@@ -479,6 +522,7 @@ DELETE /api/evento-participante/{id}
 ```
 
 #### Participante
+
 ```json
 {
     "id": 1,
@@ -494,62 +538,69 @@ DELETE /api/evento-participante/{id}
 ```
 
 ### Código de Estado
-- 200: Éxito
-- 201: Creado
-- 400: Error de validación
-- 401: No autenticado
-- 403: No autorizado
-- 404: No encontrado
-- 500: Error del servidor
+
+-   200: Éxito
+-   201: Creado
+-   400: Error de validación
+-   401: No autenticado
+-   403: No autorizado
+-   404: No encontrado
+-   500: Error del servidor
 
 ### Próximos Endpoints a Implementar
-- GET /api/eventos/usuario/{id} - Eventos de un usuario específico
-- GET /api/eventos/recordatorios - Recordatorios personales
-- PUT /api/evento-participante/{id}/asistencia - Actualizar asistencia
-- GET /api/eventos/tipo/{id} - Eventos por tipo
-- GET /api/eventos/fecha/{fecha} - Eventos por fecha
+
+-   GET /api/eventos/usuario/{id} - Eventos de un usuario específico
+-   GET /api/eventos/recordatorios - Recordatorios personales
+-   PUT /api/evento-participante/{id}/asistencia - Actualizar asistencia
+-   GET /api/eventos/tipo/{id} - Eventos por tipo
+-   GET /api/eventos/fecha/{fecha} - Eventos por fecha
 
 # Gestión de usuarios y roles (Miguel)
 
 ## 1. Introducción
+
 El sistema de gestión de usuarios permite administrar el acceso a las diferentes secciones de la aplicación web, cada usuario visualizará únicamente las funcionalidades correspondientes a su rol: **Administrador**, **Editor**, **Profesor** o **Alumno**. Esta gestión se implementa utilizando el sistema de autenticación y autorización de Laravel.
 
 ---
 
-#  Documentación de Gestión de Roles y Permisos (Spatie)
+# Documentación de Gestión de Roles y Permisos (Spatie)
 
 Este documento detalla la instalación, configuración e integración del paquete [`spatie/laravel-permission`](https://spatie.be/docs/laravel-permission) para la gestión de **roles y permisos** en nuestra aplicación de gestión de academia.
 
 ---
 
-
-##  Instalación del paquete
+## Instalación del paquete
 
 1. Instalar el paquete:
 
 ```bash
 composer require spatie/laravel-permission
 ```
+
 2. Publicar archivos de configuración y migraciones:
 
 ```bash
 php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
 ```
+
 3. Ejecutar las migraciones para crear las tablas necesarias:
 
 ```bash
 php artisan migrate
 ```
+
 4. Ejecución de Seeders
 
 Para poblar la base de datos con datos de prueba, puedes ejecutar los siguientes comandos:
 
 ## Ejecutar todos los seeders en orden
+
 ```bash
 php artisan db:seed
 ```
 
 Este comando ejecutará todos los seeders en el siguiente orden:
+
 1. DatabaseSeeder (base)
 2. RolesAndUsersSeeder (roles y usuarios de prueba)
 3. TipoEventoSeeder (categorías de eventos)
@@ -558,19 +609,22 @@ Este comando ejecutará todos los seeders en el siguiente orden:
 6. CategoriaSeeder (categorías de noticias)
 
 ## Ejecutar seeders específicos
+
 Si necesitas ejecutar solo ciertos seeders, puedes usar:
+
 ```bash
 php artisan db:seed --class=NombreDelSeeder
 ```
 
 Por ejemplo:
+
 ```bash
 php artisan db:seed --class=RolesAndUsersSeeder
 ```
 
- Esta migracion:
+Esta migracion:
 
-    - Crea las tablas roles y permissions y sus relaciones 
+    - Crea las tablas roles y permissions y sus relaciones
 
     - Crea los roles: Administrador, Editor, Profesor, Alumno
 
@@ -590,9 +644,9 @@ php artisan db:seed --class=RolesAndUsersSeeder
 Laravel Breeze con Livewire usa autenticación basada en sesión para las vistas web.
 Pero para la app móvil, necesitamos tokens, y para eso debemos:
 
-- Habilitar Sanctum como sistema de autenticación solo para la API
+-   Habilitar Sanctum como sistema de autenticación solo para la API
 
-- Esto implica:
+-   Esto implica:
 
     Registrar los endpoints /api/login, /api/register, etc.
 
@@ -617,6 +671,7 @@ php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 ```bash
 php artisan migrate
 ```
+
 ---
 
 # Flujo de autenticación y registro para la app móvil
@@ -627,21 +682,22 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ### 1. Solicitud desde la app móvil
 
-- El usuario se registra o inicia sesión desde la app móvil enviando sus credenciales (y opcionalmente datos del dispositivo) a:
-  - POST `/api/auth/register` o `/api/auth/login`
+-   El usuario se registra o inicia sesión desde la app móvil enviando sus credenciales (y opcionalmente datos del dispositivo) a:
+    -   POST `/api/auth/register` o `/api/auth/login`
 
 #### Datos enviados:
+
 ```json
 {
-  "name": "Nombre",         // solo en registro
-  "email": "usuario@dom.com",
-  "password": "secreto",
-  "device_id": "uuid-dispositivo",
-  "device_name": "iPhone 15",
-  "device_os": "iOS 17",
-  "device_token": "token_push",
-  "app_version": "1.0.0",
-  "extra_data": { "foo": "bar" }
+    "name": "Nombre", // solo en registro
+    "email": "usuario@dom.com",
+    "password": "secreto",
+    "device_id": "uuid-dispositivo",
+    "device_name": "iPhone 15",
+    "device_os": "iOS 17",
+    "device_token": "token_push",
+    "app_version": "1.0.0",
+    "extra_data": { "foo": "bar" }
 }
 ```
 
@@ -649,20 +705,20 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ### 2. Backend procesa la solicitud
 
-- Valida credenciales.
-- Si son correctas:
-  - Crea o actualiza el usuario.
-  - Crea o actualiza el registro del dispositivo en la tabla `devices` (asociado al usuario).
-  - Genera un token de acceso (Sanctum) para el usuario.
+-   Valida credenciales.
+-   Si son correctas:
+    -   Crea o actualiza el usuario.
+    -   Crea o actualiza el registro del dispositivo en la tabla `devices` (asociado al usuario).
+    -   Genera un token de acceso (Sanctum) para el usuario.
 
 ---
 
 ### 3. Respuesta del backend
 
-- Devuelve un JSON con:
-  - Los datos del usuario.
-  - El token de acceso para autenticación API.
-  - (Opcional) Los datos del dispositivo.
+-   Devuelve un JSON con:
+    -   Los datos del usuario.
+    -   El token de acceso para autenticación API.
+    -   (Opcional) Los datos del dispositivo.
 
 ```json
 {
@@ -676,25 +732,25 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ### 4. Uso del token en la app móvil
 
-- La app almacena el token recibido.
-- Para futuras peticiones protegidas, la app envía el token en la cabecera:
-  ```
-  Authorization: Bearer <token>
-  ```
+-   La app almacena el token recibido.
+-   Para futuras peticiones protegidas, la app envía el token en la cabecera:
+    ```
+    Authorization: Bearer <token>
+    ```
 
 ---
 
 ### 5. Guardar/actualizar info del dispositivo
 
-- Si la app quiere actualizar la info del dispositivo, puede hacer un POST a:
-  - `/api/auth/device` (con el token en la cabecera)
-- El backend actualiza o crea el registro en la tabla `devices`.
+-   Si la app quiere actualizar la info del dispositivo, puede hacer un POST a:
+    -   `/api/auth/device` (con el token en la cabecera)
+-   El backend actualiza o crea el registro en la tabla `devices`.
 
 ---
 
 ### 6. Otros equipos pueden usar la tabla `api_tokens`
 
-- Si otro equipo necesita gestionar tokens independientes, puede usar la tabla `api_tokens` para almacenar y consultar tokens asociados a usuarios y/o dispositivos.
+-   Si otro equipo necesita gestionar tokens independientes, puede usar la tabla `api_tokens` para almacenar y consultar tokens asociados a usuarios y/o dispositivos.
 
 ---
 
@@ -702,16 +758,16 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ## Parte de Backoffice
 
-- **Gestión CRUD de noticias**
-  - Posibilidad de crear, editar, eliminar y visualizar noticias.
-  - Verificación para evitar la creación de duplicados.
-- **Gestión CRUD de categorías**
-- **Vinculación de noticias con múltiples categorías** (relación N:N)
-- **Vinculación de noticias con usuarios**
-  - Solo permitido para usuarios con rol adecuado (_ej. "editor", "admin"_).
-- **Borrado lógico para evitar pérdida de datos**
-  - Uso de `soft delete` en lugar de eliminación permanente.
-  - Protección ante eliminación de categorías con relaciones activas (manejo de errores).
+-   **Gestión CRUD de noticias**
+    -   Posibilidad de crear, editar, eliminar y visualizar noticias.
+    -   Verificación para evitar la creación de duplicados.
+-   **Gestión CRUD de categorías**
+-   **Vinculación de noticias con múltiples categorías** (relación N:N)
+-   **Vinculación de noticias con usuarios**
+    -   Solo permitido para usuarios con rol adecuado (_ej. "editor", "admin"_).
+-   **Borrado lógico para evitar pérdida de datos**
+    -   Uso de `soft delete` en lugar de eliminación permanente.
+    -   Protección ante eliminación de categorías con relaciones activas (manejo de errores).
 
 ---
 
@@ -721,15 +777,15 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ### Opción 1: Rutas manuales
 
-- Declaradas explícitamente una por una.
-- Requiere protección futura mediante middleware global o externo.
+-   Declaradas explícitamente una por una.
+-   Requiere protección futura mediante middleware global o externo.
 
 ### Opción 2: Rutas agrupadas y protegidas
 
-- Uso de `Route::prefix()`, `name()` y `middleware()`.
-- Crea automáticamente rutas RESTful (`Route::resource()`).
-- Protegidas por middlewares como `auth` y `is_admin`.
-- Reducción significativa de código repetido.
+-   Uso de `Route::prefix()`, `name()` y `middleware()`.
+-   Crea automáticamente rutas RESTful (`Route::resource()`).
+-   Protegidas por middlewares como `auth` y `is_admin`.
+-   Reducción significativa de código repetido.
 
 > **Requiere tener el middleware `is_admin` implementado.**
 
@@ -741,7 +797,7 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 php artisan make:middleware IsAdmin
 ```
 
--  Ubica y edita el archivo: app/Http/Middleware/IsAdmin.php
+-   Ubica y edita el archivo: app/Http/Middleware/IsAdmin.php
 
 ```php
 public function handle($request, \Closure $next)
@@ -787,20 +843,42 @@ php artisan make:migration create_news_has_categorias_table
 
 ## Relizar las migraciones una vez creadas las tablas
 
-- Una vez definidas correctamente las estructuras en los archivos de migración, puedes ejecutar las migraciones:
+-   Una vez definidas correctamente las estructuras en los archivos de migración, puedes ejecutar las migraciones:
 
 # Dentro de Docker
+
 ```bash
 docker exec -it alumnos-gap-app php artisan migrate
 ```
 
 # O directamente si estás trabajando fuera de Docker
+
 ```bash
 php artisan migrate
 ```
-# Ejecutar los seeders para crear algunas categorias para pruebas 
+
+# Ejecutar los seeders
+
+-   Crear algunas categorias para pruebas
+
 ```bash
 php artisan db:seed --class=CategoriaSeeder
+```
+
+-   Crear algunas noticias para pruebas
+
+```bash
+php artisan db:seed --class=NewsSeeder
+```
+
+# Subida de imágenes en la aplicación de Noticias
+
+-   Esta aplicación permite subir imágenes para las noticias en formatos JPG y PNG, con un tamaño máximo de 5MB.
+
+# Ejecutar el enlace simbólico de almacenamiento
+
+```bash
+php artisan storage:link
 ```
 
 ---
@@ -817,9 +895,9 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 
 ### 1. Listar todas las noticias
 
-- **GET** `/api/news`
-- **Descripción:** Devuelve todas las noticias con su categoría.
-- **Respuesta exitosa:**
+-   **GET** `/api/news`
+-   **Descripción:** Devuelve todas las noticias con su categoría.
+-   **Respuesta exitosa:**
     ```json
     {
       "status": "200",
@@ -840,35 +918,35 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 
 ### 2. Obtener noticia por ID
 
-- **GET** `/api/news/{id}`
-- **Parámetro de ruta:**  
-  - `id` (integer): ID de la noticia.
-- **Descripción:** Devuelve los detalles de una noticia específica.
-- **Respuesta exitosa:**
+-   **GET** `/api/news/{id}`
+-   **Parámetro de ruta:**
+    -   `id` (integer): ID de la noticia.
+-   **Descripción:** Devuelve los detalles de una noticia específica.
+-   **Respuesta exitosa:**
     ```json
     {
-      "status": "200",
-      "data": {
-        "id": 1,
-        "titulo": "Título de la noticia",
-        "contenido": "Texto de la noticia",
-        "fecha_publicacion": "2024-06-04",
-        "categoria": "General"
-      }
+        "status": "200",
+        "data": {
+            "id": 1,
+            "titulo": "Título de la noticia",
+            "contenido": "Texto de la noticia",
+            "fecha_publicacion": "2024-06-04",
+            "categoria": "General"
+        }
     }
     ```
-- **Respuesta si no existe:**  
-  Código HTTP 404.
+-   **Respuesta si no existe:**  
+    Código HTTP 404.
 
 ---
 
 ### 3. Listar noticias por categoría
 
-- **GET** `/api/news/category/{category}`
-- **Parámetro de ruta:**  
-  - `category` (string): Nombre de la categoría.
-- **Descripción:** Devuelve todas las noticias de una categoría.
-- **Respuesta exitosa:**
+-   **GET** `/api/news/category/{category}`
+-   **Parámetro de ruta:**
+    -   `category` (string): Nombre de la categoría.
+-   **Descripción:** Devuelve todas las noticias de una categoría.
+-   **Respuesta exitosa:**
     ```json
     {
       "status": "200",
@@ -884,24 +962,24 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
       ]
     }
     ```
-- **Respuesta si no hay noticias:**  
+-   **Respuesta si no hay noticias:**
     ```json
     {
-      "status": "error",
-      "message": "No news found for this category"
+        "status": "error",
+        "message": "No news found for this category"
     }
     ```
-  Código HTTP 404.
+    Código HTTP 404.
 
 ---
 
 ### 4. Últimas noticias
 
-- **GET** `/api/news/latest/{number?}`
-- **Descripción:** Devuelve las noticias más recientes.
-**Parámetro de ruta (opcional):**  
-  - `number` (integer): Número de noticias a devolver (por defecto 5).
-- **Respuesta exitosa:**
+-   **GET** `/api/news/latest/{number?}`
+-   **Descripción:** Devuelve las noticias más recientes.
+    **Parámetro de ruta (opcional):**
+    -   `number` (integer): Número de noticias a devolver (por defecto 5).
+-   **Respuesta exitosa:**
     ```json
     {
       "status": "200",
@@ -922,9 +1000,9 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 
 ### 5. Listar todas las categorías
 
-- **GET** `/api/categorias`
-- **Descripción:** Devuelve todas las categorías disponibles.
-- **Respuesta exitosa:**
+-   **GET** `/api/categorias`
+-   **Descripción:** Devuelve todas las categorías disponibles.
+-   **Respuesta exitosa:**
     ```json
     {
       "status": "200",
@@ -943,9 +1021,9 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 
 ### 6. Listar todos los cursos
 
-- **GET** `/api/cursos`
-- **Descripción:** Devuelve todos los cursos.
-- **Respuesta exitosa:**
+-   **GET** `/api/cursos`
+-   **Descripción:** Devuelve todos los cursos.
+-   **Respuesta exitosa:**
     ```json
     {
       "status": "200",
@@ -970,74 +1048,73 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 
 ### 7. Obtener un curso por ID
 
-- **GET** `/api/cursos/curso/{id}`
-- **Parámetro de ruta:**  
-  - `id` (integer): ID del curso.
-- **Descripción:** Devuelve los detalles de un curso específico.
-- **Respuesta exitosa:**
+-   **GET** `/api/cursos/curso/{id}`
+-   **Parámetro de ruta:**
+    -   `id` (integer): ID del curso.
+-   **Descripción:** Devuelve los detalles de un curso específico.
+-   **Respuesta exitosa:**
     ```json
     {
-      "status": "200",
-      "data": {
-        "id": 1,
-        "titulo": "Curso de Laravel Básico",
-        "descripcion": "Aprende los fundamentos de Laravel.",
-        "fechainicio": "2025-07-01",
-        "fechafin": "2025-07-15",
-        "plazas": 30,
-        "estado": "activo",
-        "created_at": "...",
-        "updated_at": "..."
-      }
+        "status": "200",
+        "data": {
+            "id": 1,
+            "titulo": "Curso de Laravel Básico",
+            "descripcion": "Aprende los fundamentos de Laravel.",
+            "fechainicio": "2025-07-01",
+            "fechafin": "2025-07-15",
+            "plazas": 30,
+            "estado": "activo",
+            "created_at": "...",
+            "updated_at": "..."
+        }
     }
     ```
-- **Respuesta si no existe:**  
-  ```json
-  {
-    "status": "error",
-    "message": "Curso no encontrado"
-  }
-  ```
-  Código HTTP 404.
+-   **Respuesta si no existe:**
+    ```json
+    {
+        "status": "error",
+        "message": "Curso no encontrado"
+    }
+    ```
+    Código HTTP 404.
 
 ---
 
 ### 8. Listar cursos activos
 
-- **GET** `/api/cursos/activos`
-- **Descripción:** Devuelve todos los cursos con estado "activo".
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos activos.
+-   **GET** `/api/cursos/activos`
+-   **Descripción:** Devuelve todos los cursos con estado "activo".
+-   **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos activos.
 
 ---
 
 ### 9. Listar cursos inactivos
 
-- **GET** `/api/cursos/inactivos`
-- **Descripción:** Devuelve todos los cursos con estado "inactivos".
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos inactivos.
+-   **GET** `/api/cursos/inactivos`
+-   **Descripción:** Devuelve todos los cursos con estado "inactivos".
+-   **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos inactivos.
 
 ---
 
 ### 10. Listar cursos ordenados por fecha de inicio descendente
 
-- **GET** `/api/cursos/ordenados/fecha-inicio-desc`
-- **Descripción:** Devuelve todos los cursos ordenados por la columna `fechainicio` de más reciente a más antiguo.
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero ordenados.
+-   **GET** `/api/cursos/ordenados/fecha-inicio-desc`
+-   **Descripción:** Devuelve todos los cursos ordenados por la columna `fechainicio` de más reciente a más antiguo.
+-   **Respuesta exitosa:** Igual que el endpoint de listar todos, pero ordenados.
 
 ---
 
 ### 11. Listar los últimos N cursos
 
-- **GET** `/api/cursos/ultimos/{number?}`
-- **Parámetro de ruta (opcional):**  
-  - `number` (integer): Número de cursos a devolver (por defecto 5).
-- **Descripción:** Devuelve los últimos cursos creados.
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero limitado a los últimos N cursos.
+-   **GET** `/api/cursos/ultimos/{number?}`
+-   **Parámetro de ruta (opcional):**
+    -   `number` (integer): Número de cursos a devolver (por defecto 5).
+-   **Descripción:** Devuelve los últimos cursos creados.
+-   **Respuesta exitosa:** Igual que el endpoint de listar todos, pero limitado a los últimos N cursos.
 
 ---
 
-
 ## Notas para el Frontend
 
-- Todas las respuestas están en formato JSON.
-- Si ocurre un error, revisa el campo `
+-   Todas las respuestas están en formato JSON.
+-   Si ocurre un error, revisa el campo `
