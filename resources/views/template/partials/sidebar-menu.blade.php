@@ -38,12 +38,17 @@
             <ul class="submenu">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('events.calendar') }}">
-                        <i class="ri-calendar-2-line"></i> <span>Calendario</span>
+                        <i class="ri-calendar-line""></i> <span>Calendario</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.events.create') }}">
-                        <i class="ri-calendar-schedule-line"></i> <span>Crear evento</span>
+                    <a class="nav-link" href="{{ route('admin.events.index') }}">
+                        <i class="ri-calendar-2-line"></i> <span>listado de eventos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.events.types.index') }}">
+                        <i class="ri-calendar-todo-line"></i> <span>listado de tipos eventos</span>
                     </a>
                 </li>
                 <!-- A espera de agregar más enlaces de ser necesarios -->
