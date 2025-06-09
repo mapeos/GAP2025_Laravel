@@ -14,16 +14,14 @@ Route::get('/', function () {
     return response()->json(['message' => 'API is running']);
 });
 
-// Rutas para la gestión de noticias
-Route::get('/news', [NewsController::class, 'index']); // Listar noticias
-Route::get('/news/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
-Route::get('/news/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
-Route::get('/news/latest', [NewsController::class, 'latest']); // Obtener últimas noticias
+Route::prefix('news')->group(function () {
+    Route::get('/', [NewsController::class, 'index']);
+    Route::get('/latest', [NewsController::class, 'latest']);
+    Route::get('/{id}', [NewsController::class, 'show']);
+    Route::post('/', [NewsController::class, 'store']);
+});
 
-// Rutas para la gestión de categorías de noticias
-Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
-
-
+Route::get('/categorias', [CategoriasController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
 | Rutas API para la app móvil y otros clientes externos
