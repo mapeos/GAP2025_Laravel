@@ -7,6 +7,7 @@ class SuggestionRequest
     public function __construct(
         public int $patientId,
         public int $treatmentId,
+        public int $workerId,
         public \DateTimeInterface $approximateDate,
         public int $doctorId,
         public array $workingDays, // ej: ['monday' => ['08:00', '14:00'], ...]
