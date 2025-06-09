@@ -60,13 +60,18 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 
 Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
     Route::post('/', [CursoController::class, 'store'])->name('store'); // Crear un curso
-
     Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
     Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
     Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
 
 });
 
-Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
-Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
-Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
+   Route::prefix('cursos')->group(function () {
+    Route::get('/', [CursoController::class, 'index']); // Listar todos los cursos: GET /api/cursos
+    Route::get('/activos', [CursoController::class, 'activos']); // Cursos activos: GET /api/cursos/activos
+    Route::get('/inactivos', [CursoController::class, 'inactivos']); // Cursos inactivos: GET /api/cursos/inactivos
+    Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Cursos ordenados por fecha
+    Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']); // Últimos cursos: GET /api/cursos/ultimos/5
+    Route::get('/{id}', [CursoController::class, 'show']); // Ver detalles: GET /api/cursos/{id}
+    Route::get('/cursos/buscar', [CursoController::class, 'buscarFiltrar']); // GET /api/cursos/buscar?search=foo&estado=activo&orden=desc
+});
