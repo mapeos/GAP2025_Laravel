@@ -672,6 +672,31 @@ php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 php artisan migrate
 ```
 
+
+# Ejecutar los seeders
+
+-   Crear algunas categorias para pruebas
+
+```bash
+php artisan db:seed --class=CategoriaSeeder
+```
+
+-   Crear algunas noticias para pruebas
+
+```bash
+php artisan db:seed --class=NewsSeeder
+```
+
+# Subida de imágenes en la aplicación de Noticias
+
+-   Esta aplicación permite subir imágenes para las noticias en formatos JPG y PNG, con un tamaño máximo de 5MB.
+
+# Ejecutar el enlace simbólico de almacenamiento
+
+```bash
+php artisan storage:link
+```
+
 ---
 
 # Flujo de autenticación y registro para la app móvil
