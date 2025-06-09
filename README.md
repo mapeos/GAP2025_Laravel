@@ -910,31 +910,33 @@ php artisan storage:link
 
 # API
 
-# Documentación de la API de Noticias
+# Documentación de la API de Noticias:
+# API de Cursos
 
-Esta API permite a los desarrolladores frontend consultar noticias y categorías de manera sencilla. Todas las respuestas están en formato JSON.
+### 1. Listar todas las noticias  
+**GET** `/api/news`  
+Descripción: Devuelve todas las noticias con su categoría.  
+Parámetros opcionales (query):  
+- `q` (string): Buscar por palabra clave en el título o contenido.  
+- `category` (string): Nombre de la categoría para filtrar.  
+- `per_page` (int): Cantidad de resultados por página (por defecto: 10).  
 
----
-
-## Endpoints Disponibles
-
-### 1. Listar todas las noticias
-
-- **GET** `/api/news`
-- **Descripción:** Devuelve todas las noticias con su categoría.
-- **Respuesta exitosa:**
-    ```json
+**Respuesta exitosa:**
+```json
+{
+  "current_page": 1,
+  "data": [
     {
-      "status": "200",
-      "data": [
+      "id": 1,
+      "titulo": "Título de la noticia",
+      "contenido": "Texto de la noticia",
+      "fecha_publicacion": "2024-06-04",
+      "categorias": [
         {
           "id": 1,
-          "titulo": "Título de la noticia",
-          "contenido": "Texto de la noticia",
-          "fecha_publicacion": "2024-06-04",
-          "categoria": "General"
-        },
-        ...
+          "nombre": "General",
+          "descripcion": "Noticias generales"
+        }
       ]
     }
   ],
@@ -944,115 +946,132 @@ Esta API permite a los desarrolladores frontend consultar noticias y categorías
 }
 ```
 
-### 2. Obtener noticia por ID
+### 2. Obtener noticia por ID  
+**GET** `/api/news/{id}`  
+Parámetro de ruta:  
+- `id` (integer): ID de la noticia.
 
-- **GET** `/api/news/{id}`
-- **Parámetro de ruta:**  
-  - `id` (integer): ID de la noticia.
-- **Descripción:** Devuelve los detalles de una noticia específica.
-- **Respuesta exitosa:**
-    ```json
+**Respuesta exitosa:**
+```json
+{
+  "id": 1,
+  "titulo": "Título de la noticia",
+  "contenido": "Texto de la noticia",
+  "fecha_publicacion": "2024-06-04",
+  "categorias": [
     {
-      "status": "200",
-      "data": {
-        "id": 1,
-        "titulo": "Título de la noticia",
-        "contenido": "Texto de la noticia",
-        "fecha_publicacion": "2024-06-04",
-        "categoria": "General"
-      }
+      "id": 1,
+      "nombre": "General",
+      "descripcion": "Noticias generales"
     }
-    ```
-- **Respuesta si no existe:**  
-  Código HTTP 404.
+  ]
+}
+```
 
----
+**Respuesta si no existe:**  
+Código HTTP: 404  
+```json
+{
+  "message": "No query results for model [App\\Models\\News] 999"
+}
+```
 
-### 3. Listar noticias por categoría
+### 3. Listar noticias por categoría  
+**GET** `/api/news?category={nombre}`  
+Parámetro de query:  
+- `category` (string): Nombre de la categoría.
 
-- **GET** `/api/news/category/{category}`
-- **Parámetro de ruta:**  
-  - `category` (string): Nombre de la categoría.
-- **Descripción:** Devuelve todas las noticias de una categoría.
-- **Respuesta exitosa:**
-    ```json
+**Respuesta exitosa:**
+```json
+{
+  "status": "200",
+  "data": [
     {
-      "status": "200",
-      "data": [
+      "id": 2,
+      "titulo": "Otra noticia",
+      "contenido": "Texto...",
+      "fecha_publicacion": "2024-06-04",
+      "categorias": [
         {
           "id": 2,
-          "titulo": "Otra noticia",
-          "contenido": "Texto...",
-          "fecha_publicacion": "2024-06-04",
-          "categoria": "Deportes"
-        },
-        ...
+          "nombre": "Deportes",
+          "descripcion": "Noticias deportivas"
+        }
       ]
     }
-    ```
-- **Respuesta si no hay noticias:**  
-    ```json
+  ]
+}
+```
+
+**Respuesta si no hay noticias:**  
+Código HTTP: 404  
+```json
+{
+  "status": "error",
+  "message": "No news found for this category"
+}
+```
+
+### 4. Últimas noticias  
+**GET** `/api/news/latest/{number?}`  
+Descripción: Devuelve las noticias más recientes.  
+Parámetro opcional:  
+- `number` (integer): Número de noticias a devolver (por defecto 5).
+
+**Respuesta exitosa:**
+```json
+{
+  "status": "200",
+  "data": [
     {
-      "status": "error",
-      "message": "No news found for this category"
-    }
-    ```
-  Código HTTP 404.
-
----
-
-### 4. Últimas noticias
-
-- **GET** `/api/news/latest/{number?}`
-- **Descripción:** Devuelve las noticias más recientes.
-**Parámetro de ruta (opcional):**  
-  - `number` (integer): Número de noticias a devolver (por defecto 5).
-- **Respuesta exitosa:**
-    ```json
-    {
-      "status": "200",
-      "data": [
+      "id": 5,
+      "titulo": "Noticia reciente",
+      "contenido": "Texto...",
+      "fecha_publicacion": "2024-06-04",
+      "categorias": [
         {
-          "id": 5,
-          "titulo": "Noticia reciente",
-          "contenido": "Texto...",
-          "fecha_publicacion": "2024-06-04",
-          "categoria": "General"
-        },
-        ...
+          "id": 1,
+          "nombre": "General",
+          "descripcion": "Noticias generales"
+        }
       ]
     }
-    ```
+  ]
+}
+```
 
 ### 5. Listar todas las categorías  
 **GET** `/api/categorias`  
 Descripción: Devuelve todas las categorías disponibles.
 
-- **GET** `/api/categorias`
-- **Descripción:** Devuelve todas las categorías disponibles.
-- **Respuesta exitosa:**
-    ```json
+**Respuesta exitosa:**
+```json
+{
+  "status": "200",
+  "data": [
     {
-      "status": "200",
-      "data": [
-        {
-          "id": 1,
-          "nombre": "General",
-          "descripcion": "Noticias generales"
-        },
-        ...
-      ]
+      "id": 1,
+      "nombre": "General",
+      "descripcion": "Noticias generales"
+    },
+    {
+      "id": 2,
+      "nombre": "Deportes",
+      "descripcion": "Noticias deportivas"
     }
-    ```
+  ]
+}
+```
 
----
+# Documentación de la API de Cursos:
+# API de Cursos
 
-### 6. Listar todos los cursos
-
-- **GET** `/api/cursos`
-- **Descripción:** Devuelve todos los cursos.
-- **Respuesta exitosa:**
-    ```json
+### 1. Listar todos los cursos
+- Método: GET
+- URL: /api/cursos
+- Descripción: Devuelve todos los cursos.
+- Respuesta exitosa:
+```json
     {
       "status": "200",
       "message": "Cursos obtenidos correctamente",
@@ -1070,77 +1089,120 @@ Descripción: Devuelve todas las categorías disponibles.
         }
       ]
     }
+```
 
-### 7. Obtener un curso por ID
-
-- **GET** `/api/cursos/curso/{id}`
-- **Parámetro de ruta:**  
-  - `id` (integer): ID del curso.
-- **Descripción:** Devuelve los detalles de un curso específico.
-- **Respuesta exitosa:**
-    ```json
+### 2. Obtener un curso por ID
+- Método: GET
+- URL: /api/cursos/{id}
+- Parámetros:
+  - id (integer): ID del curso
+- Descripción: Devuelve un curso específico.
+- Respuesta exitosa:
+```json
     {
       "status": "200",
+      "message": "Curso obtenido correctamente",
       "data": {
         "id": 1,
         "titulo": "Curso de Laravel Básico",
         "descripcion": "Aprende los fundamentos de Laravel.",
-        "fechainicio": "2025-07-01",
-        "fechafin": "2025-07-15",
+        "fechaInicio": "2025-07-01",
+        "fechaFin": "2025-07-15",
         "plazas": 30,
         "estado": "activo",
         "created_at": "...",
         "updated_at": "..."
       }
     }
+- Respuesta si no existe:
+    {
+      "status": "error",
+      "message": "Curso no encontrado"
+    }
+HTTP Status: 404
+```
+
+### 3. Listar cursos activos
+- Método: GET
+- URL: /api/cursos/activos
+- Descripción: Devuelve todos los cursos con estado "activo".
+- Respuesta exitosa:
+```json
+    {
+      "status": "200",
+      "message": "Cursos activos obtenidos correctamente",
+      "data": [ /* cursos activos */ ]
+    }
     ```
-- **Respuesta si no existe:**  
-  ```json
-  {
-    "status": "error",
-    "message": "Curso no encontrado"
-  }
-  ```
-  Código HTTP 404.
 
+### 4. Listar cursos inactivos
+- Método: GET
+- URL: /api/cursos/inactivos
+- Descripción: Devuelve todos los cursos con estado "inactivo".
+- Respuesta exitosa:
+```json
+    {
+      "status": "200",
+      "message": "Cursos inactivos obtenidos correctamente",
+      "data": [ /* cursos inactivos */ ]
+    }
+    ```
+### 5.Listar cursos ordenados por fecha de inicio descendente
+- Método: GET
+- URL: /api/cursos/ordenados-por-fecha-inicio-desc
+- Descripción: Devuelve cursos ordenados por fechaInicio descendente.
+- Respuesta exitosa:
+```json
+    {
+      "status": "200",
+      "message": "Cursos ordenados por fecha de inicio descendente obtenidos correctamente",
+      "data": [ /* cursos ordenados */ ]
+    }
+    ```
+### 6. Obtener los últimos cursos
+- Método: GET
+- URL: /api/cursos/ultimos/{number?}
+- Parámetros opcionales:
+- number (integer): Número de cursos a devolver (por defecto 5)
+- Descripción: Devuelve los últimos cursos creados, limitados a number.
+- Respuesta exitosa:
+```json
+{
+  "status": "200",
+  "message": "Últimos cursos obtenidos correctamente",
+  "data": [ /* últimos cursos */ ]
+}
+```
+### 7. Buscar y filtrar cursos
+- Método: GET
+- URL: /api/cursos/buscar-filtrar
+Parámetros query opcionales:
+- search (string): Texto para buscar en título o descripción.
+- estado (string): Filtrar por estado ('activo' o 'inactivo').
+- orden (string): Ordenar por fechaInicio ('asc' o 'desc').
+- Descripción: Realiza búsqueda y filtrado con paginación.
+- Respuesta exitosa (paginada):
+```json
+{
+  "current_page": 1,
+  "data": [ /* cursos filtrados */ ],
+  "first_page_url": "...",
+  "from": 1,
+  "last_page": 5,
+  "last_page_url": "...",
+  "next_page_url": "...",
+  "path": "...",
+  "per_page": 20,
+  "prev_page_url": null,
+  "to": 20,
+  "total": 100
+}
+```
 ---
-
-### 8. Listar cursos activos
-
-- **GET** `/api/cursos/activos`
-- **Descripción:** Devuelve todos los cursos con estado "activo".
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos activos.
-
----
-
-### 9. Listar cursos inactivos
-
-- **GET** `/api/cursos/inactivos`
-- **Descripción:** Devuelve todos los cursos con estado "inactivos".
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero solo cursos inactivos.
-
----
-
-### 10. Listar cursos ordenados por fecha de inicio descendente
-
-- **GET** `/api/cursos/ordenados/fecha-inicio-desc`
-- **Descripción:** Devuelve todos los cursos ordenados por la columna `fechainicio` de más reciente a más antiguo.
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero ordenados.
-
----
-
-### 11. Listar los últimos N cursos
-
-- **GET** `/api/cursos/ultimos/{number?}`
-- **Parámetro de ruta (opcional):**  
-  - `number` (integer): Número de cursos a devolver (por defecto 5).
-- **Descripción:** Devuelve los últimos cursos creados.
-- **Respuesta exitosa:** Igual que el endpoint de listar todos, pero limitado a los últimos N cursos.
-
----
-
 
 ## Notas para el Frontend
 
 - Todas las respuestas están en formato JSON.
-- Si ocurre un error, revisa el campo `
+- Si ocurre un error, revisa el campo `status` y el mensaje correspondiente.
+
+---
