@@ -36,6 +36,17 @@ class DashboardController extends Controller
             'Otro' => $otro
         ];
 
-        return view('admin.dashboard.index', compact('stats', 'leadSources'));
+        // Obtener eventos para el calendario
+        $eventos = \App\Models\Evento::all()->map(function($evento) {
+            return [
+                'id' => $evento->id,
+                'title' => $evento->titulo,
+                'start' => $evento->fecha_inicio,
+                'end' => $evento->fecha_fin,
+                'descripcion' => $evento->descripcion,
+            ];
+        });
+
+        return view('admin.dashboard.index', compact('stats', 'leadSources', 'eventos'));
     }
 }
