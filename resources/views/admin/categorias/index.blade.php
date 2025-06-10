@@ -56,13 +56,16 @@
                 <td>
                     <div style="display: flex; gap: 0.3rem; flex-wrap: nowrap; white-space: nowrap;">
 
-                        <a href="{{ route('admin.categorias.edit', $categoria) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('admin.categorias.edit', $categoria) }}" class="btn btn-warning btn-sm" title="Editar">
+                            <i class="ri-edit-line"></i>
+                        </a>
 
                         <button class="btn btn-sm toggle-status-btn
                             {{ $categoria->trashed() ? 'btn-success' : 'btn-danger' }}"
                             data-id="{{ $categoria->id }}"
-                            data-action="{{ $categoria->trashed() ? 'restore' : 'delete' }}">
-                            {{ $categoria->trashed() ? 'Publicar' : 'Eliminar' }}
+                            data-action="{{ $categoria->trashed() ? 'restore' : 'delete' }}"
+                            title="{{ $categoria->trashed() ? 'Publicar' : 'Eliminar' }}">
+                            <i class="{{ $categoria->trashed() ? 'ri-upload-2-line' : 'ri-delete-bin-line' }}"></i>
                         </button>
 
                     </div>
@@ -114,9 +117,10 @@
                             if (data.status === 'activa') {
                                 badge.textContent = 'Activa';
                                 badge.className = 'badge bg-success';
-                                buttonEl.textContent = 'Eliminar';
+                                buttonEl.innerHTML = '<i class="ri-delete-bin-line"></i>';
                                 buttonEl.className = 'btn btn-danger btn-sm toggle-status-btn';
                                 buttonEl.dataset.action = 'delete';
+                                buttonEl.title = 'Eliminar';
                                 row.classList.remove('table-danger');
 
                                 if (icon) {
@@ -127,9 +131,10 @@
                             } else {
                                 badge.textContent = 'Eliminada';
                                 badge.className = 'badge bg-danger';
-                                buttonEl.textContent = 'Publicar';
+                                buttonEl.innerHTML = '<i class="ri-upload-2-line"></i>';
                                 buttonEl.className = 'btn btn-success btn-sm toggle-status-btn';
                                 buttonEl.dataset.action = 'restore';
+                                buttonEl.title = 'Publicar';
                                 row.classList.add('table-danger');
 
                                 if (!icon) {

@@ -155,6 +155,7 @@
                                 buttonEl.innerHTML = '<i class="ri-delete-bin-line"></i>'; // Para eliminar
                                 buttonEl.className = 'btn btn-danger btn-sm toggle-status-btn';
                                 buttonEl.dataset.action = 'delete';
+                                buttonEl.title = 'Eliminar';
                                 row.classList.remove('table-danger');
 
                                 // Elimina el ícono si existe
@@ -166,7 +167,6 @@
                                 deletedAtCell.innerHTML = '<span class="text-muted">-</span>';
 
                                 showFlashMessage('Noticia publicada correctamente', 'success');
-
                             } else {
                                 // Cambios visuales para "eliminada"
                                 badge.textContent = 'Dada de baja';
@@ -174,6 +174,7 @@
                                 buttonEl.innerHTML = '<i class="ri-upload-2-line"></i>'; // Para publicar
                                 buttonEl.className = 'btn btn-success btn-sm toggle-status-btn';
                                 buttonEl.dataset.action = 'restore';
+                                buttonEl.title = 'Publicar';
                                 row.classList.add('table-danger');
 
                                 // Añade el ícono si no existe
