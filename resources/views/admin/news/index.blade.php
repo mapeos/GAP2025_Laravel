@@ -83,18 +83,25 @@
                 <td>
                     <div style="display: flex; gap: 0.3rem; flex-wrap: nowrap; white-space: nowrap;">
 
-                        <a href="{{ route('admin.news.show', $item) }}" class="btn btn-info btn-sm">Ver</a>
-                        <a href="{{ route('admin.news.edit', $item) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('admin.news.show', $item) }}" class="btn btn-info btn-sm" title="Ver">
+                            <i class="ri-eye-line"></i>
+                        </a>
+
+                        <a href="{{ route('admin.news.edit', $item) }}" class="btn btn-warning btn-sm" title="Editar">
+                            <i class="ri-edit-line"></i>
+                        </a>
 
                         <button class="btn btn-sm toggle-status-btn 
-                                 {{ $item->trashed() ? 'btn-success' : 'btn-danger' }}"
+                {{ $item->trashed() ? 'btn-success' : 'btn-danger' }}"
                             data-id="{{ $item->id }}"
-                            data-action="{{ $item->trashed() ? 'restore' : 'delete' }}">
-                            {{ $item->trashed() ? 'Publicar' : 'Eliminar' }}
+                            data-action="{{ $item->trashed() ? 'restore' : 'delete' }}"
+                            title="{{ $item->trashed() ? 'Publicar' : 'Eliminar' }}">
+                            <i class="{{ $item->trashed() ? 'ri-upload-2-line' : 'ri-delete-bin-line' }}"></i>
                         </button>
 
                     </div>
                 </td>
+
             </tr>
             @empty
             <tr>
@@ -137,6 +144,7 @@
                         if (data.status) {
                             // Obtiene los elementos afectados
                             let badge = row.querySelector('td:nth-child(7) .badge');
+                            let deletedAtCell = row.querySelector('td:nth-child(6)');
                             let titleCell = row.querySelector('td:nth-child(1)');
                             let icon = titleCell.querySelector('i.ri-alert-line');
 
@@ -144,7 +152,7 @@
                                 // Cambios visuales para "publicada"
                                 badge.textContent = 'Publicada';
                                 badge.className = 'badge bg-success';
-                                buttonEl.textContent = 'Eliminar';
+                                buttonEl.innerHTML = '<i class="ri-delete-bin-line"></i>'; // Para eliminar
                                 buttonEl.className = 'btn btn-danger btn-sm toggle-status-btn';
                                 buttonEl.dataset.action = 'delete';
                                 row.classList.remove('table-danger');
@@ -154,13 +162,16 @@
                                     icon.remove();
                                 }
 
+                                // Actualiza la columna de "Eliminada"
+                                deletedAtCell.innerHTML = '<span class="text-muted">-</span>';
+
                                 showFlashMessage('Noticia publicada correctamente', 'success');
 
                             } else {
                                 // Cambios visuales para "eliminada"
                                 badge.textContent = 'Dada de baja';
                                 badge.className = 'badge bg-danger';
-                                buttonEl.textContent = 'Publicar';
+                                buttonEl.innerHTML = '<i class="ri-upload-2-line"></i>'; // Para publicar
                                 buttonEl.className = 'btn btn-success btn-sm toggle-status-btn';
                                 buttonEl.dataset.action = 'restore';
                                 row.classList.add('table-danger');
@@ -172,6 +183,14 @@
                                     newIcon.title = 'Noticia eliminada';
                                     titleCell.appendChild(newIcon);
                                 }
+
+                                // Actualiza la columna con la nueva fecha
+                                const now = new Date();
+                                const formatted = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                                deletedAtCell.textContent = formatted;
 
                                 showFlashMessage('Noticia eliminada correctamente', 'warning');
                             }
