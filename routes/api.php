@@ -9,21 +9,6 @@ use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
 use Illuminate\Support\Facades\Route;
 
-//mensaje de prueba para verificar que la API está funcionando
-Route::get('/', function () {
-    return response()->json(['message' => 'API is running']);
-});
-
-// Rutas para la gestión de noticias
-Route::get('/news', [NewsController::class, 'index']); // Listar noticias
-Route::get('/news/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
-Route::get('/news/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
-Route::get('/news/latest', [NewsController::class, 'latest']); // Obtener últimas noticias
-
-// Rutas para la gestión de categorías de noticias
-Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
-
-
 /*
 |--------------------------------------------------------------------------
 | Rutas API para la app móvil y otros clientes externos
@@ -68,3 +53,25 @@ Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(
     Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
     Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
 });
+
+//mensaje de prueba para verificar que la API está funcionando
+Route::get('/', function () {
+    return response()->json(['message' => 'API is running']);
+});
+
+// Rutas para la gestión de noticias
+Route::get('/news', [NewsController::class, 'index']); // Listar noticias
+Route::get('/news/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
+Route::get('/news/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
+Route::get('/news/latest', [NewsController::class, 'latest']); // Obtener últimas noticias
+
+// Rutas para la gestión de categorías de noticias
+Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
+
+// Rutas para la gestión de Cursos
+Route::get('/courses', [CursoController::class, 'index']); // Listar cursos
+Route::get('/course/{id}', [CursoController::class, 'show']); // Obtener curso por ID
+Route::get('/courses/actives', [CursoController::class, 'activos']); // Listar cursos activos
+Route::get('/courses/inactives', [CursoController::class, 'inactivos']); // Listar cursos inactivos
+Route::get('/courses/byClosesToStart', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Listar cursos ordenados por fecha de inicio descendente
+Route::get('/courses/last/{number?}', [CursoController::class, 'ultimosCursos']); // Listar últimos cursos (por defecto 5)

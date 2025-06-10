@@ -96,7 +96,8 @@ class NewsController extends Controller
         ->take(5)
         ->get();
 
-        return response()->json([
+        return response
+        ()->json([
             'status' => '200',
             'data' => $data
         ]);
