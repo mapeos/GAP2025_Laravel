@@ -15,18 +15,58 @@
     {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
     <!-- @include('template.partials.alerts') -->
 
+    <div class="page-header-container mb-4 border-bottom pb-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h1 class="h3 mb-0">Listado de Noticias</h1>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.news.create') }}" class="btn btn-primary btn-sm">
+                    <i class="ri-add-line"></i> Nueva Noticia
+                </a>
+                <a href="{{ route('admin.categorias.index') }}" class="btn btn-secondary btn-sm">
+                    <i class="ri-price-tag-3-line"></i> Categorías
+                </a>
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-dark btn-sm">
+                    <i class="ri-dashboard-line"></i> Dashboard
+                </a>
+            </div>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item active">Noticias</li>
+            </ol>
+        </nav>
+    </div>
+
     {{-- Este contenedor es importante para inyectar dinámicamente --}}
     <div id="flash-messages">
         @include('template.partials.alerts')
     </div>
 
-    <h1 class="mb-4">Listado de Noticias</h1>
+    <div class="mb-3 d-flex gap-3">
+        <div class="btn-group" role="group" aria-label="Filtrar por estado">
+            <button type="button" class="btn btn-outline-secondary btn-sm filter-status active" data-status="all">
+                <i class="ri-list-check"></i> Todas
+            </button>
+            <button type="button" class="btn btn-outline-success btn-sm filter-status" data-status="active">
+                <i class="ri-check-line"></i> Publicadas
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm filter-status" data-status="deleted">
+                <i class="ri-delete-bin-line"></i> Dadas de baja
+            </button>
+        </div>
 
-    <div class="mb-3">
-        <a href="{{ route('admin.news.create') }}" class="btn btn-primary">Crear Nueva Noticia</a>
-        <a href="{{ route('admin.categorias.index') }}" class="btn btn-secondary">Ir a Categorías</a>
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-dark">Ir al Dashboard</a>
-
+        <div class="btn-group" role="group" aria-label="Ordenar por fecha">
+            <button type="button" class="btn btn-outline-secondary btn-sm sort-date active" data-sort="all">
+                <i class="ri-time-line"></i> Sin ordenar
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm sort-date" data-sort="newest">
+                <i class="ri-arrow-up-line"></i> Más recientes
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm sort-date" data-sort="oldest">
+                <i class="ri-arrow-down-line"></i> Más antiguas
+            </button>
+        </div>
     </div>
 
     <table class="table align-middle table-responsive">
@@ -121,6 +161,72 @@
 @push('js')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Manejador para los botones de filtro por estado
+        document.querySelectorAll('.filter-status').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remover clase active de todos los botones
+                document.querySelectorAll('.filter-status').forEach(btn => btn.classList.remove('active'));
+                // Añadir clase active al botón clickeado
+                this.classList.add('active');
+
+                const status = this.dataset.status;
+                const rows = document.querySelectorAll('tbody tr');
+
+                rows.forEach(row => {
+                    if (status === 'all') {
+                        row.style.display = '';
+                    } else if (status === 'active') {
+                        row.style.display = row.classList.contains('table-danger') ? 'none' : '';
+                    } else if (status === 'deleted') {
+                        row.style.display = row.classList.contains('table-danger') ? '' : 'none';
+                    }
+                });
+            });
+        });
+
+        // Manejador para los botones de ordenamiento por fecha
+        document.querySelectorAll('.sort-date').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remover clase active de todos los botones
+                document.querySelectorAll('.sort-date').forEach(btn => btn.classList.remove('active'));
+                // Añadir clase active al botón clickeado
+                this.classList.add('active');
+
+                const sort = this.dataset.sort;
+                const tbody = document.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                if (sort !== 'all') {
+                    rows.sort((a, b) => {
+                        // Obtener el texto de la fecha de publicación (4ta columna)
+                        const dateTextA = a.querySelector('td:nth-child(4)').textContent.trim();
+                        const dateTextB = b.querySelector('td:nth-child(4)').textContent.trim();
+                        
+                        // Convertir el formato dd/mm/yyyy HH:ii a un objeto Date
+                        const [dateA, timeA] = dateTextA.split(' ');
+                        const [dayA, monthA, yearA] = dateA.split('/');
+                        const [hoursA, minutesA] = timeA.split(':');
+                        
+                        const [dateB, timeB] = dateTextB.split(' ');
+                        const [dayB, monthB, yearB] = dateB.split('/');
+                        const [hoursB, minutesB] = timeB.split(':');
+
+                        const dateObjA = new Date(yearA, monthA - 1, dayA, hoursA, minutesA);
+                        const dateObjB = new Date(yearB, monthB - 1, dayB, hoursB, minutesB);
+
+                        return sort === 'newest' ? dateObjB - dateObjA : dateObjA - dateObjB;
+                    });
+
+                    // Limpiar y reordenar las filas
+                    rows.forEach(row => tbody.appendChild(row));
+                } else {
+                    // Recargar la página para restaurar el orden original
+                    window.location.reload();
+                }
+            });
+        });
+
+        // Código existente para toggle-status-btn
         document.querySelectorAll('.toggle-status-btn').forEach(function(button) {
             button.addEventListener('click', function() {
                 let newsId = this.dataset.id;
@@ -195,6 +301,12 @@
 
                                 showFlashMessage('Noticia eliminada correctamente', 'warning');
                             }
+
+                            // Actualizar visibilidad según el filtro activo
+                            const activeFilterButton = document.querySelector('.filter-status.active');
+                            if (activeFilterButton) {
+                                activeFilterButton.click();
+                            }
                         }
                     })
                     .catch(() => {
@@ -203,6 +315,7 @@
             });
         });
 
+        
         function showFlashMessage(message, type = 'success') {
             const icons = {
                 success: 'ri-checkbox-circle-fill text-success',
@@ -219,10 +332,10 @@
             wrapper.setAttribute('role', 'alert');
 
             wrapper.innerHTML = `
-            <i class="${icons[type] || icons.success} me-2 fs-4"></i>
-            <div>${message}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        `;
+                <i class="${icons[type] || icons.success} me-2 fs-4"></i>
+                <div>${message}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            `;
 
             flashContainer.innerHTML = ''; // Limpia anteriores
             flashContainer.appendChild(wrapper);
