@@ -43,10 +43,13 @@ class NewsController extends Controller
             ->take(5)
             ->get();
 
-        return response()->json(['data' => $latest]);
+        return response()->json([
+            'status' => '200',
+            'data' => $data
+        ]);
     }
 
-    public function store(Request $request)
+ public function store(Request $request)
     {
         $request->validate([
             'titulo' => 'required|unique:news|max:50',
@@ -64,4 +67,6 @@ class NewsController extends Controller
 
         return response()->json(['message' => 'News created', 'data' => $news], 201);
     }
+
 }
+

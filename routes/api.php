@@ -14,14 +14,20 @@ Route::get('/', function () {
     return response()->json(['message' => 'API is running']);
 });
 
+// Rutas para la gestión de noticias
 Route::prefix('news')->group(function () {
-    Route::get('/', [NewsController::class, 'index']);
-    Route::get('/latest', [NewsController::class, 'latest']);
-    Route::get('/{id}', [NewsController::class, 'show']);
+    Route::get('/', [NewsController::class, 'index']); // Listar noticias
+    Route::get('/latest', [NewsController::class, 'latest']);  // Obtener últimas noticias
+    Route::get('/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
     Route::post('/', [NewsController::class, 'store']);
+    Route::get('/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
+
 });
 
-Route::get('/categorias', [CategoriasController::class, 'index']);
+// Rutas para la gestión de categorías de noticias
+Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
+
+
 /*
 |--------------------------------------------------------------------------
 | Rutas API para la app móvil y otros clientes externos
@@ -58,18 +64,17 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 
 Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
     Route::post('/', [CursoController::class, 'store'])->name('store'); // Crear un curso
+    Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
     Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
     Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
     Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
-
-});
-
-   Route::prefix('cursos')->group(function () {
-    Route::get('/', [CursoController::class, 'index']); // Listar todos los cursos: GET /api/cursos
     Route::get('/activos', [CursoController::class, 'activos']); // Cursos activos: GET /api/cursos/activos
     Route::get('/inactivos', [CursoController::class, 'inactivos']); // Cursos inactivos: GET /api/cursos/inactivos
     Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Cursos ordenados por fecha
     Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']); // Últimos cursos: GET /api/cursos/ultimos/5
-    Route::get('/{id}', [CursoController::class, 'show']); // Ver detalles: GET /api/cursos/{id}
+    
+    Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
+    Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
     Route::get('/cursos/buscar', [CursoController::class, 'buscarFiltrar']); // GET /api/cursos/buscar?search=foo&estado=activo&orden=desc
+
 });

@@ -32,15 +32,23 @@
     </div>
 
     <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
     <!-- FullCalendar JS -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <!-- Bootstrap JS para el modal -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        window.eventosData = @json($eventos ?? []);
+        window.initDashboardCalendar = function() {
             var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            if (!calendarEl) return;
+            // Destruir calendario anterior si existe
+            if (window.dashboardCalendar) {
+                window.dashboardCalendar.destroy();
+            }
+            // Esperar a que FullCalendar esté disponible
+            if (typeof FullCalendar === 'undefined') {
+                setTimeout(window.initDashboardCalendar, 100);
+                return;
+            }
+            window.dashboardCalendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'es',
                 headerToolbar: {
@@ -48,21 +56,17 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
-                events: @json($eventos ?? []),
-                editable: true, // Habilita drag & drop
-
+                events: window.eventosData,
+                editable: true,
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    // Cargar datos en el modal
                     document.getElementById('eventoId').value = info.event.id;
                     document.getElementById('titulo').value = info.event.title;
                     document.getElementById('descripcion').value = info.event.extendedProps.descripcion || '';
                     var modal = new bootstrap.Modal(document.getElementById('eventoModal'));
                     modal.show();
                 },
-
                 eventDrop: function(info) {
-                    // Cuando se arrastra y suelta un evento
                     fetch(`/admin/eventos/${info.event.id}`, {
                         method: 'PUT',
                         headers: {
@@ -81,7 +85,7 @@
                     .then(data => {
                         if (!data.success) {
                             alert('Error al actualizar la fecha del evento.');
-                            info.revert(); // Revierte el cambio en el calendario
+                            info.revert();
                         }
                     })
                     .catch(() => {
@@ -90,7 +94,7 @@
                     });
                 }
             });
-            calendar.render();
+            window.dashboardCalendar.render();
 
             document.getElementById('btnEliminar').onclick = function() {
                 let id = document.getElementById('eventoId').value;
@@ -106,7 +110,7 @@
                         if (response.ok) {
                             var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                             modal.hide();
-                            calendar.getEventById(id).remove();
+                            window.dashboardCalendar.getEventById(id).remove();
                             alert('Evento eliminado exitosamente.');
                         } else {
                             alert('Error al eliminar el evento.');
@@ -136,7 +140,7 @@
                     if (data.success) {
                         var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                         modal.hide();
-                        let event = calendar.getEventById(id);
+                        let event = window.dashboardCalendar.getEventById(id);
                         event.setProp('title', titulo);
                         event.setExtendedProp('descripcion', descripcion);
                         alert('Evento actualizado exitosamente.');
@@ -145,6 +149,18 @@
                     }
                 });
             };
+        };
+        // Ejecutar SIEMPRE la inicialización, sin esperar eventos
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.initDashboardCalendar);
+        } else {
+            window.initDashboardCalendar();
+        }
+        // wire:navigate soporte para recarga de scripts
+        document.addEventListener('navigate', function() {
+            setTimeout(function() {
+                window.initDashboardCalendar();
+            }, 100);
         });
     </script>
 </div>

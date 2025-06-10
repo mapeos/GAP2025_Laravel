@@ -49,7 +49,7 @@ class CursoController extends Controller
     // Obtener cursos con estado inactivo
     public function inactivos()
     {
-        $cursos = Curso::where('estado', 'inactivos')->get();
+        $cursos = Curso::where('estado', 'inactivo')->get();
         return response()->json([
             'status' => '200',
             'message' => 'Cursos inactivos obtenidos correctamente',
