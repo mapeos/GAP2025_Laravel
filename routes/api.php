@@ -9,6 +9,25 @@ use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
 use Illuminate\Support\Facades\Route;
 
+//mensaje de prueba para verificar que la API está funcionando
+Route::get('/', function () {
+    return response()->json(['message' => 'API is running']);
+});
+
+// Rutas para la gestión de noticias
+Route::prefix('news')->group(function () {
+    Route::get('/', [NewsController::class, 'index']); // Listar noticias
+    Route::get('/latest', [NewsController::class, 'latest']);  // Obtener últimas noticias
+    Route::get('/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
+    Route::post('/', [NewsController::class, 'store']);
+    Route::get('/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
+
+});
+
+// Rutas para la gestión de categorías de noticias
+Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
+
+
 /*
 |--------------------------------------------------------------------------
 | Rutas API para la app móvil y otros clientes externos
@@ -30,10 +49,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']); // Logout y revocación de token
     Route::get('auth/me', [AuthController::class, 'me']);          // Info del usuario autenticado
     Route::post('auth/device', [AuthController::class, 'storeDevice']); // Guardar/actualizar info del dispositivo móvil
-    Route::apiResource('eventos', EventoController::class);        
-    Route::apiResource('tipos-evento', TipoEventoController::class); 
+    Route::apiResource('eventos', EventoController::class);
+    Route::apiResource('tipos-evento', TipoEventoController::class);
     Route::apiResource('evento-participante', EventoParticipanteController::class);
-
 });
 
 // Rutas para administración de usuarios pendientes (solo admin)
@@ -50,28 +68,13 @@ Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(
     Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
     Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
     Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
+    Route::get('/activos', [CursoController::class, 'activos']); // Cursos activos: GET /api/cursos/activos
+    Route::get('/inactivos', [CursoController::class, 'inactivos']); // Cursos inactivos: GET /api/cursos/inactivos
+    Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Cursos ordenados por fecha
+    Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']); // Últimos cursos: GET /api/cursos/ultimos/5
+    
     Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
     Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
+    Route::get('/cursos/buscar', [CursoController::class, 'buscarFiltrar']); // GET /api/cursos/buscar?search=foo&estado=activo&orden=desc
+
 });
-
-//mensaje de prueba para verificar que la API está funcionando
-Route::get('/', function () {
-    return response()->json(['message' => 'API is running']);
-});
-
-// Rutas para la gestión de noticias
-Route::get('/news', [NewsController::class, 'index']); // Listar noticias
-Route::get('/news/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
-Route::get('/news/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
-Route::get('/news/latest', [NewsController::class, 'latest']); // Obtener últimas noticias
-
-// Rutas para la gestión de categorías de noticias
-Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
-
-// Rutas para la gestión de Cursos
-Route::get('/courses', [CursoController::class, 'index']); // Listar cursos
-Route::get('/course/{id}', [CursoController::class, 'show']); // Obtener curso por ID
-Route::get('/courses/actives', [CursoController::class, 'activos']); // Listar cursos activos
-Route::get('/courses/inactives', [CursoController::class, 'inactivos']); // Listar cursos inactivos
-Route::get('/courses/byClosesToStart', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Listar cursos ordenados por fecha de inicio descendente
-Route::get('/courses/last/{number?}', [CursoController::class, 'ultimosCursos']); // Listar últimos cursos (por defecto 5)

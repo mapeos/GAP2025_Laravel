@@ -76,7 +76,29 @@ class CursoController extends Controller
             'data' => $cursos
         ]);
     }
+    public function buscarFiltrar(Request $request)
+{
+    $query = Curso::query();
 
+    if ($request->has('search')) {
+        $search = $request->input('search');
+        $query->where('titulo', 'like', "%{$search}%")
+              ->orWhere('descripcion', 'like', "%{$search}%");
+    }
+
+    if ($request->has('estado')) {
+        $estado = $request->input('estado'); // 'activo' o 'inactivo'
+        $query->where('estado', $estado);
+    }
+
+    if ($request->has('orden')) {
+        $orden = $request->input('orden'); // 'asc' o 'desc'
+        $query->orderBy('fecha_inicio', $orden);
+    }
+
+    $cursos = $query->paginate(20);
+    return response()->json($cursos);
+}
     // Crear un nuevo curso
     /* public function store(Request $request)
     {
