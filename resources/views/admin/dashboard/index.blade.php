@@ -4,9 +4,8 @@
 @section('title-page', 'Administración')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item "> <a href="#">Forms</a> </li>
-    <li class="breadcrumb-item active"> Select Elements </li> 
-@endsection 
+    <li class="breadcrumb-item active">Dashboard</li>
+@endsection
 
 @push('css')
 @endpush
