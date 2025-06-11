@@ -55,26 +55,30 @@
                       </div>
                     </div>
                   </div>
-                  <!-- Business Performance Metrics -->
+                  <!-- Usuarios Recientes -->
                   <div class="col-xl-4">
                     <div class="card h-100">
-                      <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Business Growth</h5>
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Current Year
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Current Year</a></li>
-                            <li><a class="dropdown-item" href="#">Previous Year</a></li>
-                            <li><a class="dropdown-item" href="#">All Time</a></li>
-                          </ul>
-                        </div>
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">Usuarios Recientes</h5>
                       </div>
-                      <div class="card-body">
-                        <div class="chart-container" style="position: relative; height: 330px">
-                          <canvas id="performanceChart"></canvas>
-                        </div>
+                      <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                          @php
+                            $usuarios = \App\Models\User::orderBy('created_at', 'desc')->limit(8)->get();
+                          @endphp
+                          @forelse($usuarios as $user)
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-3">
+                              <div>
+                                <i class="ri-user-3-fill text-primary me-2"></i>
+                                <a href="{{ route('admin.users.show', $user) }}" class="text-decoration-none">{{ $user->name }}</a>
+                                <span class="text-muted small">({{ $user->email }})</span>
+                              </div>
+                              <span class="badge bg-{{ $user->status === 'activo' ? 'success' : 'warning' }}">{{ ucfirst($user->status) }}</span>
+                            </li>
+                          @empty
+                            <li class="list-group-item text-muted">No hay usuarios registrados.</li>
+                          @endforelse
+                        </ul>
                       </div>
                     </div>
                   </div>
@@ -142,33 +146,6 @@
                           @empty
                             <div class="text-center text-muted">No hay cursos registrados.</div>
                           @endforelse
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Lead Source Analytics -->
-                  <div class="col-xl-4">
-                    <div class="card h-100">
-                      <div class="card-header">
-                        <h5 class="card-title mb-0">Procedencia de Usuarios Registrados</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="chart-container" style="position: relative; height: 250px">
-                          <canvas id="leadSourceChart"></canvas>
-                        </div>
-                        <div class="mt-4">
-                          <div class="d-flex align-items-center mb-2">
-                            <div class="legend-dot bg-primary"></div>
-                            <span class="ms-2">Web</span> <span class="ms-auto" id="percent-web">0%</span>
-                          </div>
-                          <div class="d-flex align-items-center mb-2">
-                            <div class="legend-dot bg-success"></div>
-                            <span class="ms-2">API</span> <span class="ms-auto" id="percent-api">0%</span>
-                          </div>
-                          <div class="d-flex align-items-center">
-                            <div class="legend-dot bg-warning"></div>
-                            <span class="ms-2">Admin</span> <span class="ms-auto" id="percent-otro">0%</span>
-                          </div>
                         </div>
                       </div>
                     </div>
