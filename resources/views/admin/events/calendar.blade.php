@@ -149,6 +149,9 @@
                 events: @json($eventos ?? []),
                 editable: true,
                 selectable: true, // Permite seleccionar fechas en el calendario
+                dayMaxEventRows: 3, // Limita a mostrar máximo 3 eventos por día
+                moreLinkText: '...', // Texto para el enlace "más"
+                moreLinkClick: 'popover', // Muestra los eventos adicionales en un popover al hacer clic
                 select: function(info) {
                     // Cuando el usuario selecciona un rango de fechas en el calendario
                     // Crear un objeto Date a partir de la fecha de inicio
@@ -230,8 +233,15 @@
 
             // Código existente para btnEliminar y btnGuardar
             document.getElementById('btnEliminar').onclick = function() {
+                // Referencia al botón
+                const btnEliminar = document.getElementById('btnEliminar');
+
                 let id = document.getElementById('eventoId').value;
                 if (confirm('¿Seguro que deseas eliminar este evento?')) {
+                    // Deshabilitar el botón y mostrar indicador de carga
+                    btnEliminar.disabled = true;
+                    btnEliminar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Eliminando...';
+
                     fetch(`/eventos/${id}`, {
                         method: 'DELETE',
                         headers: {
@@ -241,6 +251,10 @@
                         }
                     })
                     .then(response => {
+                        // Restaurar el botón
+                        btnEliminar.disabled = false;
+                        btnEliminar.innerHTML = 'Eliminar';
+
                         if (response.ok) {
                             var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                             modal.hide();
@@ -253,6 +267,10 @@
                         }
                     })
                     .catch(error => {
+                        // Restaurar el botón en caso de error
+                        btnEliminar.disabled = false;
+                        btnEliminar.innerHTML = 'Eliminar';
+
                         console.error('Error:', error);
                         alert('Error al eliminar el evento.');
                     });
@@ -260,9 +278,26 @@
             };
 
             document.getElementById('btnGuardar').onclick = function() {
+                // Referencia al botón
+                const btnGuardar = document.getElementById('btnGuardar');
+
+                // Deshabilitar el botón y mostrar indicador de carga
+                btnGuardar.disabled = true;
+                btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+
                 let id = document.getElementById('eventoId').value;
                 let titulo = document.getElementById('titulo').value;
                 let descripcion = document.getElementById('descripcion').value;
+
+                // Validar que el título no esté vacío
+                if (!titulo) {
+                    // Restaurar el botón si hay error de validación
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = 'Guardar cambios';
+                    alert('El título no puede estar vacío.');
+                    return;
+                }
+
                 fetch(`/eventos/${id}`, {
                     method: 'PUT',
                     headers: {
@@ -277,6 +312,10 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    // Restaurar el botón
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = 'Guardar cambios';
+
                     if (data.success) {
                         var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                         modal.hide();
@@ -289,6 +328,10 @@
                     }
                 })
                 .catch(error => {
+                    // Restaurar el botón en caso de error
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = 'Guardar cambios';
+
                     console.error('Error:', error);
                     alert('Error al actualizar el evento.');
                 });
@@ -296,6 +339,13 @@
 
             // Nuevo código para crear eventos
             document.getElementById('btnCrearEvento').onclick = function() {
+                // Referencia al botón
+                const btnCrearEvento = document.getElementById('btnCrearEvento');
+
+                // Deshabilitar el botón y mostrar indicador de carga
+                btnCrearEvento.disabled = true;
+                btnCrearEvento.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creando...';
+
                 let titulo = document.getElementById('nuevoTitulo').value;
                 let descripcion = document.getElementById('nuevaDescripcion').value;
                 let ubicacion = document.getElementById('nuevaUbicacion').value;
@@ -306,12 +356,18 @@
 
                 // Validar que los campos requeridos estén completos
                 if (!titulo || !tipo_evento_id || !fecha_inicio || !fecha_fin) {
+                    // Restaurar el botón si hay error de validación
+                    btnCrearEvento.disabled = false;
+                    btnCrearEvento.innerHTML = 'Crear evento';
                     alert('Por favor complete todos los campos requeridos.');
                     return;
                 }
 
                 // Validar que la fecha de fin sea posterior o igual a la fecha de inicio
                 if (new Date(fecha_fin) < new Date(fecha_inicio)) {
+                    // Restaurar el botón si hay error de validación
+                    btnCrearEvento.disabled = false;
+                    btnCrearEvento.innerHTML = 'Crear evento';
                     alert('La fecha de fin debe ser posterior o igual a la fecha de inicio.');
                     return;
                 }
@@ -341,6 +397,10 @@
                     return response.json();
                 })
                 .then(data => {
+                    // Restaurar el botón
+                    btnCrearEvento.disabled = false;
+                    btnCrearEvento.innerHTML = 'Crear evento';
+
                     if (data.success) {
                         // Cerrar el modal
                         var modal = bootstrap.Modal.getInstance(document.getElementById('crearEventoModal'));
@@ -372,6 +432,10 @@
                     }
                 })
                 .catch(error => {
+                    // Restaurar el botón en caso de error
+                    btnCrearEvento.disabled = false;
+                    btnCrearEvento.innerHTML = 'Crear evento';
+
                     console.error('Error:', error);
                     alert('Error al crear el evento.');
                 });
