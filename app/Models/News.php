@@ -16,6 +16,7 @@ class News extends Model
         'contenido',
         'autor',
         'fecha_publicacion',
+        'imagen',
     ];
 
     protected $casts = [

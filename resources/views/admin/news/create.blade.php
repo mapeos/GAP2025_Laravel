@@ -16,7 +16,7 @@
     {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
     @include('template.partials.alerts')
 
-    <form action="{{ route('admin.news.store') }}" method="POST">
+    <form action="{{ route('admin.news.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="form-group mb-3">
@@ -25,6 +25,15 @@
             @error('titulo')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="imagen">Imagen</label>
+            <input type="file" class="form-control @error('imagen') is-invalid @enderror" id="imagen" name="imagen" accept="image/*">
+            @error('imagen')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+            <small class="form-text text-muted">Formatos permitidos: JPEG, PNG, JPG, GIF. Tamaño máximo: 2MB</small>
         </div>
 
         <div class="form-group mb-3">
@@ -45,10 +54,15 @@
 
         <div class="form-group mb-3">
             <label for="fecha_publicacion">Fecha de Publicación</label>
-            <input type="datetime-local" class="form-control @error('fecha_publicacion') is-invalid @enderror" id="fecha_publicacion" name="fecha_publicacion" value="{{ old('fecha_publicacion') }}" required>
-            @error('fecha_publicacion')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <div class="input-group">
+                <input type="datetime-local" class="form-control @error('fecha_publicacion') is-invalid @enderror" id="fecha_publicacion" name="fecha_publicacion" value="{{ old('fecha_publicacion') }}" required>
+                <button type="button" class="btn btn-outline-secondary" id="fechaActual">
+                    <i class="ri-time-line"></i> Fecha Actual
+                </button>
+                @error('fecha_publicacion')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
 
         <!-- <div class="form-group mb-3">
@@ -82,3 +96,24 @@
     </form>
 </div>
 @endsection
+
+@push('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fechaActualBtn = document.getElementById('fechaActual');
+        const fechaInput = document.getElementById('fecha_publicacion');
+
+        fechaActualBtn.addEventListener('click', function() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}`;
+            fechaInput.value = fechaHora;
+        });
+    });
+</script>
+@endpush

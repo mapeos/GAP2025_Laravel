@@ -32,6 +32,12 @@
     </div>
     @endif
 
+    @if($news->imagen)
+    <div class="mb-4">
+        <img src="{{ asset($news->imagen) }}" alt="Imagen de la noticia" class="img-fluid rounded" style="max-height: 400px;">
+    </div>
+    @endif
+
     <p><strong>Categorías:</strong>
         @if ($news->categorias->isNotEmpty())
         @foreach ($news->categorias as $categoria)

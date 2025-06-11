@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo', 60)->unique();
             $table->text('contenido');
+            $table->string('imagen')->nullable();
 
             // $table->foreignId('users_id')->constrained('users'); 
             // esto seria el uso de clave foranea con relacion a la tabla users
