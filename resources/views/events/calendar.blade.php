@@ -4,7 +4,16 @@
 <div class="container">
     <h1 class="mb-4">Calendario de eventos</h1>
     <div class="d-flex gap-2 mb-3">
-        
+        @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearEventoModal">
+                Crear nuevo evento
+            </button>
+        @else
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearEventoModal">
+                Crear recordatorio personal
+            </button>
+        @endif
+
         @if(Auth::user()->hasRole('alumno'))
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal">
                 Solicitar cita/consulta con profesor
@@ -50,8 +59,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="fecha_propuesta" class="form-label">Fecha y hora propuesta</label>
-                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required 
-                                   min="{{ date('Y-m-d\TH:i') }}" 
+                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required
+                                   min="{{ date('Y-m-d\TH:i') }}"
                                    step="1800">
                         </div>
                     </div>
@@ -87,8 +96,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="fecha_propuesta" class="form-label">Fecha y hora propuesta</label>
-                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required 
-                                   min="{{ date('Y-m-d\TH:i') }}" 
+                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required
+                                   min="{{ date('Y-m-d\TH:i') }}"
                                    step="1800">
                         </div>
                     </div>
@@ -101,6 +110,114 @@
     </div>
 
     <div id="calendar"></div>
+
+    <!-- Modal para crear nuevo evento -->
+    <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    @if(Auth::user()->hasRole('alumno'))
+                        <h5 class="modal-title" id="crearEventoModalLabel">Crear recordatorio personal</h5>
+                    @else
+                        <h5 class="modal-title" id="crearEventoModalLabel">Crear nuevo evento</h5>
+                    @endif
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCrearEvento">
+                        <div class="mb-3">
+                            <label for="nuevoTitulo" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="nuevoTitulo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nuevaDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="nuevaDescripcion"></textarea>
+                        </div>
+                        @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+                        <div class="mb-3">
+                            <label for="nuevaUbicacion" class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" id="nuevaUbicacion">
+                        </div>
+                        <div class="mb-3">
+                            <label for="nuevaUrlVirtual" class="form-label">URL Virtual</label>
+                            <input type="url" class="form-control" id="nuevaUrlVirtual">
+                        </div>
+                        <div class="mb-3">
+                            <label for="nuevoTipoEvento" class="form-label">Tipo de evento</label>
+                            <select class="form-select" id="nuevoTipoEvento" required>
+                                <option value="">Seleccione un tipo</option>
+                                @foreach(\App\Models\TipoEvento::where('status', true)->get() as $tipo)
+                                    <option value="{{ $tipo->id }}" data-color="{{ $tipo->color }}">{{ $tipo->nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @else
+                        <input type="hidden" id="nuevaUbicacion" value="">
+                        <input type="hidden" id="nuevaUrlVirtual" value="">
+                        <div class="mb-3">
+                            <label for="nuevoTipoEvento" class="form-label">Tipo de evento</label>
+                            @php
+                                $tipoRecordatorio = \App\Models\TipoEvento::where('status', true)
+                                    ->where('nombre', 'Recordatorio Personal')
+                                    ->first();
+                            @endphp
+                            @if($tipoRecordatorio)
+                                <input type="hidden" id="nuevoTipoEvento" value="{{ $tipoRecordatorio->id }}" data-color="{{ $tipoRecordatorio->color }}" required>
+                                <input type="text" class="form-control" value="{{ $tipoRecordatorio->nombre }}" readonly>
+                            @else
+                                <div class="alert alert-danger">No se encontró el tipo de evento "Recordatorio Personal"</div>
+                            @endif
+                        </div>
+                        @endif
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nuevaFechaInicio" class="form-label">Fecha inicio</label>
+                                <input type="datetime-local" class="form-control" id="nuevaFechaInicio" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nuevaFechaFin" class="form-label">Fecha fin</label>
+                                <input type="datetime-local" class="form-control" id="nuevaFechaFin" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnCrearEvento" class="btn btn-primary">Crear evento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar evento -->
+    <div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="eventoModalLabel">Detalles del evento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formEditarEvento">
+              <input type="hidden" id="eventoId">
+              <div class="mb-3">
+                <label for="titulo" class="form-label">Título</label>
+                <input type="text" class="form-control" id="titulo" required>
+              </div>
+              <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion"></textarea>
+              </div>
+              <!-- Puedes agregar más campos si lo necesitas -->
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="btnEliminar" class="btn btn-danger">Eliminar</button>
+            <button type="button" id="btnGuardar" class="btn btn-primary">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -156,7 +273,11 @@
 
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    // Aquí puedes agregar la lógica para mostrar detalles del evento si lo necesitas
+                    document.getElementById('eventoId').value = info.event.id;
+                    document.getElementById('titulo').value = info.event.title;
+                    document.getElementById('descripcion').value = info.event.extendedProps.descripcion || '';
+                    var modal = new bootstrap.Modal(document.getElementById('eventoModal'));
+                    modal.show();
                 },
                 eventDrop: function(info) {
                     fetch(`/eventos/${info.event.id}`, {
@@ -370,8 +491,16 @@
 
                         // Obtener el color del tipo de evento seleccionado
                         let tipoEventoSelect = document.getElementById('nuevoTipoEvento');
-                        let selectedOption = tipoEventoSelect.options[tipoEventoSelect.selectedIndex];
-                        let color = selectedOption.getAttribute('data-color');
+                        let color;
+                        
+                        // Verificar si es un select (admin/profesor) o un input hidden (alumno)
+                        if (tipoEventoSelect.tagName === 'SELECT') {
+                            let selectedOption = tipoEventoSelect.options[tipoEventoSelect.selectedIndex];
+                            color = selectedOption.getAttribute('data-color');
+                        } else {
+                            // Para alumnos, el color está en el atributo data-color del input hidden
+                            color = tipoEventoSelect.getAttribute('data-color');
+                        }
 
                         // Añadir el evento al calendario
                         calendar.addEvent({

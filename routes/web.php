@@ -72,9 +72,13 @@ Route::middleware(['auth'])->group(function () {
     // Rutas para eventos
     Route::get('calendario', [EventoController::class, 'calendario'])->name('calendario');
     Route::get('eventos/json', [EventoController::class, 'getEventos'])->name('eventos.json');
-    // Rutas CRUD de eventos (solo administradores y profesores)
+    
+    // Ruta para que los estudiantes puedan crear recordatorios personales
+    Route::post('eventos', [EventoController::class, 'store'])->name('eventos.store');
+    
+    // Rutas CRUD de eventos (solo administradores y profesores, excepto store que ya está definido arriba)
     Route::middleware(['role:Administrador|Profesor'])->group(function () {
-        Route::resource('eventos', EventoController::class);
+        Route::resource('eventos', EventoController::class)->except(['store']);
     });
     // Rutas para participantes
     Route::prefix('eventos/{evento}/participantes')->group(function () {
