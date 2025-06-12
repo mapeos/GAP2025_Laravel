@@ -44,7 +44,7 @@ class NewsController extends Controller
             'fecha_publicacion' => 'required|date',
             'categorias' => 'nullable|array',
             // 'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validación para la imagen
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB = 10240KB
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480', // 20MB = 20480KB
 
         ]);
 
@@ -100,7 +100,7 @@ class NewsController extends Controller
             'autor' => 'nullable|integer',
             'fecha_publicacion' => 'required|date',
             'categorias' => 'nullable|array',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validación para la imagen
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480', // 20MB = 20480KB
         ]);
 
         $data = $request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']);

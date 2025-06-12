@@ -96,6 +96,10 @@
                 @error('imagen')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
+                <div id="imageError" class="alert alert-danger d-none mt-2 mb-0" role="alert" style="padding: 0.5rem 1rem; font-size: 1rem;">
+                    <span id="imageErrorMsg"></span>
+                    <button type="button" class="btn-close float-end" aria-label="Cerrar" onclick="this.parentElement.classList.add('d-none')"></button>
+                </div>
             </div>
         </div>
 
@@ -218,6 +222,9 @@
         const submitBtn = document.getElementById('submitBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        const imageError = document.getElementById('imageError');
+        const imageErrorMsg = document.getElementById('imageErrorMsg');
+        let errorTimeout = null;
 
         // Variable para controlar si hay cambios sin guardar
         let hasUnsavedChanges = false;
@@ -322,6 +329,45 @@
             fechaInput.value = fechaHora;
             hasUnsavedChanges = true;
         });
+
+        function showImageError(msg) {
+            imageErrorMsg.textContent = msg;
+            imageError.classList.remove('d-none');
+            if (errorTimeout) clearTimeout(errorTimeout);
+            errorTimeout = setTimeout(() => {
+                imageError.classList.add('d-none');
+            }, 6000);
+        }
+
+        // Validar tamaño (20MB máximo)
+        if (file.size > 20 * 1024 * 1024) {
+            showImageError('El archivo es demasiado grande. El tamaño máximo permitido es 20MB.');
+            imageInput.value = '';
+            return;
+        }
+
+        // Validar tipo de archivo
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showImageError('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG, GIF y WEBP.');
+            imageInput.value = '';
+            return;
+        }
+        reader.onerror = function() {
+            showImageError('Error al leer el archivo. Por favor, intente con otra imagen.');
+            imageInput.value = '';
+        }
+        // Validar tamaño y tipo antes de enviar
+        if (file.size > 20 * 1024 * 1024) {
+            e.preventDefault();
+            showImageError('El archivo es demasiado grande. El tamaño máximo permitido es 20MB.');
+            return;
+        }
+        if (!allowedTypes.includes(file.type)) {
+            e.preventDefault();
+            showImageError('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG, GIF y WEBP.');
+            return;
+        }
     });
 </script>
 @endpush

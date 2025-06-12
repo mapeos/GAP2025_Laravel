@@ -92,7 +92,7 @@
                     <div class="image-upload-placeholder" id="imagePlaceholder">
                         <i class="ri-image-add-line"></i>
                         <span>Haz clic para subir una imagen</span>
-                        <small class="text-muted d-block mt-2">Formatos permitidos: JPEG, PNG, JPG, GIF. Tamaño máximo: 10MB</small>
+                        <small class="text-muted d-block mt-2">Formatos permitidos: JPEG, PNG, JPG, GIF, WEBP. Tamaño máximo: 20MB</small>
                     </div>
                     <div class="image-preview d-none" id="imagePreview">
                         <img src="" alt="Vista previa" id="previewImage">
@@ -104,6 +104,10 @@
                 @error('imagen')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
+                <div id="imageError" class="alert alert-danger d-none mt-2 mb-0" role="alert" style="padding: 0.5rem 1rem; font-size: 1rem;">
+                    <span id="imageErrorMsg"></span>
+                    <button type="button" class="btn-close float-end" aria-label="Cerrar" onclick="this.parentElement.classList.add('d-none')"></button>
+                </div>
             </div>
         </div>
 
@@ -227,6 +231,9 @@
         const submitBtn = document.getElementById('submitBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        const imageError = document.getElementById('imageError');
+        const imageErrorMsg = document.getElementById('imageErrorMsg');
+        let errorTimeout = null;
 
         // Variable para controlar si hay cambios sin guardar
         let hasUnsavedChanges = false;
@@ -234,17 +241,17 @@
         // Función para mostrar la vista previa
         function showPreview(file) {
             if (file) {
-                // Validar tamaño (10MB máximo)
-                if (file.size > 10 * 1024 * 1024) {
-                    alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+                // Validar tamaño (20MB máximo)
+                if (file.size > 20 * 1024 * 1024) {
+                    showImageError('El archivo es demasiado grande. El tamaño máximo permitido es 20MB.');
                     imageInput.value = '';
                     return;
                 }
 
                 // Validar tipo de archivo
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
                 if (!allowedTypes.includes(file.type)) {
-                    alert('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG y GIF.');
+                    showImageError('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG, GIF y WEBP.');
                     imageInput.value = '';
                     return;
                 }
@@ -256,7 +263,7 @@
                     imagePreview.classList.remove('d-none');
                 }
                 reader.onerror = function() {
-                    alert('Error al leer el archivo. Por favor, intente con otra imagen.');
+                    showImageError('Error al leer el archivo. Por favor, intente con otra imagen.');
                     imageInput.value = '';
                 }
                 reader.readAsDataURL(file);
@@ -300,16 +307,16 @@
             if (imageInput.files.length > 0) {
                 const file = imageInput.files[0];
                 // Validar tamaño y tipo antes de enviar
-                if (file.size > 10 * 1024 * 1024) {
+                if (file.size > 20 * 1024 * 1024) {
                     e.preventDefault();
-                    alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+                    showImageError('El archivo es demasiado grande. El tamaño máximo permitido es 20MB.');
                     return;
                 }
 
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
                 if (!allowedTypes.includes(file.type)) {
                     e.preventDefault();
-                    alert('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG y GIF.');
+                    showImageError('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG, GIF y WEBP.');
                     return;
                 }
 
@@ -375,6 +382,15 @@
             fechaInput.value = fechaHora;
             hasUnsavedChanges = true;
         });
+
+        function showImageError(msg) {
+            imageErrorMsg.textContent = msg;
+            imageError.classList.remove('d-none');
+            if (errorTimeout) clearTimeout(errorTimeout);
+            errorTimeout = setTimeout(() => {
+                imageError.classList.add('d-none');
+            }, 6000);
+        }
     });
 </script>
 @endpush
