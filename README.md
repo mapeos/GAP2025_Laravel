@@ -283,6 +283,40 @@ Para probar el sistema se puede utilizar el comando:
 php artisan appointments:suggest-ai 1 2 5 "2025-07-01"
 ```
 
+
+# Asistente AI para citas en calendario
+Ejecutar la migración: `php artisan migrate` 
+Se ha creado un comando `php artisan appointments:suggest 1 2 "2025-07-01"` para verificar si se genera una fecha mediate IA
+
+## Motor de IA
+Se utiliza un sistema basado en LLM basado en *Ollama + Mistral 7B*
+- Ollama es U una plataforma de LLMs que se ejecuta en local
+- Mistral 7B es un modelo especializado en instrucciones, entiende cosas como "sugiereme un hueco en la agenda"
+
+Más adelante se podría incluir:
+- Phi-2 (Microsoft): modelo pequeño y muy preciso.
+- Gemma 2B Instruct (Google): excelente para correr en CPU, más pequeño que Mistral.
+ - TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
+
+### Instalación del sistema
+- En linux: `curl -fsSL https://ollama.com/install.sh | sh`
+- En windows:
+```
+# Windows (WSL)
+wsl --install # (Si no tienes WSL)
+wsl
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+- cargar el modelo (unos 4.1Gb de espacio): `ollama run mistral`
+- exportar variables de sistema (linux):
+```
+export OLLAMA_HOST=0.0.0.0
+export OLLAMA_ORIGINS=*
+```
+- arrancar *Ollama*: `ollama serve`
+
+
 # Agenda/Calendario (Arnaldo y Víctor)
 
 ## 1. Introducción
@@ -672,31 +706,6 @@ php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 php artisan migrate
 ```
 
-
-# Ejecutar los seeders
-
--   Crear algunas categorias para pruebas
-
-```bash
-php artisan db:seed --class=CategoriaSeeder
-```
-
--   Crear algunas noticias para pruebas
-
-```bash
-php artisan db:seed --class=NewsSeeder
-```
-
-# Subida de imágenes en la aplicación de Noticias
-
--   Esta aplicación permite subir imágenes para las noticias en formatos JPG y PNG, con un tamaño máximo de 5MB.
-
-# Ejecutar el enlace simbólico de almacenamiento
-
-```bash
-php artisan storage:link
-```
-
 ---
 
 # Flujo de autenticación y registro para la app móvil
@@ -783,20 +792,26 @@ Este es el flujo completo para la autenticación y registro de dispositivos móv
 
 ## Parte de Backoffice
 
+### Funcionalidades Implementadas
+
 -   **Gestión CRUD de noticias**
-    -   Posibilidad de crear, editar, eliminar y visualizar noticias.
-    -   Verificación para evitar la creación de duplicados.
+    -   Crear, editar, eliminar y visualizar noticias
+    -   Verificación para evitar la creación de duplicados
+    -   Soporte para imágenes en formatos JPG y PNG (máximo 2MB)
+    -   Sistema de borrado lógico (soft delete)
+    -   Paginación de resultados
+
 -   **Gestión CRUD de categorías**
--   **Vinculación de noticias con múltiples categorías** (relación N:N)
--   **Vinculación de noticias con usuarios**
-    -   Solo permitido para usuarios con rol adecuado (_ej. "editor", "admin"_).
--   **Borrado lógico para evitar pérdida de datos**
-    -   Uso de `soft delete` en lugar de eliminación permanente.
-    -   Protección ante eliminación de categorías con relaciones activas (manejo de errores).
+    -   Crear, editar, eliminar y visualizar categorías
+    -   Protección ante eliminación de categorías con noticias asociadas
+    -   Sistema de borrado lógico (soft delete)
 
----
+-   **Relaciones**
+    -   Vinculación de noticias con múltiples categorías (relación N:N)
+    -   Vinculación de noticias con usuarios (autor)
+    -   Control de acceso basado en roles (editor, admin)
 
-## Construcción de Rutas para CRUD de Noticias y Categorías
+### Configuración Inicial
 
 > Las rutas HTTP se estructuraron de dos formas posibles:
 
@@ -856,56 +871,89 @@ php artisan make:model News
 php artisan make:model Categorias
 ```
 
-# Crear las Tablas necesarias para la BD
-
--   Genera las migraciones para las tablas:
-
+2. **Crear las migraciones**
 ```bash
 php artisan make:migration create_news_table
 php artisan make:migration create_categorias_table
 php artisan make:migration create_news_has_categorias_table
 ```
 
-## Relizar las migraciones una vez creadas las tablas
-
--   Una vez definidas correctamente las estructuras en los archivos de migración, puedes ejecutar las migraciones:
-
+3. **Ejecutar las migraciones**
+```bash
 # Dentro de Docker
-
-```bash
 docker exec -it alumnos-gap-app php artisan migrate
-```
 
-# O directamente si estás trabajando fuera de Docker
-
-```bash
+# O directamente
 php artisan migrate
 ```
 
-# Ejecutar los seeders
-
--   Crear algunas categorias para pruebas
-
+4. **Cargar datos de prueba**
 ```bash
+# Crear categorías de prueba
 php artisan db:seed --class=CategoriaSeeder
-```
 
--   Crear algunas noticias para pruebas
-
-```bash
+# Crear noticias de prueba
 php artisan db:seed --class=NewsSeeder
 ```
 
-# Subida de imágenes en la aplicación de Noticias
+### Estructura de Directorios para Imágenes
 
--   Esta aplicación permite subir imágenes para las noticias en formatos JPG y PNG, con un tamaño máximo de 5MB.
+Este comando creará un enlace simbólico en `public/storage` que apunta a `storage/app/public`. Las imágenes de las noticias se almacenarán en `storage/app/public/news` y serán accesibles públicamente a través de la URL `/storage/news/nombre-del-archivo`.
 
-# Ejecutar el enlace simbólico de almacenamiento
-
+5. **Configurar el almacenamiento de imágenes**
 ```bash
+# Dentro de Docker
+docker exec -it alumnos-gap-app php artisan storage:link
+
+# O directamente
 php artisan storage:link
 ```
 
+### Estructura de Rutas
+
+Las rutas están implementadas de dos formas:
+
+1. **Rutas Agrupadas (Recomendada)**
+```php
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'is_admin'])->group(function () {
+    Route::resource('news', NewsController::class);
+    Route::resource('categorias', CategoriasController::class);
+});
+```
+
+2. **Rutas Manuales**
+```php
+Route::get('/admin/news', [NewsController::class, 'index'])->name('admin.news.index');
+Route::post('/admin/news', [NewsController::class, 'store'])->name('admin.news.store');
+// ... más rutas
+```
+
+### Middleware de Control de Acceso (en caso de necesitarlo!)
+
+Para proteger las rutas administrativas:
+
+1. **Crear el middleware**
+```bash
+php artisan make:middleware IsAdmin
+```
+
+2. **Implementar la lógica**
+```php
+public function handle($request, \Closure $next)
+{
+    if (auth()->check() && auth()->user()->hasRole(['admin', 'editor'])) {
+        return $next($request);
+    }
+    abort(403, 'Acceso no autorizado.');
+}
+```
+
+3. **Registrar el middleware**
+```php
+protected $routeMiddleware = [
+    'is_admin' => \App\Http\Middleware\IsAdmin::class,
+];
+```
 ---
 
 # API

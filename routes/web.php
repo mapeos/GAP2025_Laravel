@@ -12,6 +12,7 @@ use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\ProfesorController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -50,9 +51,21 @@ require __DIR__ . '/auth.php';
 // Módulo de Agenda/Calendario y Eventos
 // --------------------------------------------
 Route::middleware(['auth'])->group(function () {
-    // Rutas para tipos de evento (solo administradores)
+    // Ruta para el dashboard del profesor
+    Route::get('/profesor/home', [\App\Http\Controllers\ProfesorController::class, 'home'])
+        ->name('profesor.home')
+        ->middleware('role:profesor');
+
+    // Rutas para solicitudes de citas
+    Route::get('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'index'])
+        ->name('solicitud-cita.index');
+    Route::get('/solicitud-cita/recibidas', [\App\Http\Controllers\SolicitudCitaController::class, 'recibidas'])
+        ->name('solicitud-cita.recibidas');
+    Route::put('/solicitud-cita/{solicitud}/estado', [\App\Http\Controllers\SolicitudCitaController::class, 'ActualizarEstado'])
+        ->name('solicitud-cita.actualizar-estado');
     Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
         ->name('solicitud-cita.store');
+    // Rutas para tipos de evento (solo administradores)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('tipos-evento', TipoEventoController::class);
     });

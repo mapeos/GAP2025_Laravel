@@ -94,6 +94,14 @@ class EventoController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -103,6 +111,25 @@ class EventoController extends Controller
         $data['creado_por'] = Auth::id();
 
         $evento = Evento::create($data);
+
+        // Si la petición es AJAX, responde con JSON
+        if ($request->expectsJson()) {
+            // Cargar la relación tipoEvento para obtener el color
+            $evento->load('tipoEvento');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Evento creado exitosamente',
+                'evento' => [
+                    'id' => $evento->id,
+                    'titulo' => $evento->titulo,
+                    'descripcion' => $evento->descripcion,
+                    'fecha_inicio' => $evento->fecha_inicio->toISOString(),
+                    'fecha_fin' => $evento->fecha_fin->toISOString(),
+                    'color' => $evento->tipoEvento->color
+                ]
+            ]);
+        }
 
         return redirect()->route('admin.events.index')
             ->with('success', 'Evento creado exitosamente.');

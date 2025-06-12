@@ -16,7 +16,7 @@
     {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
     @include('template.partials.alerts')
 
-    <form action="{{ route('admin.news.update', $news) }}" method="POST">
+    <form action="{{ route('admin.news.update', $news) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -26,6 +26,20 @@
             @error('titulo')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="imagen">Imagen</label>
+            @if($news->imagen)
+                <div class="mb-2">
+                    <img src="{{ asset($news->imagen) }}" alt="Imagen actual" class="img-thumbnail" style="max-width: 200px;">
+                </div>
+            @endif
+            <input type="file" class="form-control @error('imagen') is-invalid @enderror" id="imagen" name="imagen" accept="image/*">
+            @error('imagen')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+            <small class="form-text text-muted">Formatos permitidos: JPEG, PNG, JPG, GIF. Tamaño máximo: 2MB</small>
         </div>
 
         <div class="form-group">
@@ -46,11 +60,16 @@
 
         <div class="form-group">
             <label for="fecha_publicacion">Fecha de Publicación</label>
-            <input type="datetime-local" class="form-control @error('fecha_publicacion') is-invalid @enderror" id="fecha_publicacion" name="fecha_publicacion"
-                value="{{ old('fecha_publicacion', optional($news->fecha_publicacion)->format('Y-m-d\TH:i')) }}" required>
-            @error('fecha_publicacion')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <div class="input-group">
+                <input type="datetime-local" class="form-control @error('fecha_publicacion') is-invalid @enderror" id="fecha_publicacion" name="fecha_publicacion"
+                    value="{{ old('fecha_publicacion', optional($news->fecha_publicacion)->format('Y-m-d\TH:i')) }}" required>
+                <button type="button" class="btn btn-outline-secondary" id="fechaActual">
+                    <i class="ri-time-line"></i> Fecha Actual
+                </button>
+                @error('fecha_publicacion')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
 
         <div class="form-group">
@@ -71,4 +90,25 @@
         <button type="submit" class="btn btn-warning mt-3">Actualizar Noticia</button>
     </form>
 </div>
+
+@push('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fechaActualBtn = document.getElementById('fechaActual');
+        const fechaInput = document.getElementById('fecha_publicacion');
+
+        fechaActualBtn.addEventListener('click', function() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}`;
+            fechaInput.value = fechaHora;
+        });
+    });
+</script>
+@endpush
 @endsection
