@@ -8,6 +8,8 @@ use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\DeviceController;
 
 //mensaje de prueba para verificar que la API está funcionando
 Route::get('/', function () {
@@ -78,3 +80,14 @@ Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(
     Route::get('/cursos/buscar', [CursoController::class, 'buscarFiltrar']); // GET /api/cursos/buscar?search=foo&estado=activo&orden=desc
 
 });
+
+
+// Save/update FCM token for authenticated user
+Route::middleware('auth:sanctum')->post('/fcm-token', [NotificationController::class, 'store']);
+// Devices endpoints for storing/deleting device info (authenticated users)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/devices', [DeviceController::class, 'store']);
+    Route::delete('/devices', [DeviceController::class, 'destroy']);
+});
+// Send notification to selected users - only admin (you may want to use sanctum guard here for consistency)
+Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send', [NotificationController::class, 'sendNotification']);

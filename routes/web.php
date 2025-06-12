@@ -11,6 +11,7 @@ use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\NotificationController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -216,3 +217,12 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
         Route::delete('/reminders/{evento}', [EventoController::class, 'destroyReminder'])->name('reminders.destroy');
     });
 });
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth']) // make sure auth middleware is correct for your app (web guard)
+    ->group(function () {
+        Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
+        Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
+        Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
+    });

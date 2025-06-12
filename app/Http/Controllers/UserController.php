@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
+
 class UserController extends Controller
 {
     // Listar usuarios (incluidos los eliminados), ordenados por más recientes y filtrados por estado si se solicita
