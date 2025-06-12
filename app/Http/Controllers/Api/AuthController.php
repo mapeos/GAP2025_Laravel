@@ -12,63 +12,56 @@ use App\Models\Device;
 class AuthController extends Controller
 {
     /**
-     * Endpoint para registrar un dispositivo móvil sin usuario asociado.
-     * Permite identificar la primera comunicación de la app móvil.
-     * Si el dispositivo ya existe, solo actualiza los datos básicos.
-     * Si es nuevo, lo crea con user_id = null.
-     *
-     * POST /api/device/register
-     * Body: device_id, device_name, device_os, etc.
+     * Register device without user association.
      */
     public function registerDevice(Request $request)
     {
         $request->validate([
-            'device_id' => 'required|string',
-            'device_name' => 'nullable|string',
-            'device_os' => 'nullable|string',
-            'device_token' => 'nullable|string',
-            'app_version' => 'nullable|string',
+            'device_id' => 'required|string|max:255',
+            'fcm_token' => 'nullable|string|max:1024',
+            'device_name' => 'nullable|string|max:255',
+            'device_os' => 'nullable|string|max:255',
+            'app_version' => 'nullable|string|max:50',
             'extra_data' => 'nullable|array',
         ]);
 
-        // Busca el dispositivo por device_id y user_id null
         $device = Device::where('device_id', $request->device_id)
             ->whereNull('user_id')
             ->first();
 
         if (!$device) {
-            // Primer contacto de este dispositivo
             $device = Device::create([
-                'device_id' => $request->device_id,
-                'device_name' => $request->device_name,
-                'device_os' => $request->device_os,
-                'device_token' => $request->device_token,
-                'app_version' => $request->app_version,
-                'extra_data' => $request->extra_data ?? null,
-                'first_seen_at' => now(), // Campo nuevo en la tabla devices
-                'user_id' => null,
+                'device_id'    => $request->device_id,
+                'fcm_token'    => $request->fcm_token,
+                'device_name'  => $request->device_name,
+                'device_os'    => $request->device_os,
+                'app_version'  => $request->app_version,
+                'extra_data'   => $request->extra_data ?? [],
+                'first_seen_at' => now(),
+                'user_id'      => null,
             ]);
         } else {
-            // El dispositivo ya existe, solo actualiza info básica
             $device->update([
+                'fcm_token'   => $request->fcm_token,
                 'device_name' => $request->device_name,
-                'device_os' => $request->device_os,
-                'device_token' => $request->device_token,
+                'device_os'   => $request->device_os,
                 'app_version' => $request->app_version,
-                'extra_data' => $request->extra_data ?? null,
+                'extra_data'  => $request->extra_data ?? [],
             ]);
         }
 
         return response()->json($device, 201);
     }
 
-    // Registro de usuario móvil
+    /**
+     * Register a new user and optionally associate a device.
+     */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|string|email|max:255|unique:users',
+            'password'              => 'required|string|min:6|confirmed',
             'password_confirmation' => 'required|string|min:6',
         ]);
 
@@ -77,56 +70,58 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'status' => 'pendiente',
+            'status'   => 'pendiente',
         ]);
-        // No asignar rol por defecto, el admin lo hará manualmente
 
         $token = $user->createToken('mobile')->plainTextToken;
 
-        // Si viene device_id, asociar el dispositivo existente al usuario
         if ($request->has('device_id')) {
             $device = Device::where('device_id', $request->device_id)
                 ->whereNull('user_id')
                 ->first();
+
             if ($device) {
-                // Asociar el dispositivo al usuario y guardar el token
                 $device->user_id = $user->id;
-                $device->first_token = $token; // Campo nuevo en la tabla devices
+                $device->first_token = $token;
+                $device->fcm_token = $request->fcm_token;
                 $device->save();
             } else {
-                // Si no existe, crear el registro como antes
                 Device::updateOrCreate(
                     [
-                        'user_id' => $user->id,
+                        'user_id'   => $user->id,
                         'device_id' => $request->device_id,
                     ],
                     [
-                        'device_name' => $request->device_name,
-                        'device_os' => $request->device_os,
-                        'device_token' => $request->device_token,
-                        'app_version' => $request->app_version,
-                        'extra_data' => $request->extra_data ?? null,
-                        'first_token' => $token,
+                        'fcm_token'   => $request->fcm_token,
+                        'device_name' => $request->device_name ?? 'unknown',
+                        'device_os'   => $request->device_os ?? 'unknown',
+                        'app_version' => $request->app_version ?? '1.0',
+                        'extra_data'  => $request->extra_data ?? [],
+                        'first_token'=> $token,
                     ]
                 );
             }
         }
 
         return response()->json([
-            'user' => $user,
+            'user'  => $user,
             'token' => $token,
         ], 201);
     }
 
-    // Login de usuario móvil
+    /**
+     * Login a user and register/update device.
+     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
+            'email'      => 'required|email',
+            'password'   => 'required',
+            'device_id'  => 'nullable|string|max:255',
+            'fcm_token'  => 'nullable|string|max:1024',
         ]);
 
         if ($validator->fails()) {
@@ -141,87 +136,102 @@ class AuthController extends Controller
 
         $token = $user->createToken('mobile')->plainTextToken;
 
-        // Guardar datos del dispositivo si vienen
-        if ($request->has('device_id')) {
+        if ($request->filled('device_id')) {
             Device::updateOrCreate(
                 [
-                    'user_id' => $user->id,
+                    'user_id'   => $user->id,
                     'device_id' => $request->device_id,
                 ],
                 [
-                    'device_name' => $request->device_name,
-                    'device_os' => $request->device_os,
-                    'device_token' => $request->device_token,
-                    'app_version' => $request->app_version,
-                    'extra_data' => $request->extra_data ?? null,
+                    'fcm_token'   => $request->fcm_token,
+                    'device_name' => $request->device_name ?? 'unknown',
+                    'device_os'   => $request->device_os ?? 'unknown',
+                    'app_version' => $request->app_version ?? '1.0',
+                    'extra_data'  => $request->extra_data ?? [],
                 ]
             );
         }
 
         return response()->json([
-            'user' => $user,
+            'user'  => $user,
             'token' => $token,
         ]);
     }
 
+    /**
+     * Logout user and revoke current token.
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada']);
     }
 
+    /**
+     * Return authenticated user.
+     */
     public function me(Request $request)
     {
         return response()->json($request->user());
     }
 
+    /**
+     * Optional: Store/update device manually.
+     */
     public function storeDevice(Request $request)
     {
         $request->validate([
-            'device_id' => 'required|string',
-            'device_name' => 'nullable|string',
-            'device_os' => 'nullable|string',
-            'device_token' => 'nullable|string',
-            'app_version' => 'nullable|string',
+            'device_id' => 'required|string|max:255',
+            'fcm_token' => 'required|string|max:1024',
+            'device_name' => 'nullable|string|max:255',
+            'device_os' => 'nullable|string|max:255',
+            'app_version' => 'nullable|string|max:50',
             'extra_data' => 'nullable|array',
         ]);
 
         $device = Device::updateOrCreate(
             [
-                'user_id' => $request->user()->id,
+                'user_id'   => $request->user()->id,
                 'device_id' => $request->device_id,
             ],
             [
-                'device_name' => $request->device_name,
-                'device_os' => $request->device_os,
-                'device_token' => $request->device_token,
-                'app_version' => $request->app_version,
-                'extra_data' => $request->extra_data ?? null,
+                'fcm_token'   => $request->fcm_token,
+                'device_name' => $request->device_name ?? 'unknown',
+                'device_os'   => $request->device_os ?? 'unknown',
+                'app_version' => $request->app_version ?? '1.0',
+                'extra_data'  => $request->extra_data ?? [],
             ]
         );
 
         return response()->json($device, 201);
     }
 
-    // Listar usuarios pendientes de validar (solo admin)
+    /**
+     * Admin: List users pending validation.
+     */
     public function pendingUsers()
     {
-        // La protección de acceso debe hacerse en la ruta con middleware 'role:Administrador'
         $users = User::where('status', 'pendiente')->get();
         return response()->json($users);
     }
 
-    // Asignar rol y activar usuario (solo admin)
+    /**
+     * Admin: Validate and assign role to user.
+     */
     public function validateAndAssignRole(Request $request, $userId)
     {
-        // La protección de acceso debe hacerse en la ruta con middleware 'role:Administrador'
         $request->validate([
             'role' => 'required|string|exists:roles,name',
         ]);
+
         $user = User::findOrFail($userId);
         $user->status = 'activo';
         $user->save();
         $user->syncRoles([$request->role]);
-        return response()->json(['message' => 'Usuario validado y rol asignado', 'user' => $user]);
+
+        return response()->json([
+            'message' => 'Usuario validado y rol asignado',
+            'user' => $user
+        ]);
     }
 }

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('device_id'); // Unique ID per device
-            $table->string('fcm_token')->nullable(); // This stores the Firebase token
+            $table->string('device_token')->nullable(); // This stores the Firebase token
             $table->string('device_name')->nullable();
             $table->string('device_os')->nullable();
             $table->string('app_version')->nullable();
@@ -20,6 +20,7 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['user_id', 'device_id']);
         });
+        
     }
 
     public function down(): void
