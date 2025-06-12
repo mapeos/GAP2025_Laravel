@@ -16,7 +16,7 @@
     {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
     @include('template.partials.alerts')
 
-    <form action="{{ route('admin.news.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.news.store') }}" method="POST" enctype="multipart/form-data" id="newsForm">
         @csrf
 
         <div class="form-group mb-3">
@@ -25,15 +25,6 @@
             @error('titulo')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
-        </div>
-
-        <div class="form-group mb-3">
-            <label for="imagen">Imagen</label>
-            <input type="file" class="form-control @error('imagen') is-invalid @enderror" id="imagen" name="imagen" accept="image/*">
-            @error('imagen')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-            <small class="form-text text-muted">Formatos permitidos: JPEG, PNG, JPG, GIF. Tamaño máximo: 2MB</small>
         </div>
 
         <div class="form-group mb-3">
@@ -55,7 +46,9 @@
         <div class="form-group mb-3">
             <label for="fecha_publicacion">Fecha de Publicación</label>
             <div class="input-group">
-                <input type="datetime-local" class="form-control @error('fecha_publicacion') is-invalid @enderror" id="fecha_publicacion" name="fecha_publicacion" value="{{ old('fecha_publicacion') }}" required>
+                <input type="datetime-local" class="form-control @error('fecha_publicacion') is-invalid @enderror"
+                    id="fecha_publicacion" name="fecha_publicacion"
+                    value="{{ old('fecha_publicacion') }}" required>
                 <button type="button" class="btn btn-outline-secondary" id="fechaActual">
                     <i class="ri-time-line"></i> Fecha Actual
                 </button>
@@ -65,7 +58,7 @@
             </div>
         </div>
 
-        <!-- <div class="form-group mb-3">
+        <div class="form-group mb-3">
             <label for="categorias">Categorías</label>
             <div>
                 @foreach($categorias as $categoria)
@@ -78,9 +71,9 @@
                 </div>
                 @endforeach
             </div>
-        </div> -->
+        </div>
 
-        <div class="form-group mb-3">
+        <!-- <div class="form-group mb-3">
             <label for="categorias">Categorías</label>
             <select class="form-control select2-categorias" name="categorias[]" id="categorias">
                 <option value="" disabled selected>Seleccionar Categorías...</option>
@@ -88,18 +81,280 @@
                 <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
                 @endforeach
             </select>
+        </div> -->
+
+        <div class="form-group mb-3">
+            <label for="imagen">Imagen</label>
+            <div class="image-upload-container">
+                <div class="image-upload-box" id="imageUploadBox">
+                    <input type="file" class="image-upload-input @error('imagen') is-invalid @enderror"
+                        id="imagen" name="imagen" accept="image/*" style="display: none;">
+                    <div class="image-upload-placeholder" id="imagePlaceholder">
+                        <i class="ri-image-add-line"></i>
+                        <span>Haz clic para subir una imagen</span>
+                        <small class="text-muted d-block mt-2">Formatos permitidos: JPEG, PNG, JPG, GIF. Tamaño máximo: 10MB</small>
+                    </div>
+                    <div class="image-preview d-none" id="imagePreview">
+                        <img src="" alt="Vista previa" id="previewImage">
+                        <button type="button" class="btn btn-danger btn-sm remove-image" id="removeImage">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                </div>
+                @error('imagen')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-success mt-3">Crear Noticia</button>
-        <a href="{{ route('admin.news.index') }}" class="btn btn-secondary mt-3">Cancelar</a>
-
+        <button type="submit" class="btn btn-success mt-3" id="submitBtn">Crear Noticia</button>
+        <a href="{{ route('admin.news.index') }}" class="btn btn-secondary mt-3" id="cancelBtn">Cancelar</a>
     </form>
 </div>
+
+{{-- Spinner de carga --}}
+<div class="loading-spinner" id="loadingSpinner" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2">Subiendo Noticia...</p>
+</div>
+
+{{-- Modal de confirmación --}}
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar salida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Hay cambios sin guardar. ¿Desea salir sin guardar los cambios?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, permanecer aquí</button>
+                <a href="{{ route('admin.news.index') }}" class="btn btn-primary">Sí, salir sin guardar</a>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('css')
+<style>
+    .image-upload-container {
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .image-upload-box {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-upload-box:hover {
+        border-color: #0d6efd;
+        background-color: #f1f3f5;
+    }
+
+    .image-upload-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .image-upload-placeholder i {
+        font-size: 48px;
+        color: #6c757d;
+    }
+
+    .image-preview {
+        position: relative;
+        width: 100%;
+        height: 200px;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 4px;
+    }
+
+    .remove-image {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    .loading-spinner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+</style>
+@endpush
 
 @push('js')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const imageUploadBox = document.getElementById('imageUploadBox');
+        const imageInput = document.getElementById('imagen');
+        const imagePlaceholder = document.getElementById('imagePlaceholder');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const removeImage = document.getElementById('removeImage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const newsForm = document.getElementById('newsForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+        // Variable para controlar si hay cambios sin guardar
+        let hasUnsavedChanges = false;
+
+        // Función para mostrar la vista previa
+        function showPreview(file) {
+            if (file) {
+                // Validar tamaño (10MB máximo)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+                    imageInput.value = '';
+                    return;
+                }
+
+                // Validar tipo de archivo
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG y GIF.');
+                    imageInput.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    imagePlaceholder.classList.add('d-none');
+                    imagePreview.classList.remove('d-none');
+                }
+                reader.onerror = function() {
+                    alert('Error al leer el archivo. Por favor, intente con otra imagen.');
+                    imageInput.value = '';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Click en el contenedor para abrir el selector de archivos
+        imageUploadBox.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        // Cuando se selecciona una imagen
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                showPreview(file);
+                hasUnsavedChanges = true;
+            }
+        });
+
+        // Eliminar imagen
+        removeImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            imageInput.value = '';
+            imagePlaceholder.classList.remove('d-none');
+            imagePreview.classList.add('d-none');
+            previewImage.src = '';
+            hasUnsavedChanges = true;
+        });
+
+        // Detectar cambios en el formulario
+        const formInputs = newsForm.querySelectorAll('input, textarea, select');
+        formInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                hasUnsavedChanges = true;
+            });
+        });
+
+        // Mostrar spinner durante la subida
+        newsForm.addEventListener('submit', (e) => {
+            if (imageInput.files.length > 0) {
+                const file = imageInput.files[0];
+                // Validar tamaño y tipo antes de enviar
+                if (file.size > 10 * 1024 * 1024) {
+                    e.preventDefault();
+                    alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+                    return;
+                }
+
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    e.preventDefault();
+                    alert('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG y GIF.');
+                    return;
+                }
+
+                loadingSpinner.style.display = 'flex';
+                submitBtn.disabled = true;
+            }
+        });
+
+        // Manejar el botón de cancelar
+        cancelBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (hasUnsavedChanges) {
+                confirmModal.show();
+            } else {
+                window.location.href = cancelBtn.href;
+            }
+        });
+
+        // Drag and drop
+        imageUploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUploadBox.style.borderColor = '#0d6efd';
+        });
+
+        imageUploadBox.addEventListener('dragleave', () => {
+            imageUploadBox.style.borderColor = '#ccc';
+        });
+
+        imageUploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUploadBox.style.borderColor = '#ccc';
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    imageInput.files = e.dataTransfer.files;
+                    showPreview(file);
+                    hasUnsavedChanges = true;
+                } else {
+                    alert('Tipo de archivo no permitido. Solo se permiten imágenes.');
+                }
+            }
+        });
+
+        // Código para el botón de fecha actual
         const fechaActualBtn = document.getElementById('fechaActual');
         const fechaInput = document.getElementById('fecha_publicacion');
 
@@ -113,6 +368,7 @@
             
             const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}`;
             fechaInput.value = fechaHora;
+            hasUnsavedChanges = true;
         });
     });
 </script>

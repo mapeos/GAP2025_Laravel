@@ -16,7 +16,7 @@
     {{-- Mensajes flash (éxito, error, info, warning y validaciones) --}}
     @include('template.partials.alerts')
 
-    <form action="{{ route('admin.categorias.store') }}" method="POST">
+    <form action="{{ route('admin.categorias.store') }}" method="POST" id="categoriaForm">
         @csrf
 
         <div class="mb-3">
@@ -30,7 +30,55 @@
         </div>
 
         <button type="submit" class="btn btn-success">Guardar</button>
-        <a href="{{ route('admin.categorias.index') }}" class="btn btn-secondary">Cancelar</a>
+        <a href="{{ route('admin.categorias.index') }}" class="btn btn-secondary" id="cancelBtn">Cancelar</a>
     </form>
 </div>
+
+{{-- Modal de confirmación --}}
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar salida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Hay cambios sin guardar. ¿Desea salir sin guardar los cambios?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, permanecer aquí</button>
+                <a href="{{ route('admin.categorias.index') }}" class="btn btn-primary">Sí, salir sin guardar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoriaForm = document.getElementById('categoriaForm');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        let hasUnsavedChanges = false;
+
+        // Detectar cambios en el formulario
+        const formInputs = categoriaForm.querySelectorAll('input, textarea');
+        formInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                hasUnsavedChanges = true;
+            });
+        });
+
+        // Manejar el botón de cancelar
+        cancelBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (hasUnsavedChanges) {
+                confirmModal.show();
+            } else {
+                window.location.href = cancelBtn.href;
+            }
+        });
+    });
+</script>
+@endpush
 @endsection

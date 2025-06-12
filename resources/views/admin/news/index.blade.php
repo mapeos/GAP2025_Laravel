@@ -160,6 +160,7 @@
 
 @push('js')
 <script>
+    // Función para manejar el toggle de estado
     document.addEventListener('DOMContentLoaded', function() {
         // Manejador para los botones de filtro por estado
         document.querySelectorAll('.filter-status').forEach(button => {
