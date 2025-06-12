@@ -113,7 +113,7 @@
                                 <tbody>
                                     @foreach($proximasCitas as $cita)
                                         <tr>
-                                            <td>{{ $cita->estudiante->name }}</td>
+                                            <td>{{ $cita->alumno->name }}</td>
                                             <td>{{ $cita->motivo }}</td>
                                             <td>{{ $cita->fecha_propuesta->format('d/m/Y H:i') }}</td>
                                             <td>
