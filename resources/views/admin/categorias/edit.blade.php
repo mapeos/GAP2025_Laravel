@@ -54,6 +54,14 @@
     </div>
 </div>
 
+{{-- Spinner de carga --}}
+<div class="loading-spinner" id="loadingSpinner" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2" id="spinnerText">Actualizando categoría...</p>
+</div>
+
 @push('js')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -78,6 +86,14 @@
             } else {
                 window.location.href = cancelBtn.href;
             }
+        });
+
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        categoriaForm.addEventListener('submit', (e) => {
+            loadingSpinner.style.display = 'flex';
+            document.getElementById('spinnerText').textContent = 'Actualizando categoría...';
+            submitBtn.disabled = true;
         });
     });
 </script>

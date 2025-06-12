@@ -29,7 +29,7 @@
             <textarea id="descripcion" name="descripcion" class="form-control" maxlength="255">{{ old('descripcion') }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="submit" class="btn btn-success" id="submitBtn">Guardar</button>
         <a href="{{ route('admin.categorias.index') }}" class="btn btn-secondary" id="cancelBtn">Cancelar</a>
     </form>
 </div>
@@ -53,6 +53,14 @@
     </div>
 </div>
 
+{{-- Spinner de carga --}}
+<div class="loading-spinner" id="loadingSpinner" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2" id="spinnerText">Creando categoría...</p>
+</div>
+
 @push('js')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -60,6 +68,8 @@
         const cancelBtn = document.getElementById('cancelBtn');
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
         let hasUnsavedChanges = false;
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
 
         // Detectar cambios en el formulario
         const formInputs = categoriaForm.querySelectorAll('input, textarea');
@@ -77,6 +87,12 @@
             } else {
                 window.location.href = cancelBtn.href;
             }
+        });
+
+        categoriaForm.addEventListener('submit', (e) => {
+            loadingSpinner.style.display = 'flex';
+            document.getElementById('spinnerText').textContent = 'Creando categoría...';
+            submitBtn.disabled = true;
         });
     });
 </script>

@@ -57,6 +57,15 @@
         </div>
     </div>
 
+    <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 mb-0" id="spinnerText" style="font-size: 1.2rem;">Cargando...</p>
+        </div>
+    </div>
+
     <table class="table align-middle">
         <thead>
             <tr>
@@ -147,10 +156,21 @@
                 let action = this.dataset.action;
                 let buttonEl = this;
                 let row = this.closest('tr');
+                let spinner = document.getElementById('loadingSpinner');
+                let spinnerText = document.getElementById('spinnerText');
 
                 if (action === 'delete' && !confirm('¿Eliminar esta categoría?')) {
                     return;
                 }
+
+                if (action === 'delete') {
+                    spinnerText.textContent = 'Eliminando categoría...';
+                } else if (action === 'restore') {
+                    spinnerText.textContent = 'Publicando categoría...';
+                } else {
+                    spinnerText.textContent = 'Cargando...';
+                }
+                spinner.style.display = 'flex';
 
                 fetch(`/admin/categorias/${categoriaId}/toggle-status`, {
                         method: 'POST',
@@ -212,6 +232,9 @@
                     })
                     .catch(() => {
                         showFlashMessage('Ocurrió un error inesperado. Inténtalo de nuevo.', 'danger');
+                    })
+                    .finally(() => {
+                        spinner.style.display = 'none';
                     });
             });
         });

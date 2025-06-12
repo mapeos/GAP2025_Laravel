@@ -123,6 +123,14 @@
     </div>
 </div>
 
+{{-- Spinner de carga --}}
+<div class="loading-spinner" id="loadingSpinner" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2" id="spinnerText">Actualizando noticia...</p>
+</div>
+
 @push('css')
 <style>
     .image-upload-container {
@@ -260,11 +268,10 @@
         });
 
         // Mostrar spinner durante la subida
-        newsForm.addEventListener('submit', () => {
-            if (imageInput.files.length > 0) {
-                loadingSpinner.style.display = 'flex';
-                submitBtn.disabled = true;
-            }
+        newsForm.addEventListener('submit', (e) => {
+            loadingSpinner.style.display = 'flex';
+            document.getElementById('spinnerText').textContent = 'Actualizando noticia...';
+            submitBtn.disabled = true;
         });
 
         // Manejar el botón de cancelar

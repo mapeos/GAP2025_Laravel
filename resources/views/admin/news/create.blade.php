@@ -117,7 +117,7 @@
     <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Cargando...</span>
     </div>
-    <p class="mt-2">Subiendo Noticia...</p>
+    <p class="mt-2" id="spinnerText">Creando noticia...</p>
 </div>
 
 {{-- Modal de confirmación --}}
@@ -314,6 +314,11 @@
                 }
 
                 loadingSpinner.style.display = 'flex';
+                document.getElementById('spinnerText').textContent = 'Creando noticia...';
+                submitBtn.disabled = true;
+            } else {
+                loadingSpinner.style.display = 'flex';
+                document.getElementById('spinnerText').textContent = 'Creando noticia...';
                 submitBtn.disabled = true;
             }
         });
