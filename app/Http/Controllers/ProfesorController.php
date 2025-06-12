@@ -33,6 +33,7 @@ class ProfesorController extends Controller
         // Obtener próximas citas
         $proximasCitas = SolicitudCita::where('profesor_id', $profesor->id)
             ->where('fecha_propuesta', '>=', Carbon::now())
+            ->with('alumno')
             ->orderBy('fecha_propuesta')
             ->take(5)
             ->get();

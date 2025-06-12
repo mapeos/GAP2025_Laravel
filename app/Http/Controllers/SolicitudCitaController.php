@@ -9,6 +9,7 @@ use App\Models\Evento;
 use App\Models\TipoEvento;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SolicitudCitaController extends Controller
 {
@@ -20,21 +21,33 @@ class SolicitudCitaController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'profesor_id' => 'required|exists:users,id',
-            'motivo' => 'required|string|max:255',
-            'fecha_propuesta' => 'required|date|after:now',
-        ]);
+        try {
+            Log::info('Intentando crear solicitud de cita', $request->all());
 
-        SolicitudCita::create([
-            'alumno_id' => Auth::id(),
-            'profesor_id' => $request->profesor_id,
-            'motivo' => $request->motivo,
-            'fecha_propuesta' => $request->fecha_propuesta,
-            'estado' => 'pendiente',
-        ]);
+            $request->validate([
+                'profesor_id' => 'required|exists:users,id',
+                'motivo' => 'required|string|max:255',
+                'fecha_propuesta' => 'required|date|after:now',
+            ]);
 
-        return redirect()->back()->with('success', 'Solicitud enviada correctamente.');
+            $solicitud = SolicitudCita::create([
+                'alumno_id' => Auth::id(),
+                'profesor_id' => $request->profesor_id,
+                'motivo' => $request->motivo,
+                'fecha_propuesta' => $request->fecha_propuesta,
+                'estado' => 'pendiente',
+            ]);
+
+            Log::info('Solicitud creada exitosamente', ['solicitud_id' => $solicitud->id]);
+
+            return redirect()->back()->with('success', 'Solicitud enviada correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al crear solicitud de cita', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with('error', 'Error al enviar la solicitud: ' . $e->getMessage());
+        }
     }
 
     public function recibidas()

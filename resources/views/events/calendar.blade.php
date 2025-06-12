@@ -4,9 +4,16 @@
 <div class="container">
     <h1 class="mb-4">Calendario de eventos</h1>
     <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal">
-            Solicitar cita/consulta con profesor
-        </button>
+        
+        @if(Auth::user()->hasRole('alumno'))
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal">
+                Solicitar cita/consulta con profesor
+            </button>
+        @else
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal2">
+                Agendar cita/consulta con alumno
+            </button>
+        @endif
         @if(Auth::user()->hasRole('profesor'))
             <a href="{{ route('solicitud-cita.recibidas') }}" class="btn btn-info">
                 <i class="ri-mail-line"></i> Ver solicitudes recibidas
@@ -43,7 +50,46 @@
                         </div>
                         <div class="mb-3">
                             <label for="fecha_propuesta" class="form-label">Fecha y hora propuesta</label>
-                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required>
+                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required 
+                                   min="{{ date('Y-m-d\TH:i') }}" 
+                                   step="1800">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal fade" id="solicitudCitaModal2" tabindex="-1" aria-labelledby="solicitudCitaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ route('solicitud-cita.store') }}">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="solicitudCitaModalLabel">Agendar cita/consulta</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="alumno_id" class="form-label">Alumno</label>
+                            <select class="form-select" name="alumno_id" required>
+                                <option value="">Seleccione un alumno</option>
+                                @foreach($alumnos as $alumno)
+                                    <option value="{{ $alumno->id }}">{{ $alumno->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">Motivo</label>
+                            <input type="text" class="form-control" name="motivo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha_propuesta" class="form-label">Fecha y hora propuesta</label>
+                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required 
+                                   min="{{ date('Y-m-d\TH:i') }}" 
+                                   step="1800">
                         </div>
                     </div>
                     <div class="modal-footer">

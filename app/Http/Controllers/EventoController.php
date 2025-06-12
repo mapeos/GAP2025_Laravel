@@ -38,11 +38,10 @@ class EventoController extends Controller
                 ];
             });
 
-       $profesores = \App\Models\User::role('profesor')->get();
+        $profesores = \App\Models\User::role('profesor')->get();
+        $alumnos = \App\Models\User::role('alumno')->get();
 
-         return view('events.calendar', compact('eventos', 'profesores'));
-
-
+        return view('events.calendar', compact('eventos', 'profesores', 'alumnos'));
     }
 
     /**
