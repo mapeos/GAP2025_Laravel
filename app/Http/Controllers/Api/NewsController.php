@@ -45,7 +45,7 @@ class NewsController extends Controller
 
         return response()->json([
             'status' => '200',
-            'data' => $data
+            'data' => "" //$data
         ]);
     }
 

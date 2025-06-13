@@ -1254,3 +1254,105 @@ Parámetros query opcionales:
 - Si ocurre un error, revisa el campo `status` y el mensaje correspondiente.
 
 ---
+
+## Notificaciones Push (Firebase Cloud Messaging HTTP v1)
+
+### Requisitos previos
+- Archivo de credenciales JSON de Service Account de Firebase (descargar desde la consola de Firebase, sección Cuentas de servicio).
+- Instalar la librería JWT para PHP:
+
+```bash
+composer require firebase/php-jwt
+```
+
+### Configuración
+1. Coloca el archivo JSON en una ruta segura, por ejemplo:
+   `storage/app/private/firebase/service-account.json`
+2. Agrega la ruta absoluta en tu archivo `.env`:
+   ```
+   FIREBASE_CREDENTIALS=/ruta/absoluta/a/storage/app/private/firebase/service-account.json
+   ```
+
+### Endpoints principales
+
+#### Guardar/actualizar token FCM del usuario autenticado
+- **POST** `/api/fcm-token`
+- Body:
+  ```json
+  {
+    "fcm_token": "TOKEN_FCM",
+    "device_id": "ID_UNICO_DEL_DISPOSITIVO"
+  }
+  ```
+
+#### Enviar notificación push (solo admin)
+- **POST** `/api/notifications/send-fcm-v1`
+- Body:
+  ```json
+  {
+    "token": "TOKEN_FCM_DEL_DISPOSITIVO",
+    "title": "Título de la notificación",
+    "body": "Mensaje de la notificación"
+  }
+  ```
+
+### ¿Cómo funciona?
+- El backend genera un JWT firmado con el Service Account y obtiene un access token de Google.
+- Se envía la notificación a FCM HTTP v1 usando ese token.
+- El método implementado es `sendFcmV1` en `NotificationController`.
+
+### Notas
+- Solo usuarios autenticados y con rol admin pueden enviar notificaciones.
+- Puedes adaptar el método para enviar a múltiples tokens si lo necesitas.
+- Si cambias la ubicación del JSON, actualiza la variable en `.env`.
+
+---
+
+## Instrucciones para el equipo de la app móvil (Push Notifications)
+
+### 1. Instalación y configuración en la app móvil
+
+- Instala el SDK de Firebase Cloud Messaging (según tu framework: Ionic/Angular, React Native, Flutter, etc.).
+- Configura el proyecto móvil con los datos de Firebase (`google-services.json` para Android, `GoogleService-Info.plist` para iOS).
+- Solicita permisos de notificación al usuario.
+- Obtén el token FCM del dispositivo tras el login o cuando cambie.
+
+### 2. Registro del token FCM en el backend
+
+- Envía el token FCM al backend cada vez que el usuario inicie sesión o el token cambie:
+  - Endpoint: `POST /api/fcm-token`
+  - Headers: `Authorization: Bearer <token_sanctum>`
+  - Body:
+    ```json
+    {
+      "fcm_token": "TOKEN_FCM_GENERADO",
+      "device_id": "ID_UNICO_DEL_DISPOSITIVO"
+    }
+    ```
+  - Puedes enviar también: `device_name`, `device_os`, `app_version` (opcional).
+
+### 3. Prueba de notificaciones push
+
+- Un administrador puede enviar una notificación desde el backend:
+  - Endpoint: `POST /api/notifications/send-fcm-v1`
+  - Body:
+    ```json
+    {
+      "token": "TOKEN_FCM_DEL_DISPOSITIVO",
+      "title": "Título de prueba",
+      "body": "Mensaje de prueba"
+    }
+    ```
+- El dispositivo debe recibir la notificación push.
+
+### 4. Consideraciones
+
+- Si el token FCM cambia (por ejemplo, tras reinstalar la app), vuelve a registrar el nuevo token usando el mismo endpoint.
+- El backend solo enviará notificaciones a los tokens registrados correctamente.
+
+### 5. Recursos útiles
+- [Documentación oficial FCM Android](https://firebase.google.com/docs/cloud-messaging/android/client)
+- [Documentación oficial FCM iOS](https://firebase.google.com/docs/cloud-messaging/ios/client)
+- [Documentación oficial FCM Web](https://firebase.google.com/docs/cloud-messaging/js/client)
+
+---

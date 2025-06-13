@@ -13,6 +13,7 @@ class Device extends Model
         'user_id',
         'device_id',
         'fcm_token',
+        'device_token', // Deprecated, use fcm_token instead
         'device_name',
         'device_os',
         'app_version',
