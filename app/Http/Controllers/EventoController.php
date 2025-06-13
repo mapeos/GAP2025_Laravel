@@ -7,6 +7,7 @@ use App\Models\TipoEvento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class EventoController extends Controller
 {
@@ -27,7 +28,7 @@ class EventoController extends Controller
         $userId = Auth::id();
         $tipoRecordatorio = TipoEvento::where('nombre', 'Recordatorio Personal')->first();
         
-        $query = Evento::with(['tipoEvento', 'participantes']);
+        $query = Evento::with(['tipoEvento', 'participantes', 'creador']);
         
         // Si es un recordatorio personal, solo mostrar los creados por el usuario actual
         if ($tipoRecordatorio) {
@@ -47,14 +48,30 @@ class EventoController extends Controller
                     'title' => $evento->titulo,
                     'start' => $evento->fecha_inicio,
                     'end' => $evento->fecha_fin,
-                    'color' => $evento->tipoEvento->color,
-                    'descripcion' => $evento->descripcion,
-                    'url' => route('events.show', $evento->id)
+                    'color' => $evento->tipoEvento->color ?? '#3788d8',
+                    'extendedProps' => [
+                        'descripcion' => $evento->descripcion,
+                        'ubicacion' => $evento->ubicacion,
+                        'url_virtual' => $evento->url_virtual,
+                        'tipo_evento_id' => $evento->tipo_evento_id,
+                        'tipo_evento_nombre' => $evento->tipoEvento->nombre ?? 'N/A',
+                        'status' => $evento->status,
+                        'creado_por' => $evento->creado_por,
+                        'creado_por_nombre' => $evento->creador->name ?? 'N/A',
+                        'participantes' => $evento->participantes->map(function($participante) {
+                            return [
+                                'id' => $participante->id,
+                                'name' => $participante->name,
+                                'rol' => $participante->pivot->rol,
+                                'estado_asistencia' => $participante->pivot->estado_asistencia
+                            ];
+                        })
+                    ]
                 ];
             });
 
-        $profesores = \App\Models\User::role('profesor')->get();
-        $alumnos = \App\Models\User::role('alumno')->get();
+        $profesores = User::role('profesor')->get();
+        $alumnos = User::role('alumno')->get();
 
         return view('events.calendar', compact('eventos', 'profesores', 'alumnos'));
     }
