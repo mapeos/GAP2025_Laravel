@@ -116,6 +116,37 @@
     </form>
 </div>
 
+{{-- Modal de recorte de imagen --}}
+<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropModalLabel">Recortar Imagen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <img id="cropImage" src="" alt="Imagen para recortar">
+                </div>
+                <div class="crop-presets mt-3 text-center">
+                    <div class="btn-group" role="group" aria-label="Presets de recorte">
+                        <button type="button" class="btn btn-outline-primary" data-ratio="16/9">16:9</button>
+                        <button type="button" class="btn btn-outline-primary" data-ratio="4/3">4:3</button>
+                        <button type="button" class="btn btn-outline-primary" data-ratio="1/1">1:1</button>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary ms-2" id="resetCrop">
+                        <i class="ri-refresh-line"></i> Restablecer
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="cropButton">Recortar y Aplicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Spinner de carga --}}
 <div class="loading-spinner" id="loadingSpinner" style="display: none;">
     <div class="spinner-border text-primary" role="status">
@@ -145,6 +176,7 @@
 @endsection
 
 @push('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <style>
     .image-upload-container {
         width: 100%;
@@ -214,10 +246,34 @@
         justify-content: center;
         z-index: 9999;
     }
+
+    /* Estilos para el modal de recorte */
+    .img-container {
+        max-height: 500px;
+        margin-bottom: 1rem;
+    }
+    
+    .img-container img {
+        max-width: 100%;
+        max-height: 500px;
+    }
+
+    .crop-presets {
+        margin-top: 1rem;
+    }
+
+    .crop-presets .btn-group {
+        margin-right: 0.5rem;
+    }
+
+    .cropper-container {
+        max-height: 500px !important;
+    }
 </style>
 @endpush
 
 @push('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const imageUploadBox = document.getElementById('imageUploadBox');
@@ -231,15 +287,112 @@
         const submitBtn = document.getElementById('submitBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
         const imageError = document.getElementById('imageError');
         const imageErrorMsg = document.getElementById('imageErrorMsg');
+        const cropImage = document.getElementById('cropImage');
+        const cropButton = document.getElementById('cropButton');
+        const resetCropBtn = document.getElementById('resetCrop');
         let errorTimeout = null;
+        let cropper = null;
+        let currentFile = null;
 
         // Variable para controlar si hay cambios sin guardar
         let hasUnsavedChanges = false;
 
-        // Función para mostrar la vista previa
-        function showPreview(file) {
+        // Función para mostrar el modal de recorte
+        function showCropModal(file) {
+            currentFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cropImage.src = e.target.result;
+                cropModal.show();
+                
+                // Inicializar Cropper después de que el modal esté visible
+                cropModal._element.addEventListener('shown.bs.modal', function onShown() {
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 16 / 9,
+                        viewMode: 2,
+                        responsive: true,
+                        restore: false,
+                        autoCropArea: 1,
+                        movable: false,
+                        zoomable: true,
+                        rotatable: false,
+                        scalable: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false,
+                    });
+                    cropModal._element.removeEventListener('shown.bs.modal', onShown);
+                }, { once: true });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Botones de proporciones predefinidas
+        document.querySelectorAll('.crop-presets button[data-ratio]').forEach(button => {
+            button.addEventListener('click', function() {
+                if (cropper) {
+                    const ratio = this.dataset.ratio.split('/');
+                    cropper.setAspectRatio(ratio[0] / ratio[1]);
+                }
+            });
+        });
+
+        // Botón de restablecer
+        resetCropBtn.addEventListener('click', function() {
+            if (cropper) {
+                cropper.reset();
+            }
+        });
+
+        // Botón de recortar y aplicar
+        cropButton.addEventListener('click', function() {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    maxWidth: 1200,
+                    maxHeight: 1200,
+                    fillColor: '#fff',
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                
+                canvas.toBlob(function(blob) {
+                    // Crear un nuevo archivo con la imagen recortada
+                    const croppedFile = new File([blob], currentFile.name, {
+                        type: currentFile.type,
+                        lastModified: new Date().getTime()
+                    });
+
+                    // Actualizar la vista previa
+                    previewImage.src = canvas.toDataURL();
+                    imagePlaceholder.classList.add('d-none');
+                    imagePreview.classList.remove('d-none');
+
+                    // Actualizar el input file
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    imageInput.files = dataTransfer.files;
+
+                    // Cerrar el modal
+                    cropModal.hide();
+                    hasUnsavedChanges = true;
+                }, currentFile.type);
+            }
+        });
+
+        // Click en el contenedor para abrir el selector de archivos
+        imageUploadBox.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        // Cuando se selecciona una imagen
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
             if (file) {
                 // Validar tamaño (20MB máximo)
                 if (file.size > 20 * 1024 * 1024) {
@@ -256,37 +409,17 @@
                     return;
                 }
 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    imagePlaceholder.classList.add('d-none');
-                    imagePreview.classList.remove('d-none');
-                }
-                reader.onerror = function() {
-                    showImageError('Error al leer el archivo. Por favor, intente con otra imagen.');
-                    imageInput.value = '';
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Click en el contenedor para abrir el selector de archivos
-        imageUploadBox.addEventListener('click', () => {
-            imageInput.click();
-        });
-
-        // Cuando se selecciona una imagen
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                showPreview(file);
-                hasUnsavedChanges = true;
+                showCropModal(file);
             }
         });
 
         // Eliminar imagen
         removeImage.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
             imageInput.value = '';
             imagePlaceholder.classList.remove('d-none');
             imagePreview.classList.add('d-none');
@@ -294,40 +427,11 @@
             hasUnsavedChanges = true;
         });
 
-        // Detectar cambios en el formulario
-        const formInputs = newsForm.querySelectorAll('input, textarea, select');
-        formInputs.forEach(input => {
-            input.addEventListener('change', () => {
-                hasUnsavedChanges = true;
-            });
-        });
-
         // Mostrar spinner durante la subida
         newsForm.addEventListener('submit', (e) => {
-            if (imageInput.files.length > 0) {
-                const file = imageInput.files[0];
-                // Validar tamaño y tipo antes de enviar
-                if (file.size > 20 * 1024 * 1024) {
-                    e.preventDefault();
-                    showImageError('El archivo es demasiado grande. El tamaño máximo permitido es 20MB.');
-                    return;
-                }
-
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
-                if (!allowedTypes.includes(file.type)) {
-                    e.preventDefault();
-                    showImageError('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG, GIF y WEBP.');
-                    return;
-                }
-
-                loadingSpinner.style.display = 'flex';
-                document.getElementById('spinnerText').textContent = 'Creando noticia...';
-                submitBtn.disabled = true;
-            } else {
-                loadingSpinner.style.display = 'flex';
-                document.getElementById('spinnerText').textContent = 'Creando noticia...';
-                submitBtn.disabled = true;
-            }
+            loadingSpinner.style.display = 'flex';
+            document.getElementById('spinnerText').textContent = 'Creando noticia...';
+            submitBtn.disabled = true;
         });
 
         // Manejar el botón de cancelar
@@ -358,10 +462,9 @@
             if (file) {
                 if (file.type.startsWith('image/')) {
                     imageInput.files = e.dataTransfer.files;
-                    showPreview(file);
-                    hasUnsavedChanges = true;
+                    showCropModal(file);
                 } else {
-                    alert('Tipo de archivo no permitido. Solo se permiten imágenes.');
+                    showImageError('Tipo de archivo no permitido. Solo se permiten imágenes.');
                 }
             }
         });
