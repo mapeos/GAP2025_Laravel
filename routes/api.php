@@ -81,6 +81,8 @@ Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(
 
 });
 
+// Registro de dispositivo SIN autenticación (primer contacto, sin usuario)
+Route::post('auth/device/register', [AuthController::class, 'registerDevice']);
 
 // Save/update FCM token for authenticated user
 Route::middleware('auth:sanctum')->post('/fcm-token', [NotificationController::class, 'store']);

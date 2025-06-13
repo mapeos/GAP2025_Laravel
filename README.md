@@ -1356,3 +1356,113 @@ composer require firebase/php-jwt
 - [Documentación oficial FCM Web](https://firebase.google.com/docs/cloud-messaging/js/client)
 
 ---
+
+# Endpoints para integración de la app móvil
+
+## 1. Registro de dispositivo (sin usuario, sin autenticación)
+
+- **POST** `/api/auth/device/register`
+- **Body:**
+```json
+{
+  "device_id": "uuid-del-dispositivo",
+  "fcm_token": "token-fcm",
+  "device_name": "Nombre del dispositivo",
+  "device_os": "Android/iOS/Web",
+  "app_version": "1.0.0",
+  "extra_data": { "foo": "bar" }
+}
+```
+- **Respuesta:**
+```json
+{
+  "ok": true,
+  "device_id": "uuid-del-dispositivo"
+}
+```
+
+## 2. Registro de usuario (asociando dispositivo)
+
+- **POST** `/api/auth/register`
+- **Body:**
+```json
+{
+  "name": "Nombre",
+  "email": "usuario@dom.com",
+  "password": "secreto",
+  "password_confirmation": "secreto",
+  "device_id": "uuid-del-dispositivo",
+  "fcm_token": "token-fcm"
+}
+```
+- **Respuesta:**
+```json
+{
+  "ok": true,
+  "device_id": "uuid-del-dispositivo"
+}
+```
+
+## 3. Login de usuario (opcionalmente actualiza FCM)
+
+- **POST** `/api/auth/login`
+- **Body:**
+```json
+{
+  "email": "usuario@dom.com",
+  "password": "secreto",
+  "device_id": "uuid-del-dispositivo",
+  "fcm_token": "token-fcm"
+}
+```
+- **Respuesta:**
+```json
+{
+  "user": { ... },
+  "token": "token-sanctum"
+}
+```
+
+## 4. Actualizar info de dispositivo (requiere autenticación)
+
+- **POST** `/api/auth/device`
+- **Headers:**
+  - `Authorization: Bearer <token-sanctum>`
+- **Body:**
+```json
+{
+  "device_id": "uuid-del-dispositivo",
+  "fcm_token": "token-fcm",
+  "device_name": "Nombre del dispositivo",
+  "device_os": "Android/iOS/Web",
+  "app_version": "1.0.0",
+  "extra_data": { "foo": "bar" }
+}
+```
+- **Respuesta:**
+```json
+{
+  ...datos del dispositivo actualizado...
+}
+```
+
+## 5. Guardar/actualizar token FCM (requiere autenticación)
+
+- **POST** `/api/fcm-token`
+- **Headers:**
+  - `Authorization: Bearer <token-sanctum>`
+- **Body:**
+```json
+{
+  "fcm_token": "token-fcm",
+  "device_id": "uuid-del-dispositivo"
+}
+```
+
+---
+
+**Notas:**
+- El primer registro de dispositivo no requiere autenticación.
+- El resto de endpoints requieren el token de usuario (Sanctum) en la cabecera.
+- Si el FCM token cambia, vuelve a registrar el dispositivo o usa `/api/fcm-token`.
+- Para recibir notificaciones, el dispositivo debe tener el FCM token actualizado en backend.
