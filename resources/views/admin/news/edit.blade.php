@@ -86,9 +86,14 @@
                     </div>
                     <div class="image-preview {{ $news->imagen ? '' : 'd-none' }}" id="imagePreview">
                         <img src="{{ $news->imagen ? asset($news->imagen) : '' }}" alt="Vista previa" id="previewImage">
-                        <button type="button" class="btn btn-danger btn-sm remove-image" id="removeImage">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
+                        <div class="image-buttons">
+                            <button type="button" class="btn btn-danger btn-sm remove-image" id="removeImage">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm edit-image" id="editImage">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 @error('imagen')
@@ -216,10 +221,27 @@
         border-radius: 4px;
     }
 
-    .remove-image {
+    .image-buttons {
         position: absolute;
         top: 10px;
         right: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        z-index: 10;
+    }
+
+    .image-buttons button {
+        padding: 0.25rem 0.5rem;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-buttons button i {
+        font-size: 1.1rem;
     }
 
     .loading-spinner {
@@ -416,6 +438,66 @@
             hasUnsavedChanges = true;
         });
 
+        // Editar imagen existente
+        const editImage = document.getElementById('editImage');
+        editImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (previewImage.src) {
+                // Convertir la URL de la imagen a un Blob
+                fetch(previewImage.src)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const file = new File([blob], 'imagen_editada.jpg', { type: blob.type });
+                        showCropModal(file);
+                    });
+            }
+        });
+
+        // Drag and drop mejorado
+        imageUploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            imageUploadBox.style.borderColor = '#0d6efd';
+            imageUploadBox.style.backgroundColor = '#f1f3f5';
+        });
+
+        imageUploadBox.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            imageUploadBox.style.borderColor = '#ccc';
+            imageUploadBox.style.backgroundColor = '#f8f9fa';
+        });
+
+        imageUploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            imageUploadBox.style.borderColor = '#ccc';
+            imageUploadBox.style.backgroundColor = '#f8f9fa';
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    // Validar tamaño (20MB máximo)
+                    if (file.size > 20 * 1024 * 1024) {
+                        showImageError('El archivo es demasiado grande. El tamaño máximo permitido es 20MB.');
+                        return;
+                    }
+
+                    // Validar tipo de archivo
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        showImageError('Tipo de archivo no permitido. Solo se permiten imágenes JPEG, PNG, JPG, GIF y WEBP.');
+                        return;
+                    }
+
+                    imageInput.files = e.dataTransfer.files;
+                    showCropModal(file);
+                } else {
+                    showImageError('Tipo de archivo no permitido. Solo se permiten imágenes.');
+                }
+            }
+        });
+
         // Mostrar spinner durante la subida
         newsForm.addEventListener('submit', (e) => {
             loadingSpinner.style.display = 'flex';
@@ -430,31 +512,6 @@
                 confirmModal.show();
             } else {
                 window.location.href = cancelBtn.href;
-            }
-        });
-
-        // Drag and drop
-        imageUploadBox.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            imageUploadBox.style.borderColor = '#0d6efd';
-        });
-
-        imageUploadBox.addEventListener('dragleave', () => {
-            imageUploadBox.style.borderColor = '#ccc';
-        });
-
-        imageUploadBox.addEventListener('drop', (e) => {
-            e.preventDefault();
-            imageUploadBox.style.borderColor = '#ccc';
-            
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                if (file.type.startsWith('image/')) {
-                    imageInput.files = e.dataTransfer.files;
-                    showCropModal(file);
-                } else {
-                    showImageError('Tipo de archivo no permitido. Solo se permiten imágenes.');
-                }
             }
         });
 
@@ -483,6 +540,35 @@
                 imageError.classList.add('d-none');
             }, 6000);
         }
+
+        // Botón de editar imagen
+        document.getElementById('editImageBtn').addEventListener('click', function() {
+            // Si hay una imagen existente, la guardamos temporalmente
+            const existingImage = document.getElementById('imagePreview').querySelector('img');
+            if (existingImage) {
+                // Guardamos la URL de la imagen original
+                const originalImageUrl = existingImage.src;
+                // Limpiamos el input file para permitir seleccionar la misma imagen
+                document.getElementById('imagen').value = '';
+                // Abrimos el selector de archivos
+                document.getElementById('imagen').click();
+            }
+        });
+
+        // Modificar el evento change del input file
+        document.getElementById('imagen').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Guardamos la imagen original en el cropper
+                    cropper.replace(e.target.result);
+                    // Mostramos el modal
+                    $('#cropModal').modal('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     });
 </script>
 @endpush
