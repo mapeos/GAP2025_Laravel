@@ -9,59 +9,34 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Device;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     /**
-     * Register device without user association.
+     * Primer contacto: solo guardar FCM token, sin device_id ni usuario
      */
     public function registerDevice(Request $request)
     {
         $request->validate([
-            'device_id' => 'required|string|max:255',
-            'fcm_token' => 'nullable|string|max:1024',
+            'fcm_token' => 'required|string|max:1024',
             'device_name' => 'nullable|string|max:255',
             'device_os' => 'nullable|string|max:255',
             'app_version' => 'nullable|string|max:50',
             'extra_data' => 'nullable|array',
         ]);
 
-        Log::info('[Device] Registro inicial de dispositivo', [
-            'device_id' => $request->device_id,
+        Log::info('[Device][FCM] Primer contacto: solo FCM token recibido', [
             'fcm_token' => $request->fcm_token,
             'device_name' => $request->device_name,
             'device_os' => $request->device_os,
             'app_version' => $request->app_version,
         ]);
 
-        $device = Device::where('device_id', $request->device_id)
-            ->whereNull('user_id')
-            ->first();
+        // Guardar el FCM token en una tabla temporal o loguear (no se asocia a device_id ni usuario)
+        // Si quieres guardar en DB, puedes crear una tabla temporal o simplemente loguear
 
-        if (!$device) {
-            $device = Device::create([
-                'device_id'    => $request->device_id,
-                'fcm_token'    => $request->fcm_token,
-                'device_name'  => $request->device_name,
-                'device_os'    => $request->device_os,
-                'app_version'  => $request->app_version,
-                'extra_data'   => $request->extra_data ?? [],
-                'first_seen_at' => now(),
-                'user_id'      => null,
-            ]);
-            Log::info('[Device] Dispositivo creado', ['device_id' => $device->device_id]);
-        } else {
-            $device->update([
-                'fcm_token'   => $request->fcm_token,
-                'device_name' => $request->device_name,
-                'device_os'   => $request->device_os,
-                'app_version' => $request->app_version,
-                'extra_data'  => $request->extra_data ?? [],
-            ]);
-            Log::info('[Device] Dispositivo actualizado', ['device_id' => $device->device_id]);
-        }
-
-        return response()->json(['ok' => true, 'device_id' => $device->device_id]);
+        return response()->json(['ok' => true]);
     }
 
     /**
@@ -96,7 +71,6 @@ class AuthController extends Controller
 
             if ($device) {
                 $device->user_id = $user->id;
-                $device->first_token = $token;
                 $device->fcm_token = $request->fcm_token;
                 $device->save();
                 Log::info('[Device] Dispositivo asociado a usuario', [
@@ -115,7 +89,6 @@ class AuthController extends Controller
                         'device_os'   => $request->device_os ?? 'unknown',
                         'app_version' => $request->app_version ?? '1.0',
                         'extra_data'  => $request->extra_data ?? [],
-                        'first_token'=> $token,
                     ]
                 );
                 Log::info('[Device] Dispositivo creado y asociado a usuario', [
@@ -133,49 +106,76 @@ class AuthController extends Controller
     }
 
     /**
-     * Login a user and register/update device.
+     * Login: usuario y password, aquí se genera el device_id y se responde
      */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email'      => 'required|email',
             'password'   => 'required',
-            'device_id'  => 'nullable|string|max:255',
-            'fcm_token'  => 'nullable|string|max:1024',
         ]);
 
         if ($validator->fails()) {
+            Log::info('[Device][LOGIN] Error de validación login', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            Log::info('[Device][LOGIN] Credenciales incorrectas', ['email' => $request->email]);
             return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
         $token = $user->createToken('mobile')->plainTextToken;
+        $deviceId = 'web-' . Str::random(12);
 
-        if ($request->filled('device_id')) {
-            Device::updateOrCreate(
-                [
-                    'user_id'   => $user->id,
-                    'device_id' => $request->device_id,
-                ],
-                [
-                    'fcm_token'   => $request->fcm_token,
-                    'device_name' => $request->device_name ?? 'unknown',
-                    'device_os'   => $request->device_os ?? 'unknown',
-                    'app_version' => $request->app_version ?? '1.0',
-                    'extra_data'  => $request->extra_data ?? [],
-                ]
-            );
-        }
+        Log::info('[Device][LOGIN] Login exitoso, device_id generado', [
+            'user_id' => $user->id,
+            'device_id' => $deviceId
+        ]);
 
         return response()->json([
-            'user'  => $user,
+            'ok' => true,
+            'device_id' => $deviceId,
             'token' => $token,
         ]);
+    }
+
+    /**
+     * Relacionar FCM token y device_id con el usuario autenticado
+     */
+    public function storeDevice(Request $request)
+    {
+        $request->validate([
+            'device_id' => 'required|string|max:255',
+            'fcm_token' => 'required|string|max:1024',
+            'device_name' => 'nullable|string|max:255',
+            'device_os' => 'nullable|string|max:255',
+            'app_version' => 'nullable|string|max:50',
+            'extra_data' => 'nullable|array',
+        ]);
+
+        $user = $request->user();
+        $device = Device::updateOrCreate(
+            [
+                'user_id'   => $user->id,
+                'device_id' => $request->device_id,
+            ],
+            [
+                'fcm_token'   => $request->fcm_token,
+                'device_name' => $request->device_name ?? 'unknown',
+                'device_os'   => $request->device_os ?? 'unknown',
+                'app_version' => $request->app_version ?? '1.0',
+                'extra_data'  => $request->extra_data ?? [],
+            ]
+        );
+        Log::info('[Device][RELACION] FCM token y device_id asociados a usuario', [
+            'user_id' => $user->id,
+            'device_id' => $request->device_id,
+            'fcm_token' => $request->fcm_token
+        ]);
+        return response()->json(['ok' => true]);
     }
 
     /**
@@ -198,7 +198,7 @@ class AuthController extends Controller
     /**
      * Optional: Store/update device manually.
      */
-    public function storeDevice(Request $request)
+    public function manualStoreDevice(Request $request)
     {
         $request->validate([
             'device_id' => 'required|string|max:255',
