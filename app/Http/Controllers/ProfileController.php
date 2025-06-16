@@ -11,8 +11,8 @@ class ProfileController extends Controller
 {
     public function index()
     {
-        $personas = \App\Models\Persona::all(); // Obtiene todas las personas
-        return view('admin.participantes.index', compact('personas')); // Retorna la vista con las personas
+        $personas = Persona::with('user')->get(); // Obtiene todas las personas con su usuario asociado
+        return view('admin.participantes.index', compact('personas'));
     }
 
     public function show()

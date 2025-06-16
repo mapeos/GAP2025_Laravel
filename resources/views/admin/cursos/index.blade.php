@@ -37,6 +37,7 @@
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar este curso?')">Eliminar</button>
                         </form>
+                        <a href="{{ route('admin.cursos.show', $curso->id) }}" class="btn btn-sm btn-info">Más información</a>
                     </td>
                 </tr>
             @empty

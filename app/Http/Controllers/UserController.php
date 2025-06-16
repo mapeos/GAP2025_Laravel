@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Models\Persona;
 
 
 class UserController extends Controller
@@ -28,14 +29,14 @@ class UserController extends Controller
         return view('admin.users.index', compact('users', 'roles'));
     }
 
-    
+
     public function create()
     {
         $roles = Role::all();
         return view('admin.users.create', compact('roles'));
     }
 
-    
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -68,7 +69,7 @@ class UserController extends Controller
         return view('admin.users.show', compact('user'));
     }
 
-    
+
     public function edit(User $user)
     {
         $roles = Role::all();
@@ -76,7 +77,7 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
-    
+
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
@@ -144,14 +145,30 @@ class UserController extends Controller
         $request->validate([
             'roles' => 'required|array',
         ]);
+
         foreach ($request->input('roles') as $userId => $role) {
             $user = User::find($userId);
             if ($user && $user->status === 'pendiente') {
+                // Cambiar estado y asignar rol
                 $user->status = 'activo';
                 $user->save();
                 $user->syncRoles([$role]);
+
+                // Crear una entrada en la tabla personas si no existe
+                if (!$user->persona) {
+                    Persona::create([
+                        'nombre' => $user->name, // Usa el nombre del usuario
+                        'apellido1' => '', // Ajusta según tus necesidades
+                        'apellido2' => '',
+                        'dni' => '', // Ajusta según tus necesidades
+                        'tfno' => '',
+                        'direccion_id' => null,
+                        'user_id' => $user->id,
+                    ]);
+                }
             }
         }
+
         return redirect()->route('admin.users.pendent')->with('success', 'Usuarios validados correctamente.');
     }
 
@@ -185,5 +202,14 @@ class UserController extends Controller
     public function homePendiente()
     {
         return view('pendientes.home');
+    }
+
+    public function getPersonaByUser($userId)
+    {
+        $user = User::with('persona')->findOrFail($userId); // Carga el usuario con su relación 'persona'
+        return response()->json([
+            'user' => $user,
+            'persona' => $user->persona, // Devuelve los datos de la persona asociada
+        ]);
     }
 }

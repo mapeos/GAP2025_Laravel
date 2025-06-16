@@ -81,9 +81,5 @@ class User extends Authenticatable
     {
         return $this->hasOne(Persona::class);
     }
-    public function devices()
-{
-    return $this->hasMany(Device::class);
-}
 
 }

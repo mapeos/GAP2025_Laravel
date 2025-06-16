@@ -102,6 +102,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
     Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
+    Route::get('/admin/cursos/{curso}', [CursoController::class, 'show'])->name('admin.cursos.show');
+    Route::post('/admin/cursos/{curso}/upload', [CursoController::class, 'uploadTemario'])->name('admin.cursos.upload');
+    
 });
 
 // Rutas de PARTICIPANTES
@@ -146,6 +149,8 @@ Route::prefix('admin/users')->name('admin.users.')->middleware(['auth', 'role:Ad
     Route::post('validate-bulk', [UserController::class, 'validateBulk'])->name('validate.bulk');
     Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggleStatus');
     Route::post('/{id}/change-role', [UserController::class, 'changeRole'])->name('changeRole');
+    // Ruta para obtener la persona asociada a un usuario
+    Route::get('/users/{user}/persona', [UserController::class, 'getPersonaByUser'])->name('users.persona');
 });
 
 //--------------------------------------------

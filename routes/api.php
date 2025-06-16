@@ -7,6 +7,7 @@ use App\Http\Controllers\EventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
@@ -70,28 +71,9 @@ Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(
     Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
     Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
     Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
-    Route::get('/activos', [CursoController::class, 'activos']); // Cursos activos: GET /api/cursos/activos
-    Route::get('/inactivos', [CursoController::class, 'inactivos']); // Cursos inactivos: GET /api/cursos/inactivos
-    Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Cursos ordenados por fecha
-    Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']); // Últimos cursos: GET /api/cursos/ultimos/5
-    
-    Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
-    Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
-    Route::get('/cursos/buscar', [CursoController::class, 'buscarFiltrar']); // GET /api/cursos/buscar?search=foo&estado=activo&orden=desc
 
 });
 
-// Registro de dispositivo SIN autenticación (primer contacto, sin usuario)
-Route::post('auth/device/register', [AuthController::class, 'registerDevice']);
-
-// Save/update FCM token for authenticated user
-Route::middleware('auth:sanctum')->post('/fcm-token', [NotificationController::class, 'store']);
-// Devices endpoints for storing/deleting device info (authenticated users)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/devices', [DeviceController::class, 'store']);
-    Route::delete('/devices', [DeviceController::class, 'destroy']);
-});
-// Send notification to selected users - only admin (you may want to use sanctum guard here for consistency)
-Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send', [NotificationController::class, 'sendNotification']);
-// Nueva ruta para FCM HTTP v1
-Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-fcm-v1', [NotificationController::class, 'sendFcmV1']);
+Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
+Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
+Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
