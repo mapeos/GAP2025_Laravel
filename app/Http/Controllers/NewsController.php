@@ -43,10 +43,23 @@ class NewsController extends Controller
             'autor' => 'nullable|integer',
             'fecha_publicacion' => 'required|date',
             'categorias' => 'nullable|array',
+            // 'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validación para la imagen
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480', // 20MB = 20480KB
+
         ]);
 
+        $data = $request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']);
+
+        // Manejar la subida de la imagen
+        if ($request->hasFile('imagen')) {
+            $imagen = $request->file('imagen');
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $imagen->move(public_path('storage/news'), $nombreImagen);
+            $data['imagen'] = 'storage/news/' . $nombreImagen;
+        }
+
         //Crear la noticia
-        $news = News::create($request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']));
+        $news = News::create($data);
 
         //Asignar categorias a las noticias
         $news->categorias()->sync($request->categorias ?? []);
@@ -87,10 +100,26 @@ class NewsController extends Controller
             'autor' => 'nullable|integer',
             'fecha_publicacion' => 'required|date',
             'categorias' => 'nullable|array',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480', // 20MB = 20480KB
         ]);
 
+        $data = $request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']);
+
+        // Manejar la actualización de la imagen
+        if ($request->hasFile('imagen')) {
+            // Eliminar la imagen anterior si existe
+            if ($news->imagen && file_exists(public_path($news->imagen))) {
+                unlink(public_path($news->imagen));
+            }
+
+            $imagen = $request->file('imagen');
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $imagen->move(public_path('storage/news'), $nombreImagen);
+            $data['imagen'] = 'storage/news/' . $nombreImagen;
+        }
+
         // Actualizar la noticia
-        $news->update($request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']));
+        $news->update($data);
 
         // Actualizar las categorías asociadas
         $news->categorias()->sync($request->categorias ?? []);
@@ -112,7 +141,7 @@ class NewsController extends Controller
             return response()->json(['status' => 'eliminada']);
         }
     }
-    
+
     /**
      * Eliminar una noticia de la base de datos.
      */

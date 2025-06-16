@@ -38,12 +38,17 @@
             <ul class="submenu">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('events.calendar') }}">
-                        <i class="ri-calendar-2-line"></i> <span>Calendario</span>
+                        <i class="ri-calendar-line""></i> <span>Calendario</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.events.create') }}">
-                        <i class="ri-calendar-schedule-line"></i> <span>Crear evento</span>
+                    <a class="nav-link" href="{{ route('admin.events.index') }}">
+                        <i class="ri-calendar-2-line"></i> <span>listado de eventos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.events.types.index') }}">
+                        <i class="ri-calendar-todo-line"></i> <span>listado de tipos eventos</span>
                     </a>
                 </li>
                 <!-- A espera de agregar más enlaces de ser necesarios -->
@@ -57,101 +62,25 @@
                 <i class="ri-line-chart-line"></i> <span>Analytics</span>
             </a>
         </li>
-        <!-- Interface Section -->
+        <!-- Notificaciones Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
-                <i class="ri-layout-grid-line"></i> <span>Interface</span> <i class="ri-arrow-right-s-line"></i>
+                <i class="ri-notification-3-line"></i> <span>Notificaciones</span> <i class="ri-arrow-right-s-line"></i>
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/accordion"> <span>Accordion</span> </a>
+                    <a class="nav-link" href="{{ route('admin.notificaciones.index') }}">
+                        <i class="ri-list-unordered"></i> <span>Listado</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/alerts"> <span>Alerts</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/badges"> <span>Badges</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/breadcrumb"> <span>Breadcrumb</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/buttons"> <span>Buttons</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/button-group"> <span>Button Group</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/cards"> <span>Cards</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/carousel"> <span>Carousel</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/close-button"> <span>Close Button</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/collapse"> <span>Collapse</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/colors"> <span>Colors</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/dropdowns"> <span>Dropdowns</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/info-box"> <span>Info Box</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/list-group"> <span>List Group</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/modal"> <span>Modal</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/navbar"> <span>Navbar</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/navs-and-tabs"> <span>Navs and tabs</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/offcanvas"> <span>Offcanvas</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/pagination"> <span>Pagination</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/placeholders"> <span>Placeholders</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/popovers"> <span>Popovers</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/progress"> <span>Progress</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/scrollspy"> <span>Scrollspy</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/small-box"> <span>Small Box</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/spinners"> <span>Spinners</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/text-animations"> <span>Text Animations</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/toasts"> <span>Toasts</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/tooltips"> <span>Tooltips</span> </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pages/interface/typography"> <span>Typography</span> </a>
+                    <a class="nav-link" href="{{ route('admin.notificaciones.create') }}">
+                        <i class="ri-add-line"></i> <span>Crear Notificación</span>
+                    </a>
                 </li>
             </ul>
         </li>
+        <!-- Fin Notificaciones -->
         <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
         <!-- CURSOS Section -->

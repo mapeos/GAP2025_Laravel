@@ -93,6 +93,13 @@
                   </ul>
                 </div>
               </li>
+
+              <!-- Nuevo elemento para Calendario -->
+              <li class="nav-item">
+                <a class="nav-link d-flex align-items-center {{ request()->routeIs('calendario') ? 'active' : '' }}" href="{{ route('calendario') }}">
+                  <span><i class="ri-calendar-line nav-icon me-2"></i>Calendario</span>
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
@@ -151,8 +158,8 @@
                 </div>
               </div>
               <!-- Second Row: Breadcrumbs -->
-               <nav aria-label="breadcrumb"> 
-                <ol class="breadcrumb mb-0"> 
+               <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
                   <li class="breadcrumb-item "> <a href="/dashboard" class="text-decoration-none"> Dashboard </a> </li>
                   @yield('breadcrumb')
                 </ol> </nav>
@@ -210,7 +217,7 @@
 
     @stack('js')
 
-   
+
     <!-- Component JS -->
   </body>
 </html>

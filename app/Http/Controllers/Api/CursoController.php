@@ -49,7 +49,7 @@ class CursoController extends Controller
     // Obtener cursos con estado inactivo
     public function inactivos()
     {
-        $cursos = Curso::where('estado', 'inactivos')->get();
+        $cursos = Curso::where('estado', 'inactivo')->get();
         return response()->json([
             'status' => '200',
             'message' => 'Cursos inactivos obtenidos correctamente',
@@ -76,7 +76,29 @@ class CursoController extends Controller
             'data' => $cursos
         ]);
     }
+    public function buscarFiltrar(Request $request)
+{
+    $query = Curso::query();
 
+    if ($request->has('search')) {
+        $search = $request->input('search');
+        $query->where('titulo', 'like', "%{$search}%")
+              ->orWhere('descripcion', 'like', "%{$search}%");
+    }
+
+    if ($request->has('estado')) {
+        $estado = $request->input('estado'); // 'activo' o 'inactivo'
+        $query->where('estado', $estado);
+    }
+
+    if ($request->has('orden')) {
+        $orden = $request->input('orden'); // 'asc' o 'desc'
+        $query->orderBy('fecha_inicio', $orden);
+    }
+
+    $cursos = $query->paginate(20);
+    return response()->json($cursos);
+}
     // Crear un nuevo curso
     /* public function store(Request $request)
     {

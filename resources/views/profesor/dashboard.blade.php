@@ -74,7 +74,7 @@
                             </a>
                         </div>
                         <div class="col-md-4">
-                            <a href="{{ route('events.calendar') }}" class="btn btn-outline-success w-100 py-3">
+                            <a href="{{ route('eventos.calendario') }}" class="btn btn-outline-success w-100 py-3">
                                 <i class="ri-calendar-line me-2"></i>
                                 Ver Calendario
                             </a>
@@ -113,7 +113,7 @@
                                 <tbody>
                                     @foreach($proximasCitas as $cita)
                                         <tr>
-                                            <td>{{ $cita->alumno->name }}</td>
+                                            <td>{{ $cita->estudiante->name }}</td>
                                             <td>{{ $cita->motivo }}</td>
                                             <td>{{ $cita->fecha_propuesta->format('d/m/Y H:i') }}</td>
                                             <td>
@@ -199,4 +199,4 @@
     background: #e9ecef;
 }
 </style>
-@endsection
+@endsection 

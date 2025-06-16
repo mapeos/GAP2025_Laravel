@@ -8,101 +8,65 @@ use App\Http\Controllers\Controller;
 
 class NewsController extends Controller
 {
-    /* get all news an select id, title, content, published_date and category */
-    /* Obtener todas las noticias y seleccionar titulo, contenido, descripsion y sus categoria */
-    public function index()
+    public function index(Request $request)
     {
-        $data = News::leftJoin('news_has_categorias', 'news.id', '=', 'news_has_categorias.news_id')
-        ->leftJoin('categorias', 'news_has_categorias.categorias_id', '=', 'categorias.id')
-        ->select(
-            'news.id',
-            'news.titulo',
-            'news.contenido',
-            'news.fecha_publicacion',
-            'categorias.nombre as categoria'
-        )
-        ->orderBy('news.fecha_publicacion', 'asc')
-        ->get();
+        $perPage = $request->get('per_page', 10);
+        $query = News::with('categorias')->orderBy('fecha_publicacion', 'desc');
 
-        return response()->json([
-            'status' => '200',
-            'data' => $data
-        ]);
-    }
-
-    /* get news by id */
-    public function show($id)
-    {
-        $data = News::leftJoin('news_has_categorias', 'news.id', '=', 'news_has_categorias.news_id')
-        ->leftJoin('categorias', 'news_has_categorias.categorias_id', '=', 'categorias.id')
-        ->select(
-            'news.id',
-            'news.titulo',
-            'news.contenido',
-            'news.fecha_publicacion',
-            'categorias.nombre as categoria'
-        )
-        ->where('news.id', $id)
-        ->firstOrFail();
-
-        return response()->json([
-            'status' => '200',
-            'data' => $data
-        ]);
-    }
-
-    /* get news by category */
-    public function getByCategory($category)
-    {
-        $data = News::leftJoin('news_has_categorias', 'news.id', '=', 'news_has_categorias.news_id')
-        ->leftJoin('categorias', 'news_has_categorias.categorias_id', '=', 'categorias.id')
-        ->select(
-            'news.id',
-            'news.titulo',
-            'news.contenido',
-            'news.fecha_publicacion',
-            'categorias.nombre as categoria'
-        )
-        ->where('categorias.nombre', $category)
-        ->orderBy('news.fecha_publicacion', 'desc')
-        ->get();
-
-        if ($data->isEmpty()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No news found for this category'
-            ], 404);
+        if ($request->filled('q')) {
+            $q = $request->query('q');
+            $query->where(function ($qBuilder) use ($q) {
+                $qBuilder->where('titulo', 'like', "%$q%")
+                         ->orWhere('contenido', 'like', "%$q%");
+            });
         }
 
-        return response()->json([
-            'status' => '200',
-            'data' => $data
-        ]);
+        if ($request->filled('category')) {
+            $category = $request->query('category');
+            $query->whereHas('categorias', fn($q) => $q->where('nombre', $category));
+        }
+
+        $news = $query->paginate($perPage);
+        return response()->json($news);
     }
 
-    /* get latest news */
+    public function show($id)
+    {
+        $news = News::with('categorias')->findOrFail($id);
+        return response()->json($news);
+    }
+
     public function latest()
     {
-        $data = News::leftJoin('news_has_categorias', 'news.id', '=', 'news_has_categorias.news_id')
-        ->leftJoin('categorias', 'news_has_categorias.categorias_id', '=', 'categorias.id')
-        ->select(
-            'news.id',
-            'news.titulo',
-            'news.contenido',
-            'news.fecha_publicacion',
-            'categorias.nombre as categoria'
-        )
-        ->orderBy('news.fecha_publicacion', 'desc')
-        ->take(5)
-        ->get();
+        $latest = News::with('categorias')
+            ->orderBy('fecha_publicacion', 'desc')
+            ->take(5)
+            ->get();
 
         return response()->json([
             'status' => '200',
-            'data' => $data
+            'data' => "" //$data
         ]);
     }
 
+ public function store(Request $request)
+    {
+        $request->validate([
+            'titulo' => 'required|unique:news|max:50',
+            'contenido' => 'required',
+            'autor' => 'nullable|integer',
+            'fecha_publicacion' => 'required|date',
+            'categorias' => 'nullable|array',
+            'categorias.*' => 'integer|exists:categorias,id',
+        ]);
 
+        $news = News::create($request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']));
+        if ($request->filled('categorias')) {
+            $news->categorias()->sync($request->categorias);
+        }
+
+        return response()->json(['message' => 'News created', 'data' => $news], 201);
+    }
 
 }
 

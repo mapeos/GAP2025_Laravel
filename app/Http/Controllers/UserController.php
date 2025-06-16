@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Models\Persona;
 
+
 class UserController extends Controller
 {
     // Listar usuarios (incluidos los eliminados), ordenados por más recientes y filtrados por estado si se solicita

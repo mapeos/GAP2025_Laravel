@@ -11,6 +11,8 @@ use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\ProfesorController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -49,18 +51,34 @@ require __DIR__ . '/auth.php';
 // Módulo de Agenda/Calendario y Eventos
 // --------------------------------------------
 Route::middleware(['auth'])->group(function () {
-    // Rutas para tipos de evento (solo administradores)
+    // Ruta para el dashboard del profesor
+    Route::get('/profesor/home', [\App\Http\Controllers\ProfesorController::class, 'home'])
+        ->name('profesor.home')
+        ->middleware('role:profesor');
+
+    // Rutas para solicitudes de citas
+    Route::get('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'index'])
+        ->name('solicitud-cita.index');
+    Route::get('/solicitud-cita/recibidas', [\App\Http\Controllers\SolicitudCitaController::class, 'recibidas'])
+        ->name('solicitud-cita.recibidas');
+    Route::put('/solicitud-cita/{solicitud}/estado', [\App\Http\Controllers\SolicitudCitaController::class, 'ActualizarEstado'])
+        ->name('solicitud-cita.actualizar-estado');
     Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
         ->name('solicitud-cita.store');
+    // Rutas para tipos de evento (solo administradores)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('tipos-evento', TipoEventoController::class);
     });
     // Rutas para eventos
     Route::get('calendario', [EventoController::class, 'calendario'])->name('calendario');
     Route::get('eventos/json', [EventoController::class, 'getEventos'])->name('eventos.json');
-    // Rutas CRUD de eventos (solo administradores y profesores)
+    
+    // Ruta para que los estudiantes puedan crear recordatorios personales
+    Route::post('eventos', [EventoController::class, 'store'])->name('eventos.store');
+    
+    // Rutas CRUD de eventos (solo administradores y profesores, excepto store que ya está definido arriba)
     Route::middleware(['role:Administrador|Profesor'])->group(function () {
-        Route::resource('eventos', EventoController::class);
+        Route::resource('eventos', EventoController::class)->except(['store']);
     });
     // Rutas para participantes
     Route::prefix('eventos/{evento}/participantes')->group(function () {
@@ -175,15 +193,43 @@ Route::middleware(['auth', 'role:Profesor'])->group(function () {
 });
 
 //--------------------------------------------
-// Rutas de Events - CRUD
+// Rutas de Events - CRUD (legacy o duplicadas, revisar si se usan)
 //--------------------------------------------
-// Rutas públicas de eventos (accesibles para usuarios autenticados)
-Route::prefix('eventos')->name('events.')->middleware(['auth'])->group(function () {
+Route::prefix('admin/events')->name('admin.events.')->middleware(['auth', 'role:Administrador|Profesor'])->group(function () {
+    // Rutas para tipos de evento (solo administradores)
+    Route::middleware(['role:Administrador'])->group(function () {
+        Route::get('/types', [TipoEventoController::class, 'index'])->name('types.index');
+        Route::get('/types/create', [TipoEventoController::class, 'create'])->name('types.create');
+        Route::post('/types', [TipoEventoController::class, 'store'])->name('types.store');
+        Route::get('/types/{tipoEvento}/edit', [TipoEventoController::class, 'edit'])->name('types.edit');
+        Route::put('/types/{tipoEvento}', [TipoEventoController::class, 'update'])->name('types.update');
+        Route::delete('/types/{tipoEvento}', [TipoEventoController::class, 'destroy'])->name('types.destroy');
+    });
+    // Rutas CRUD de eventos
+    Route::get('/', [EventoController::class, 'index'])->name('index');
+    Route::get('/create', [EventoController::class, 'create'])->name('create');
+    Route::post('/', [EventoController::class, 'store'])->name('store');
+    Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
+    Route::get('/{evento}/edit', [EventoController::class, 'edit'])->name('edit');
+    Route::put('/{evento}', [EventoController::class, 'update'])->name('update');
+    Route::delete('/{evento}', [EventoController::class, 'destroy'])->name('destroy');
+    // Rutas para participantes
+    Route::prefix('{evento}/participants')->name('participants.')->group(function () {
+        Route::post('/attendance', [EventoParticipanteController::class, 'updateAsistencia'])->name('attendance');
+        Route::post('/add', [EventoParticipanteController::class, 'addParticipantes'])->name('add');
+        Route::post('/remove', [EventoParticipanteController::class, 'removeParticipantes'])->name('remove');
+        Route::post('/role', [EventoParticipanteController::class, 'updateRol'])->name('role');
+    });
+});
+
+//--------------------------------------------
+// Rutas para usuarios autenticados (incluyendo alumnos)
+//--------------------------------------------
+Route::prefix('events')->name('events.')->middleware(['auth'])->group(function () {
     // Rutas comunes para todos los usuarios autenticados
     Route::get('/calendar', [EventoController::class, 'calendario'])->name('calendar');
     Route::get('/json', [EventoController::class, 'getEventos'])->name('json');
     Route::get('/{evento}', [EventoController::class, 'show'])->name('show');
-
     // Rutas específicas para alumnos (recordatorios personales)
     Route::middleware(['role:Alumno'])->group(function () {
         Route::get('/reminders/create', [EventoController::class, 'createReminder'])->name('reminders.create');
@@ -194,31 +240,11 @@ Route::prefix('eventos')->name('events.')->middleware(['auth'])->group(function 
     });
 });
 
-// Rutas administrativas de eventos (solo para administradores y profesores)
-Route::prefix('admin/eventos')->name('admin.events.')->middleware(['auth', 'role:Administrador|Profesor'])->group(function () {
-    // Rutas CRUD de eventos
-    Route::get('/', [EventoController::class, 'index'])->name('index');
-    Route::get('/create', [EventoController::class, 'create'])->name('create');
-    Route::post('/', [EventoController::class, 'store'])->name('store');
-    Route::get('/{evento}/edit', [EventoController::class, 'edit'])->name('edit');
-    Route::put('/{evento}', [EventoController::class, 'update'])->name('update');
-    Route::delete('/{evento}', [EventoController::class, 'destroy'])->name('destroy');
-
-    // Rutas para participantes
-    Route::prefix('{evento}/participants')->name('participants.')->group(function () {
-        Route::post('/attendance', [EventoParticipanteController::class, 'updateAsistencia'])->name('attendance');
-        Route::post('/add', [EventoParticipanteController::class, 'addParticipantes'])->name('add');
-        Route::post('/remove', [EventoParticipanteController::class, 'removeParticipantes'])->name('remove');
-        Route::post('/role', [EventoParticipanteController::class, 'updateRol'])->name('role');
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth']) // make sure auth middleware is correct for your app (web guard)
+    ->group(function () {
+        Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
+        Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
+        Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
     });
-
-    // Rutas para tipos de evento (solo administradores)
-    Route::middleware(['role:Administrador'])->group(function () {
-        Route::get('/types', [TipoEventoController::class, 'index'])->name('types.index');
-        Route::get('/types/create', [TipoEventoController::class, 'create'])->name('types.create');
-        Route::post('/types', [TipoEventoController::class, 'store'])->name('types.store');
-        Route::get('/types/{tipoEvento}/edit', [TipoEventoController::class, 'edit'])->name('types.edit');
-        Route::put('/types/{tipoEvento}', [TipoEventoController::class, 'update'])->name('types.update');
-        Route::delete('/types/{tipoEvento}', [TipoEventoController::class, 'destroy'])->name('types.destroy');
-    });
-});

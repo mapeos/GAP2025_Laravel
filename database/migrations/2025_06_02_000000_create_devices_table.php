@@ -11,15 +11,16 @@ return new class extends Migration
         Schema::create('devices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('device_id');
+            $table->string('device_id'); // Unique ID per device
+            $table->string('device_token')->nullable(); // This stores the Firebase token
             $table->string('device_name')->nullable();
             $table->string('device_os')->nullable();
-            $table->string('device_token')->nullable();
             $table->string('app_version')->nullable();
             $table->json('extra_data')->nullable();
             $table->timestamps();
             $table->unique(['user_id', 'device_id']);
         });
+        
     }
 
     public function down(): void

@@ -9,6 +9,8 @@ use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\DeviceController;
 
 //mensaje de prueba para verificar que la API está funcionando
 Route::get('/', function () {
@@ -16,10 +18,14 @@ Route::get('/', function () {
 });
 
 // Rutas para la gestión de noticias
-Route::get('/news', [NewsController::class, 'index']); // Listar noticias
-Route::get('/news/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
-Route::get('/news/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
-Route::get('/news/latest', [NewsController::class, 'latest']); // Obtener últimas noticias
+Route::prefix('news')->group(function () {
+    Route::get('/', [NewsController::class, 'index']); // Listar noticias
+    Route::get('/latest', [NewsController::class, 'latest']);  // Obtener últimas noticias
+    Route::get('/{id}', [NewsController::class, 'show']); // Obtener noticia por ID
+    Route::post('/', [NewsController::class, 'store']);
+    Route::get('/category/{category}', [NewsController::class, 'getByCategory']); // Listar noticias por categoría
+
+});
 
 // Rutas para la gestión de categorías de noticias
 Route::get('/categorias', [CategoriasController::class, 'index']); // Listar categorías de eventos
@@ -61,17 +67,13 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 
 Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
     Route::post('/', [CursoController::class, 'store'])->name('store'); // Crear un curso
-
+    Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
     Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
     Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
     Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
 
 });
-//rutas fuera de sanctum para que puedan ser accedidas sin autenticación
+
 Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
 Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
 Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
-//ruta valida para obtener la persona asociada a un usuario
-Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
-Route::get('/users/{user}/persona', [UserController::class, 'getPersonaByUser'])->name('users.persona');
-});

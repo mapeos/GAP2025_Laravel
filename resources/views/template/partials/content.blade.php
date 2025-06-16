@@ -1,5 +1,5 @@
 <div class="col">
-                <!-- Key Metrics Overview Cards -->
+                <!-- Tarjetas con enlaces a los CRUD de Usuarios, Cursos y Noticias -->
                 <div class="row g-4 mb-4">
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-primary">
@@ -42,9 +42,8 @@
                     </div>
                   </div>
                 </div>
-                <!-- Performance Analytics Section -->
+                <!-- Calendario de eventos -->
                 <div class="row g-4 mb-4">
-                  <!-- Revenue Performance Chart -->
                   <div class="col-xl-8">
                     <div class="card h-100">
                       <div class="card-body">
@@ -55,26 +54,30 @@
                       </div>
                     </div>
                   </div>
-                  <!-- Business Performance Metrics -->
+                  <!-- Usuarios Recientes -->
                   <div class="col-xl-4">
                     <div class="card h-100">
-                      <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Business Growth</h5>
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Current Year
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Current Year</a></li>
-                            <li><a class="dropdown-item" href="#">Previous Year</a></li>
-                            <li><a class="dropdown-item" href="#">All Time</a></li>
-                          </ul>
-                        </div>
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">Usuarios Recientes</h5>
                       </div>
-                      <div class="card-body">
-                        <div class="chart-container" style="position: relative; height: 330px">
-                          <canvas id="performanceChart"></canvas>
-                        </div>
+                      <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                          @php
+                            $usuarios = \App\Models\User::orderBy('created_at', 'desc')->limit(8)->get();
+                          @endphp
+                          @forelse($usuarios as $user)
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-3">
+                              <div>
+                                <i class="ri-user-3-fill text-primary me-2"></i>
+                                <a href="{{ route('admin.users.show', $user) }}" class="text-decoration-none">{{ $user->name }}</a>
+                                <span class="text-muted small">({{ $user->email }})</span>
+                              </div>
+                              <span class="badge bg-{{ $user->status === 'activo' ? 'success' : 'warning' }}">{{ ucfirst($user->status) }}</span>
+                            </li>
+                          @empty
+                            <li class="list-group-item text-muted">No hay usuarios registrados.</li>
+                          @endforelse
+                        </ul>
                       </div>
                     </div>
                   </div>
@@ -109,7 +112,7 @@
                       </div>
                     </div>
                   </div>
-                  <!-- Financial Transactions -->
+                  <!-- Tarjeta de cursos -->
                   <div class="col-xl-4">
                     <div class="card h-100">
                       <div class="card-header d-flex justify-content-between align-items-center">
@@ -130,7 +133,11 @@
                                 <div class="ms-3 flex-grow-1">
                                   <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                      <h6 class="mb-0">{{ $curso->titulo }}</h6>
+                                      <h6 class="mb-0">
+                                        <!-- TODO Enlazar con la vista de detalles del curso -->
+                                        {{-- <a href="{{ route('cursos.show', $curso->id) }}" class="text-decoration-none">{{ $curso->titulo }}</a> --}}
+                                        {{ $curso->titulo }}
+                                      </h6>
                                       <small class="text-muted">{{ $curso->fechaInicio }} - {{ $curso->fechaFin }}</small>
                                     </div>
                                     <span class="text-primary">Plazas: {{ $curso->plazas }}</span>
@@ -146,29 +153,40 @@
                       </div>
                     </div>
                   </div>
-                  <!-- Lead Source Analytics -->
+                  <!-- Noticias recientes -->
                   <div class="col-xl-4">
                     <div class="card h-100">
-                      <div class="card-header">
-                        <h5 class="card-title mb-0">Procedencia de Usuarios Registrados</h5>
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Noticias Recientes</h5>
+                        <a href="{{ route('admin.news.index') }}" class="btn btn-sm btn-info">Ver todas</a>
                       </div>
-                      <div class="card-body">
-                        <div class="chart-container" style="position: relative; height: 250px">
-                          <canvas id="leadSourceChart"></canvas>
-                        </div>
-                        <div class="mt-4">
-                          <div class="d-flex align-items-center mb-2">
-                            <div class="legend-dot bg-primary"></div>
-                            <span class="ms-2">Web</span> <span class="ms-auto" id="percent-web">0%</span>
-                          </div>
-                          <div class="d-flex align-items-center mb-2">
-                            <div class="legend-dot bg-success"></div>
-                            <span class="ms-2">API</span> <span class="ms-auto" id="percent-api">0%</span>
-                          </div>
-                          <div class="d-flex align-items-center">
-                            <div class="legend-dot bg-warning"></div>
-                            <span class="ms-2">Admin</span> <span class="ms-auto" id="percent-otro">0%</span>
-                          </div>
+                      <div class="card-body d-flex flex-column" style="max-height: 440px; overflow-y: auto">
+                        <div class="flex-grow-1 px-3" data-simplebar>
+                          @php
+                            $noticias = \App\Models\News::orderBy('created_at', 'desc')->limit(8)->get();
+                          @endphp
+                          @forelse($noticias as $news)
+                            <div class="mb-3 pb-3 border-bottom">
+                              <div class="d-flex align-items-center">
+                                <div class="p-2 rounded bg-info bg-opacity-10">
+                                  <i class="ri-newspaper-fill text-info fs-4"></i>
+                                </div>
+                                <div class="ms-3 flex-grow-1">
+                                  <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                      <h6 class="mb-0">
+                                        <a href="{{ route('admin.news.show', $news) }}" class="text-decoration-none">{{ $news->titulo }}</a>
+                                      </h6>
+                                      <small class="text-muted">{{ $news->created_at->format('d/m/Y') }}</small>
+                                    </div>
+                                  </div>
+                                  <div class="text-muted small">{{ Str::limit($news->contenido, 60) }}</div>
+                                </div>
+                              </div>
+                            </div>
+                          @empty
+                            <div class="text-center text-muted">No hay noticias registradas.</div>
+                          @endforelse
                         </div>
                       </div>
                     </div>

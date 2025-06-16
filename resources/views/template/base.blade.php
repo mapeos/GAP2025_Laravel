@@ -46,6 +46,12 @@
   <!-- Page CSS -->
   <!-- Component CSS -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <!-- Chart.js global -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <!-- FullCalendar global -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <!-- Bootstrap JS para el modal (si usas modales en dashboard) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
@@ -130,7 +136,7 @@
             <!-- Second Row: Breadcrumbs -->
             <nav aria-label="breadcrumb">
               <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item "> <a href="/dashboard" class="text-decoration-none"> Dashboard </a> </li>
+                <li class="breadcrumb-item "><a href="{{ route('admin.dashboard') }}" class="text-decoration-none"> Dashboard </a></li>
                 @yield('breadcrumb')
               </ol>
             </nav>
