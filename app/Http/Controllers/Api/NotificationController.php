@@ -5,20 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Device;
 use Illuminate\Http\Request;
-use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification;
-use Kreait\Firebase\Factory;
+use Firebase\JWT\JWT;
+use Illuminate\Support\Facades\Http;
 
 class NotificationController extends Controller
 {
-    protected $messaging;
-
-    public function __construct()
-    {
-        $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/service-account.json'));
-        $this->messaging = $factory->createMessaging();
-    }
-
     // Save or update the FCM token for the authenticated user
     public function store(Request $request)
     {
@@ -45,45 +36,58 @@ class NotificationController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // Admin: Send push notification to selected users (optional, for API use)
-    public function sendNotification(Request $request)
+    /**
+     * Enviar notificación push usando FCM HTTP v1 y Service Account JSON
+     */
+    public function sendFcmV1(Request $request)
     {
         $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,id',
-            'title' => 'required|string|max:255',
-            'body' => 'required|string|max:1000',
+            'token' => 'required|string',
+            'title' => 'required|string',
+            'body' => 'required|string',
         ]);
 
-        $tokens = Device::whereIn('user_id', $request->user_ids)
-            ->whereNotNull('fcm_token')
-            ->pluck('fcm_token')
-            ->unique()
-            ->toArray();
+        $credentialsPath = env('FIREBASE_CREDENTIALS');
+        $credentials = json_decode(file_get_contents($credentialsPath), true);
 
-        if (empty($tokens)) {
-            return response()->json(['message' => 'No FCM tokens found for selected users'], 404);
-        }
+        // 1. Crear JWT para obtener access_token
+        $now = time();
+        $payload = [
+            'iss' => $credentials['client_email'],
+            'sub' => $credentials['client_email'],
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'iat' => $now,
+            'exp' => $now + 3600,
+            'scope' => 'https://www.googleapis.com/auth/firebase.messaging'
+        ];
+        $privateKey = $credentials['private_key'];
+        $jwt = JWT::encode($payload, $privateKey, 'RS256');
 
-        $notification = Notification::create($request->title, $request->body);
-        $message = CloudMessage::new()->withNotification($notification);
+        // 2. Solicitar access_token
+        $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt,
+        ]);
+        $accessToken = $tokenResponse->json('access_token');
 
-        try {
-            $chunks = array_chunk($tokens, 500);
-            $responses = [];
+        // 3. Enviar notificación
+        $projectId = $credentials['project_id'];
+        $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
-            foreach ($chunks as $chunk) {
-                $response = $this->messaging->sendMulticast($message, $chunk);
-                $responses[] = $response;
-            }
+        $fcmPayload = [
+            'message' => [
+                'token' => $request->input('token'),
+                'notification' => [
+                    'title' => $request->input('title'),
+                    'body' => $request->input('body'),
+                ],
+                // Puedes agregar 'data' => [...] si quieres datos personalizados
+            ]
+        ];
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Notifications sent',
-                'responses' => $responses,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to send notification', 'details' => $e->getMessage()], 500);
-        }
+        $fcmResponse = Http::withToken($accessToken)
+            ->post($fcmUrl, $fcmPayload);
+
+        return response()->json($fcmResponse->json(), $fcmResponse->status());
     }
 }

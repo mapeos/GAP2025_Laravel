@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Device;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -25,6 +26,14 @@ class AuthController extends Controller
             'extra_data' => 'nullable|array',
         ]);
 
+        Log::info('[Device] Registro inicial de dispositivo', [
+            'device_id' => $request->device_id,
+            'fcm_token' => $request->fcm_token,
+            'device_name' => $request->device_name,
+            'device_os' => $request->device_os,
+            'app_version' => $request->app_version,
+        ]);
+
         $device = Device::where('device_id', $request->device_id)
             ->whereNull('user_id')
             ->first();
@@ -40,6 +49,7 @@ class AuthController extends Controller
                 'first_seen_at' => now(),
                 'user_id'      => null,
             ]);
+            Log::info('[Device] Dispositivo creado', ['device_id' => $device->device_id]);
         } else {
             $device->update([
                 'fcm_token'   => $request->fcm_token,
@@ -48,9 +58,10 @@ class AuthController extends Controller
                 'app_version' => $request->app_version,
                 'extra_data'  => $request->extra_data ?? [],
             ]);
+            Log::info('[Device] Dispositivo actualizado', ['device_id' => $device->device_id]);
         }
 
-        return response()->json($device, 201);
+        return response()->json(['ok' => true, 'device_id' => $device->device_id]);
     }
 
     /**
@@ -88,8 +99,12 @@ class AuthController extends Controller
                 $device->first_token = $token;
                 $device->fcm_token = $request->fcm_token;
                 $device->save();
+                Log::info('[Device] Dispositivo asociado a usuario', [
+                    'device_id' => $device->device_id,
+                    'user_id' => $user->id
+                ]);
             } else {
-                Device::updateOrCreate(
+                $device = Device::updateOrCreate(
                     [
                         'user_id'   => $user->id,
                         'device_id' => $request->device_id,
@@ -103,7 +118,12 @@ class AuthController extends Controller
                         'first_token'=> $token,
                     ]
                 );
+                Log::info('[Device] Dispositivo creado y asociado a usuario', [
+                    'device_id' => $device->device_id,
+                    'user_id' => $user->id
+                ]);
             }
+            return response()->json(['ok' => true, 'device_id' => $request->device_id]);
         }
 
         return response()->json([
