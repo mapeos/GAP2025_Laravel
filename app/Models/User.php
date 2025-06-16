@@ -77,9 +77,9 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
-    public function persona()
-    {
-        return $this->hasOne(Persona::class);
-    }
+public function persona()
+{
+    return $this->hasOne(Persona::class, 'user_id', 'id'); // Relación uno a uno
+}
 
 }

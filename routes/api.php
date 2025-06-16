@@ -7,6 +7,7 @@ use App\Http\Controllers\EventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 //mensaje de prueba para verificar que la API está funcionando
@@ -66,7 +67,11 @@ Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(
     Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
 
 });
-
+//rutas fuera de sanctum para que puedan ser accedidas sin autenticación
 Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
 Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
 Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
+//ruta valida para obtener la persona asociada a un usuario
+Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
+Route::get('/users/{user}/persona', [UserController::class, 'getPersonaByUser'])->name('users.persona');
+});

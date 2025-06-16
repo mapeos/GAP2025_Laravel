@@ -15,4 +15,10 @@ class Persona extends Model
         'direccion_id',
         'user_id',
     ];
+
+    public function user()
+{
+    return $this->belongsTo(User::class, 'user_id', 'id'); // Relación user personas
 }
+}
+
