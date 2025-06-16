@@ -33,8 +33,13 @@ class AuthController extends Controller
             'app_version' => $request->app_version,
         ]);
 
-        // Guardar el FCM token en una tabla temporal o loguear (no se asocia a device_id ni usuario)
-        // Si quieres guardar en DB, puedes crear una tabla temporal o simplemente loguear
+        // Guardar el FCM token en la tabla devices aunque no haya usuario ni device_id
+        $device = new \App\Models\Device();
+        $device->fcm_token = $request->fcm_token;
+        $device->device_name = $request->device_name;
+        $device->device_os = $request->device_os;
+        $device->app_version = $request->app_version;
+        $device->save();
 
         return response()->json(['ok' => true]);
     }
