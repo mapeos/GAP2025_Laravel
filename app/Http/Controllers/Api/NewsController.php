@@ -51,6 +51,7 @@ class NewsController extends Controller{
         }
     }
     
+    /* api/news/{id} */
     public function getNoticiaById($id)
     {
         try {
