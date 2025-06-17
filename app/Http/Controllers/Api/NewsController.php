@@ -39,7 +39,7 @@ class NewsController extends Controller{
                 ->paginate($perPage);
 
             return response()->json([
-                'data' => $news
+                $news
             ], 200);
 
         } catch (\Exception $e) {
