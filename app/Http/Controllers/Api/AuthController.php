@@ -33,8 +33,10 @@ class AuthController extends Controller
             'app_version' => $request->app_version,
         ]);
 
-        // Guardar el FCM token en la tabla devices aunque no haya usuario ni device_id
+        // Generar un device_id temporal único para cumplir la restricción de la base de datos
+        $device_id = 'temp-' . \Illuminate\Support\Str::uuid();
         $device = new \App\Models\Device();
+        $device->device_id = $device_id;
         $device->fcm_token = $request->fcm_token;
         $device->device_name = $request->device_name;
         $device->device_os = $request->device_os;
@@ -139,6 +141,30 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'device_id' => $deviceId
         ]);
+
+        // Buscar el dispositivo por user_id y fcm_token (así detectamos si el usuario cambió de device_id o de móvil)
+        $device = Device::where('user_id', $user->id)
+            ->where('fcm_token', $request->fcm_token)
+            ->first();
+
+        if ($device) {
+            // Si existe, actualizar el device_id y demás datos
+            $device->device_id = $deviceId;
+            $device->device_name = $request->device_name;
+            $device->device_os = $request->device_os;
+            $device->app_version = $request->app_version;
+            $device->save();
+        } else {
+            // Si no existe, crear el registro
+            $device = Device::create([
+                'user_id' => $user->id,
+                'device_id' => $deviceId,
+                'fcm_token' => $request->fcm_token,
+                'device_name' => $request->device_name,
+                'device_os' => $request->device_os,
+                'app_version' => $request->app_version,
+            ]);
+        }
 
         return response()->json([
             'ok' => true,
