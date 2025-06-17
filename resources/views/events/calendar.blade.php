@@ -203,29 +203,55 @@
               <input type="hidden" id="eventoTipoId">
               <input type="hidden" id="eventoCreadoPor">
 
-              <div class="mb-3">
-                <label for="titulo" class="form-label">Título</label>
-                <input type="text" class="form-control" id="titulo" required>
+              <div class="row">
+                <div class="col-md-12 mb-2">
+                  <label for="titulo" class="form-label">Título</label>
+                  <input type="text" class="form-control" id="titulo" required>
+                </div>
               </div>
-              <div class="mb-3">
-                <label for="descripcion" class="form-label">Descripción</label>
-                <textarea class="form-control" id="descripcion"></textarea>
+              
+              <div class="row">
+                <div class="col-md-12 mb-2">
+                  <label for="descripcion" class="form-label">Descripción</label>
+                  <textarea class="form-control" id="descripcion" rows="2"></textarea>
+                </div>
               </div>
-              <div class="mb-3">
-                <label class="form-label">Tipo de evento</label>
-                <p id="tipoEventoNombre" class="form-control-plaintext"></p>
+              
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Tipo de evento</label>
+                  <p id="tipoEventoNombre" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Creado por</label>
+                  <p id="creadoPorNombre" class="form-control-plaintext small"></p>
+                </div>
               </div>
-              <div class="mb-3">
-                <label class="form-label">Creado por</label>
-                <p id="creadoPorNombre" class="form-control-plaintext"></p>
+              
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Ubicación</label>
+                  <p id="ubicacion" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">URL Virtual</label>
+                  <p id="urlVirtual" class="form-control-plaintext small"></p>
+                </div>
               </div>
-              <div class="mb-3">
-                <label class="form-label">Ubicación</label>
-                <p id="ubicacion" class="form-control-plaintext"></p>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">URL Virtual</label>
-                <p id="urlVirtual" class="form-control-plaintext"></p>
+              
+              <div class="row">
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha de creación</label>
+                  <p id="fechaCreacion" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha de inicio</label>
+                  <p id="fechaInicio" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha de fin</label>
+                  <p id="fechaFin" class="form-control-plaintext small"></p>
+                </div>
               </div>
             </form>
           </div>
@@ -306,6 +332,45 @@
                     document.getElementById('creadoPorNombre').textContent = props.creado_por_nombre || 'No especificado';
                     document.getElementById('ubicacion').textContent = props.ubicacion || 'No especificado';
                     document.getElementById('urlVirtual').textContent = props.url_virtual || 'No especificado';
+                    
+                    // Formatear y mostrar las fechas
+                    // Fecha de inicio
+                    const fechaInicio = new Date(evento.start);
+                    document.getElementById('fechaInicio').textContent = fechaInicio.toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    // Fecha de fin
+                    if (evento.end) {
+                        const fechaFin = new Date(evento.end);
+                        document.getElementById('fechaFin').textContent = fechaFin.toLocaleString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } else {
+                        document.getElementById('fechaFin').textContent = 'No especificado';
+                    }
+                    
+                    // Fecha de creación (si está disponible en los datos extendidos)
+                    if (props.created_at) {
+                        const fechaCreacion = new Date(props.created_at);
+                        document.getElementById('fechaCreacion').textContent = fechaCreacion.toLocaleString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } else {
+                        document.getElementById('fechaCreacion').textContent = 'No disponible';
+                    }
 
                     // Configurar permisos de edición según el rol del usuario
                     const btnEliminar = document.getElementById('btnEliminar');

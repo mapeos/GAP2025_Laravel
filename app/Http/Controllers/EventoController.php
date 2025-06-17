@@ -58,6 +58,7 @@ class EventoController extends Controller
                         'status' => $evento->status,
                         'creado_por' => $evento->creado_por,
                         'creado_por_nombre' => $evento->creador->name ?? 'N/A',
+                        'created_at' => $evento->created_at,
                         'participantes' => $evento->participantes->map(function($participante) {
                             return [
                                 'id' => $participante->id,
