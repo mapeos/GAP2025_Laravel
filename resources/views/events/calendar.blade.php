@@ -209,14 +209,14 @@
                   <input type="text" class="form-control" id="titulo" required>
                 </div>
               </div>
-              
+
               <div class="row">
                 <div class="col-md-12 mb-2">
                   <label for="descripcion" class="form-label">Descripción</label>
                   <textarea class="form-control" id="descripcion" rows="2"></textarea>
                 </div>
               </div>
-              
+
               <div class="row">
                 <div class="col-md-6 mb-2">
                   <label class="form-label">Tipo de evento</label>
@@ -227,7 +227,7 @@
                   <p id="creadoPorNombre" class="form-control-plaintext small"></p>
                 </div>
               </div>
-              
+
               <div class="row">
                 <div class="col-md-6 mb-2">
                   <label class="form-label">Ubicación</label>
@@ -238,7 +238,7 @@
                   <p id="urlVirtual" class="form-control-plaintext small"></p>
                 </div>
               </div>
-              
+
               <div class="row">
                 <div class="col-md-4 mb-2">
                   <label class="form-label">Fecha de creación</label>
@@ -275,7 +275,25 @@
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 events: @json($eventos ?? []),
-                editable: true,
+                editable: false, // Por defecto, los eventos no son arrastables
+                eventDidMount: function(info) {
+                    // Determinar si el evento debe ser arrastrable según el rol del usuario y el tipo de evento
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == {{ Auth::id() }};
+                    
+                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+                        // Administradores y profesores pueden arrastrar cualquier evento
+                        info.event.setProp('editable', true);
+                    @elseif(Auth::user()->hasRole('Alumno'))
+                        // Alumnos solo pueden arrastrar sus propios recordatorios personales
+                        if (esRecordatorioPersonal && esCreador) {
+                            info.event.setProp('editable', true);
+                        } else {
+                            info.event.setProp('editable', false);
+                        }
+                    @endif
+                },
                 selectable: true, // Permite seleccionar fechas en el calendario
                 dayMaxEventRows: 3, // Limita a mostrar máximo 3 eventos por día
                 moreLinkText: '...', // Texto para el enlace "más"
@@ -332,7 +350,7 @@
                     document.getElementById('creadoPorNombre').textContent = props.creado_por_nombre || 'No especificado';
                     document.getElementById('ubicacion').textContent = props.ubicacion || 'No especificado';
                     document.getElementById('urlVirtual').textContent = props.url_virtual || 'No especificado';
-                    
+
                     // Formatear y mostrar las fechas
                     // Fecha de inicio
                     const fechaInicio = new Date(evento.start);
@@ -343,7 +361,7 @@
                         hour: '2-digit',
                         minute: '2-digit'
                     });
-                    
+
                     // Fecha de fin
                     if (evento.end) {
                         const fechaFin = new Date(evento.end);
@@ -357,7 +375,7 @@
                     } else {
                         document.getElementById('fechaFin').textContent = 'No especificado';
                     }
-                    
+
                     // Fecha de creación (si está disponible en los datos extendidos)
                     if (props.created_at) {
                         const fechaCreacion = new Date(props.created_at);
@@ -407,7 +425,21 @@
                     modal.show();
                 },
                 eventDrop: function(info) {
-                    fetch(`/eventos/${info.event.id}`, {
+                    // Obtener propiedades extendidas del evento
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == {{ Auth::id() }};
+
+                    // Determinar la URL correcta según el tipo de evento y el rol del usuario
+                    let url = `/eventos/${info.event.id}`;
+
+                    @if(Auth::user()->hasRole('Alumno'))
+                        if (esRecordatorioPersonal && esCreador) {
+                            url = `/events/reminders/${info.event.id}`;
+                        }
+                    @endif
+
+                    fetch(url, {
                         method: 'PUT',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',

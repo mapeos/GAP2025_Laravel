@@ -433,8 +433,10 @@ class EventoController extends Controller
         // Si la petición es AJAX, responde con JSON
         if ($request->expectsJson()) {
             $validator = Validator::make($request->all(), [
-                'titulo' => 'required|string|max:255',
+                'titulo' => 'sometimes|required|string|max:255',
                 'descripcion' => 'nullable|string',
+                'fecha_inicio' => 'sometimes|required|date',
+                'fecha_fin' => 'sometimes|required|date|after_or_equal:fecha_inicio',
             ]);
 
             if ($validator->fails()) {
@@ -448,7 +450,9 @@ class EventoController extends Controller
             try {
                 $evento->update($request->only([
                     'titulo',
-                    'descripcion'
+                    'descripcion',
+                    'fecha_inicio',
+                    'fecha_fin'
                 ]));
 
                 return response()->json([

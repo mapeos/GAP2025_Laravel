@@ -275,7 +275,25 @@
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 events: @json($eventos ?? []),
-                editable: true,
+                editable: false, // Por defecto, los eventos no son arrastables
+                eventDidMount: function(info) {
+                    // Determinar si el evento debe ser arrastrable según el rol del usuario y el tipo de evento
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == {{ Auth::id() }};
+
+                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+                        // Administradores y profesores pueden arrastrar cualquier evento
+                        info.event.setProp('editable', true);
+                    @elseif(Auth::user()->hasRole('Alumno'))
+                        // Alumnos solo pueden arrastrar sus propios recordatorios personales
+                        if (esRecordatorioPersonal && esCreador) {
+                            info.event.setProp('editable', true);
+                        } else {
+                            info.event.setProp('editable', false);
+                        }
+                    @endif
+                },
                 selectable: true, // Permite seleccionar fechas en el calendario
                 dayMaxEventRows: 3, // Limita a mostrar máximo 3 eventos por día
                 moreLinkText: '...', // Texto para el enlace "más"
@@ -407,7 +425,21 @@
                     modal.show();
                 },
                 eventDrop: function(info) {
-                    fetch(`/eventos/${info.event.id}`, {
+                    // Obtener propiedades extendidas del evento
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == {{ Auth::id() }};
+
+                    // Determinar la URL correcta según el tipo de evento y el rol del usuario
+                    let url = `/eventos/${info.event.id}`;
+
+                    @if(Auth::user()->hasRole('Alumno'))
+                        if (esRecordatorioPersonal && esCreador) {
+                            url = `/events/reminders/${info.event.id}`;
+                        }
+                    @endif
+
+                    fetch(url, {
                         method: 'PUT',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
