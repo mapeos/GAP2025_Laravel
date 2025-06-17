@@ -90,4 +90,66 @@ class NotificationController extends Controller
 
         return response()->json($fcmResponse->json(), $fcmResponse->status());
     }
+
+    /**
+     * Enviar notificación webpush personalizada (WebPush API)
+     */
+    public function sendWebPush(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'title' => 'required|string',
+            'body' => 'required|string',
+            'icon' => 'nullable|string',
+            'actions' => 'nullable|array',
+        ]);
+
+        $credentialsPath = env('FIREBASE_CREDENTIALS');
+        $credentials = json_decode(file_get_contents($credentialsPath), true);
+
+        $now = time();
+        $payload = [
+            'iss' => $credentials['client_email'],
+            'sub' => $credentials['client_email'],
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'iat' => $now,
+            'exp' => $now + 3600,
+            'scope' => 'https://www.googleapis.com/auth/firebase.messaging'
+        ];
+        $privateKey = $credentials['private_key'];
+        $jwt = JWT::encode($payload, $privateKey, 'RS256');
+
+        $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt,
+        ]);
+        $accessToken = $tokenResponse->json('access_token');
+
+        $projectId = $credentials['project_id'];
+        $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+
+        $webpush = [
+            'headers' => [
+                'Urgency' => 'high',
+            ],
+            'notification' => [
+                'title' => $request->input('title'),
+                'body' => $request->input('body'),
+                'icon' => $request->input('icon', null),
+                'actions' => $request->input('actions', []),
+            ],
+        ];
+
+        $fcmPayload = [
+            'message' => [
+                'token' => $request->input('token'),
+                'webpush' => $webpush,
+            ]
+        ];
+
+        $fcmResponse = Http::withToken($accessToken)
+            ->post($fcmUrl, $fcmPayload);
+
+        return response()->json($fcmResponse->json(), $fcmResponse->status());
+    }
 }
