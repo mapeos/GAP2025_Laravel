@@ -15,4 +15,13 @@ class SentNotification extends Model
     protected $casts = [
         'user_ids' => 'array',
     ];
+
+    /**
+     * Obtener los usuarios destinatarios de la notificación.
+     * Devuelve una colección de modelos User.
+     */
+    public function users()
+    {
+        return User::whereIn('id', $this->user_ids ?? [])->get();
+    }
 }
