@@ -328,7 +328,7 @@
                         document.getElementById('titulo').readOnly = false;
                         document.getElementById('descripcion').readOnly = false;
                     @elseif(Auth::user()->hasRole('Alumno'))
-                        // alumnos solo pueden editar sus propios recordatorios personales
+                        // Alumnos solo pueden editar sus propios recordatorios personales
                         if (esRecordatorioPersonal && esCreador) {
                             btnEliminar.style.display = 'block';
                             btnGuardar.style.display = 'block';
@@ -401,7 +401,15 @@
                     btnEliminar.disabled = true;
                     btnEliminar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Eliminando...';
 
-                    fetch(`/eventos/${id}`, {
+                    // Determinar la URL correcta según el tipo de evento y el rol del usuario
+                    let deleteUrl = `/eventos/${id}`;
+                    @if(Auth::user()->hasRole('Alumno'))
+                        if (esRecordatorioPersonal && esCreador) {
+                            deleteUrl = `/events/reminders/${id}`;
+                        }
+                    @endif
+
+                    fetch(deleteUrl, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -418,6 +426,7 @@
                             var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                             modal.hide();
                             calendar.getEventById(id).remove();
+                            calendar.refetchEvents(); // Refrescar todos los eventos del calendario
                             alert('Evento eliminado exitosamente.');
                         } else {
                             response.json().then(data => {
@@ -471,7 +480,15 @@
                     return;
                 }
 
-                fetch(`/eventos/${id}`, {
+                // Determinar la URL correcta según el tipo de evento y el rol del usuario
+                let updateUrl = `/eventos/${id}`;
+                @if(Auth::user()->hasRole('Alumno'))
+                    if (esRecordatorioPersonal && esCreador) {
+                        updateUrl = `/events/reminders/${id}`;
+                    }
+                @endif
+
+                fetch(updateUrl, {
                     method: 'PUT',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
