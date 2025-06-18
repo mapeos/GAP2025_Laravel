@@ -20,7 +20,11 @@ class NewsController extends Controller
         // Carga las noticias junto con sus categorías relacionadas, paginando de 10 en 10
         // $news = News::with('categorias')->paginate(10);
         $news = News::withTrashed()->with('categorias')->paginate(10);
-        return view('admin.news.index', compact('news'));
+        
+        // MEJORA FILTROS: Obtener todas las categorías para el filtro
+        $categorias = Categorias::orderBy('nombre')->get();
+        
+        return view('admin.news.index', compact('news', 'categorias'));
     }
 
     /**

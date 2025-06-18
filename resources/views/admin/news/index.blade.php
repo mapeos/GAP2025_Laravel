@@ -43,7 +43,9 @@
         @include('template.partials.alerts')
     </div>
 
+    {{-- FILTROS EXISTENTES --}}
     <div class="mb-3 d-flex gap-3">
+        {{-- Filtro por estado --}}
         <div class="btn-group" role="group" aria-label="Filtrar por estado">
             <button type="button" class="btn btn-outline-secondary btn-sm filter-status active" data-status="all">
                 <i class="ri-list-check"></i> Todas
@@ -56,6 +58,7 @@
             </button>
         </div>
 
+        {{-- Ordenar por fecha --}}
         <div class="btn-group" role="group" aria-label="Ordenar por fecha">
             <button type="button" class="btn btn-outline-secondary btn-sm sort-date active" data-sort="all">
                 <i class="ri-time-line"></i> Sin ordenar
@@ -67,8 +70,69 @@
                 <i class="ri-arrow-down-line"></i> Más antiguas
             </button>
         </div>
+
+        {{-- Botón de búsqueda avanzada --}}
+        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#searchFilters" aria-expanded="false" aria-controls="searchFilters" id="toggleFiltersBtn">
+            <i class="ri-filter-3-line"></i> Búsqueda Avanzada
+        </button>
     </div>
 
+    {{-- NUEVOS FILTROS: Búsqueda avanzada (colapsable) --}}
+    <div class="collapse mb-3" id="searchFilters">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Búsqueda Avanzada</h6>
+                <button type="button" class="btn-close" id="closeFiltersBtn" aria-label="Cerrar"></button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {{-- Búsqueda por texto --}}
+                    <div class="col-md-4 mb-3">
+                        <label for="searchText" class="form-label">Buscar en título y contenido</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchText" placeholder="Escriba para buscar...">
+                            <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Filtro por categorías --}}
+                    <div class="col-md-4 mb-3">
+                        <label for="categoryFilter" class="form-label">Filtrar por categoría</label>
+                        <select class="form-select" id="categoryFilter">
+                            <option value="">Todas las categorías</option>
+                            @foreach($categorias ?? [] as $categoria)
+                            <option value="{{ $categoria->nombre }}">{{ $categoria->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Filtro por rango de fechas --}}
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Rango de fechas</label>
+                        <div class="input-group">
+                            <input type="date" class="form-control" id="dateFrom" placeholder="Desde">
+                            <span class="input-group-text">hasta</span>
+                            <input type="date" class="form-control" id="dateTo" placeholder="Hasta">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Botones de acción --}}
+                <div class="row">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFilters">
+                            <i class="ri-refresh-line"></i> Limpiar Filtros
+                        </button>
+                        <span class="text-muted ms-2" id="filterResults"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Spinner de carga --}}
     <div class="loading-spinner" id="loadingSpinner" style="display: none;">
         <div style="display: flex; align-items: center; gap: 1rem;">
             <div class="spinner-border text-primary" role="status">
@@ -78,6 +142,7 @@
         </div>
     </div>
 
+    {{-- Tabla de noticias --}}
     <table class="table align-middle table-responsive">
         <thead>
             <tr>
@@ -339,7 +404,7 @@
             });
         });
 
-        
+        // Función para mostrar mensajes de flash
         function showFlashMessage(message, type = 'success') {
             const icons = {
                 success: 'ri-checkbox-circle-fill text-success',
@@ -363,6 +428,143 @@
 
             flashContainer.innerHTML = ''; // Limpia anteriores
             flashContainer.appendChild(wrapper);
+        }
+
+        // NUEVOS FILTROS: Funcionalidad de búsqueda avanzada
+        const searchText = document.getElementById('searchText');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        const clearFilters = document.getElementById('clearFilters');
+        const clearSearch = document.getElementById('clearSearch');
+        const filterResults = document.getElementById('filterResults');
+
+        // Función para aplicar todos los filtros
+        function applyAllFilters() {
+            const searchValue = searchText.value.toLowerCase().trim();
+            const categoryValue = categoryFilter.value.toLowerCase();
+            const dateFromValue = dateFrom.value;
+            const dateToValue = dateTo.value;
+
+            const rows = document.querySelectorAll('tbody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                let showRow = true;
+
+                // Filtro por texto (título y contenido)
+                if (searchValue) {
+                    const title = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                    // Nota: El contenido no está visible en la tabla, solo se filtra por título
+                    if (!title.includes(searchValue)) {
+                        showRow = false;
+                    }
+                }
+
+                // Filtro por categoría
+                if (categoryValue && showRow) {
+                    const categories = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    if (!categories.includes(categoryValue)) {
+                        showRow = false;
+                    }
+                }
+
+                // Filtro por rango de fechas
+                if (showRow && (dateFromValue || dateToValue)) {
+                    const dateText = row.querySelector('td:nth-child(4)').textContent.trim();
+                    const [datePart] = dateText.split(' ');
+                    const [day, month, year] = datePart.split('/');
+                    const rowDate = new Date(year, month - 1, day);
+
+                    if (dateFromValue) {
+                        const fromDate = new Date(dateFromValue);
+                        if (rowDate < fromDate) {
+                            showRow = false;
+                        }
+                    }
+
+                    if (dateToValue && showRow) {
+                        const toDate = new Date(dateToValue);
+                        if (rowDate > toDate) {
+                            showRow = false;
+                        }
+                    }
+                }
+
+                // Aplicar visibilidad
+                if (showRow) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Mostrar resultados del filtro
+            const totalRows = rows.length;
+            if (searchValue || categoryValue || dateFromValue || dateToValue) {
+                filterResults.textContent = `Mostrando ${visibleCount} de ${totalRows} noticias`;
+            } else {
+                filterResults.textContent = '';
+            }
+        }
+
+        // Event listeners para los nuevos filtros
+        clearFilters.addEventListener('click', function() {
+            // Limpiar todos los campos de filtro
+            searchText.value = '';
+            categoryFilter.value = '';
+            dateFrom.value = '';
+            dateTo.value = '';
+            filterResults.textContent = '';
+            
+            // Mostrar todas las filas
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+        });
+
+        clearSearch.addEventListener('click', function() {
+            searchText.value = '';
+            applyAllFilters();
+        });
+
+        // Búsqueda en tiempo real (con debounce)
+        let searchTimeout;
+        searchText.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(applyAllFilters, 300);
+        });
+
+        // Filtros que se aplican automáticamente
+        categoryFilter.addEventListener('change', applyAllFilters);
+        dateFrom.addEventListener('change', applyAllFilters);
+        dateTo.addEventListener('change', applyAllFilters);
+
+        // Validación de fechas
+        dateFrom.addEventListener('change', function() {
+            if (dateTo.value && this.value > dateTo.value) {
+                dateTo.value = this.value;
+            }
+        });
+
+        dateTo.addEventListener('change', function() {
+            if (dateFrom.value && this.value < dateFrom.value) {
+                dateFrom.value = this.value;
+            }
+        });
+
+        // Hacer que la X funcione correctamente
+        const closeButton = document.getElementById('closeFiltersBtn');
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                const searchFilters = document.getElementById('searchFilters');
+                if (searchFilters) {
+                    const bsCollapse = new bootstrap.Collapse(searchFilters);
+                    bsCollapse.hide();
+                }
+            });
         }
     });
 </script>

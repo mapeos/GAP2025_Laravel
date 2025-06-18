@@ -82,7 +82,7 @@
                     <div class="image-upload-placeholder {{ $news->imagen ? 'd-none' : '' }}" id="imagePlaceholder">
                         <i class="ri-image-add-line"></i>
                         <span>Haz clic para subir una imagen</span>
-                        <small class="text-muted d-block mt-2">Formatos permitidos: JPEG, PNG, JPG, GIF. Tamaño máximo: 10MB</small>
+                        <small class="text-muted d-block mt-2">Formatos permitidos: JPEG, PNG, JPG, GIF. Tamaño máximo: 20MB</small>
                     </div>
                     <div class="image-preview {{ $news->imagen ? '' : 'd-none' }}" id="imagePreview">
                         <img src="{{ $news->imagen ? asset($news->imagen) : '' }}" alt="Vista previa" id="previewImage">
@@ -532,6 +532,7 @@
             hasUnsavedChanges = true;
         });
 
+        // Función para mostrar errores de imagen
         function showImageError(msg) {
             imageErrorMsg.textContent = msg;
             imageError.classList.remove('d-none');
