@@ -1272,6 +1272,12 @@ composer require firebase/php-jwt
    ```
    FIREBASE_CREDENTIALS=/ruta/absoluta/a/storage/app/private/firebase/service-account.json
    ```
+3. Para que las notificaciones push se envíen inmediatamente (sin necesidad de un worker de colas), ajusta la siguiente variable en tu archivo `.env`:
+   ```
+   QUEUE_CONNECTION=sync
+   ```
+   **¿Por qué este cambio?**
+   Por defecto, Laravel usa un sistema de colas para procesar tareas en segundo plano (como el envío de notificaciones push). Si no tienes un worker ejecutándose (por ejemplo, en Docker sin un servicio adicional para la cola), los jobs quedan pendientes y no se envían hasta que se procese la cola manualmente. Al usar `QUEUE_CONNECTION=sync`, los jobs se ejecutan inmediatamente en el mismo request, lo que simplifica el flujo en entornos donde no se desea gestionar un worker de colas.
 
 ### Endpoints principales
 
