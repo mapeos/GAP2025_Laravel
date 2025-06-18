@@ -39,6 +39,24 @@
         background-color: #0a58ca !important;
         border-color: #0a53be !important;
     }
+    /* Estilos para la vista de agenda */
+    #agendaView .list-group-item.list-group-item-secondary {
+        transition: background-color 0.2s;
+    }
+    #agendaView .list-group-item.list-group-item-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+    #agendaView .events-container {
+        transition: max-height 0.3s ease-in-out;
+        overflow: hidden;
+    }
+    #agendaView .events-container.d-none {
+        max-height: 0;
+    }
+    #agendaView .events-container:not(.d-none) {
+        max-height: 1000px;
+    }
 </style>
 
 <div class="container">
@@ -72,6 +90,10 @@
                 <i class="ri-mail-line"></i> Ver mis solicitudes
             </a>
         @endif
+
+        <button id="btnAgendaView" class="btn btn-secondary">
+            <i class="ri-list-check-line"></i> Ver agenda
+        </button>
     </div>
 
     <div class="modal fade" id="solicitudCitaModal" tabindex="-1" aria-labelledby="solicitudCitaModalLabel" aria-hidden="true">
@@ -151,6 +173,20 @@
 
     <div id="calendar"></div>
 
+    <!-- Contenedor para la vista de agenda -->
+    <div id="agendaView" class="d-none">
+        <div class="card">
+            <div class="card-header bg-secondary text-white text-center py-3">
+                <h5 class="mb-0">Agenda de Eventos</h5>
+            </div>
+            <div class="card-body">
+                <div id="agendaList" class="list-group">
+                    <!-- Los eventos se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para crear nuevo evento -->
     <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -167,10 +203,10 @@
                     <form id="formCrearEvento" novalidate>
                         <div class="mb-3">
                             <label for="nuevoTitulo" class="form-label">Título <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nuevoTitulo" required 
+                            <input type="text" class="form-control" id="nuevoTitulo" required
                                    maxlength="100" minlength="3"
-                                   data-bs-toggle="tooltip" 
-                                   data-bs-placement="top" 
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
                                    title="El título debe tener entre 3 y 100 caracteres">
                             <div class="invalid-feedback">Por favor ingrese un título válido (3-100 caracteres)</div>
                         </div>
@@ -186,10 +222,10 @@
                         </div>
                         <div class="mb-3">
                             <label for="nuevaUrlVirtual" class="form-label">URL Virtual</label>
-                            <input type="url" class="form-control" id="nuevaUrlVirtual" 
+                            <input type="url" class="form-control" id="nuevaUrlVirtual"
                                    pattern="https?://.+"
-                                   data-bs-toggle="tooltip" 
-                                   data-bs-placement="top" 
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
                                    title="Debe ser una URL válida comenzando con http:// o https://">
                             <div class="invalid-feedback">Por favor ingrese una URL válida</div>
                         </div>
@@ -227,8 +263,8 @@
                                 <div class="input-group">
                                     <input type="date" class="form-control" id="nuevaFechaInicio" required
                                            min="{{ date('Y-m-d') }}"
-                                           data-bs-toggle="tooltip" 
-                                           data-bs-placement="top" 
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
                                            title="La fecha debe ser hoy o posterior">
                                     <select class="form-select" id="nuevaHoraInicio" style="max-width: 120px;" required>
                                         @php
@@ -252,8 +288,8 @@
                                 <div class="input-group">
                                     <input type="date" class="form-control" id="nuevaFechaFin" required
                                            min="{{ date('Y-m-d') }}"
-                                           data-bs-toggle="tooltip" 
-                                           data-bs-placement="top" 
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
                                            title="La fecha debe ser hoy o posterior">
                                     <select class="form-select" id="nuevaHoraFin" style="max-width: 120px;" required>
                                         @foreach($horas as $hora)
@@ -373,9 +409,63 @@
     <!-- Este btón abre el modal de creación de eventos al hacer click -->
     <button id="fabCrearEvento" class="btn btn-primary rounded-circle"
             style="position: fixed; bottom: 32px; right: 32px; z-index: 1050; width: 56px; height: 56px; font-size: 2rem;" >
-        +    
+        +
     </button>
 
+    <style>
+        /* Estilos para el calendario */
+        #calendar {
+            margin-bottom: 20px;
+        }
+
+        /* Estilos para el botón flotante */
+        .floating-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .floating-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-button i {
+            font-size: 24px;
+        }
+
+        /* Estilos para la vista de agenda */
+        #agendaView {
+            margin-bottom: 20px;
+        }
+
+        #agendaList .list-group-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        #agendaList .list-group-item:not(.list-group-item-secondary):hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #agendaList .badge {
+            font-weight: normal;
+        }
+    </style>
     <script>
         // Variables de usuario para JS
         const userRole = "{{ Auth::user()->getRoleNames()->first() }}";
@@ -544,6 +634,156 @@
                 return;
             }
 
+            // Variables para la vista de agenda
+            const agendaViewEl = document.getElementById('agendaView');
+            const agendaListEl = document.getElementById('agendaList');
+            let isAgendaView = false;
+
+            // Función para cambiar entre vista de calendario y agenda
+            function toggleAgendaView() {
+                isAgendaView = !isAgendaView;
+                if (isAgendaView) {
+                    calendarEl.classList.add('d-none');
+                    agendaViewEl.classList.remove('d-none');
+                    document.getElementById('btnAgendaView').innerHTML = '<i class="ri-calendar-line"></i> Ver calendario';
+                    loadAgendaView();
+                } else {
+                    calendarEl.classList.remove('d-none');
+                    agendaViewEl.classList.add('d-none');
+                    document.getElementById('btnAgendaView').innerHTML = '<i class="ri-list-check-line"></i> Ver agenda';
+                }
+            }
+
+            // Función para actualizar la vista de agenda si está activa
+            function updateAgendaViewIfActive() {
+                if (isAgendaView) {
+                    loadAgendaView();
+                }
+            }
+
+            // Evento para el botón de agenda
+            document.getElementById('btnAgendaView').addEventListener('click', toggleAgendaView);
+
+            // Función para cargar los eventos en la vista de agenda
+            function loadAgendaView() {
+                // Obtener todos los eventos del calendario
+                const events = calendar.getEvents();
+
+                // Ordenar eventos por fecha de inicio
+                events.sort((a, b) => a.start - b.start);
+
+                // Limpiar la lista de agenda
+                agendaListEl.innerHTML = '';
+
+                // Agrupar eventos por fecha
+                const eventsByDate = {};
+                events.forEach(event => {
+                    const dateStr = event.start.toISOString().split('T')[0];
+                    if (!eventsByDate[dateStr]) {
+                        eventsByDate[dateStr] = [];
+                    }
+                    eventsByDate[dateStr].push(event);
+                });
+
+                // Si no hay eventos, mostrar mensaje
+                if (Object.keys(eventsByDate).length === 0) {
+                    agendaListEl.innerHTML = '<div class="alert alert-info">No hay eventos para mostrar</div>';
+                    return;
+                }
+
+                // Crear elementos para cada fecha y sus eventos
+                for (const dateStr in eventsByDate) {
+                    const date = new Date(dateStr);
+                    const formattedDate = date.toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    // Crear encabezado de fecha desplegable
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'list-group-item list-group-item-secondary';
+                    dateHeader.style.cursor = 'pointer';
+                    dateHeader.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">${formattedDate}</h5>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                    `;
+                    agendaListEl.appendChild(dateHeader);
+
+                    // Crear contenedor para los eventos de esta fecha (inicialmente oculto)
+                    const eventsContainer = document.createElement('div');
+                    eventsContainer.className = 'events-container d-none';
+                    eventsContainer.dataset.date = dateStr;
+                    agendaListEl.appendChild(eventsContainer);
+
+                    // Añadir evento click al encabezado para mostrar/ocultar eventos
+                    dateHeader.addEventListener('click', function() {
+                        const icon = this.querySelector('i');
+                        if (eventsContainer.classList.contains('d-none')) {
+                            eventsContainer.classList.remove('d-none');
+                            icon.classList.remove('ri-arrow-down-s-line');
+                            icon.classList.add('ri-arrow-up-s-line');
+                        } else {
+                            eventsContainer.classList.add('d-none');
+                            icon.classList.remove('ri-arrow-up-s-line');
+                            icon.classList.add('ri-arrow-down-s-line');
+                        }
+                    });
+
+                    // Crear elementos para cada evento en esta fecha
+                    eventsByDate[dateStr].forEach(event => {
+                        const eventItem = document.createElement('div');
+                        eventItem.className = 'list-group-item';
+                        eventItem.style.borderLeft = `5px solid ${event.backgroundColor || event.borderColor || '#3788d8'}`;
+
+                        // Formatear hora
+                        let timeStr = '';
+                        if (event.allDay) {
+                            timeStr = 'Todo el día';
+                        } else {
+                            const startTime = event.start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                            const endTime = event.end ? event.end.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+                            timeStr = startTime + (endTime ? ` - ${endTime}` : '');
+                        }
+
+                        // Crear contenido del evento
+                        eventItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-1">${event.title}</h6>
+                                <span class="badge bg-secondary">${timeStr}</span>
+                            </div>
+                            <p class="mb-1 text-muted small">${event.extendedProps?.tipo_evento_nombre || ''}</p>
+                            ${event.extendedProps?.descripcion ? `<p class="mb-1">${event.extendedProps.descripcion}</p>` : ''}
+                            ${event.extendedProps?.ubicacion ? `<p class="mb-0 small"><i class="ri-map-pin-line"></i> ${event.extendedProps.ubicacion}</p>` : ''}
+                        `;
+
+                        // Añadir estilo de cursor para indicar que es clickeable
+                        eventItem.style.cursor = 'pointer';
+
+                        // Añadir evento para mostrar detalles al hacer clic
+                        eventItem.addEventListener('click', function() {
+                            // Usar la función mostrarModalEvento para mostrar los detalles del evento
+                            mostrarModalEvento(event);
+
+                            // La función mostrarModalEvento se encarga de llenar el modal con los datos del evento
+
+                            // La función mostrarModalEvento ya se encarga de mostrar todos los detalles del evento,
+                            // configurar la visibilidad de los campos, formatear las fechas y configurar los permisos
+                            // para los botones de edición y eliminación.
+                            // La función mostrarModalEvento ya se encarga de mostrar el modal
+                        });
+
+                        eventsContainer.appendChild(eventItem);
+                    });
+                }
+            }
+
+            // Evento para el botón de agenda
+            document.getElementById('btnAgendaView').addEventListener('click', toggleAgendaView);
+
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'es',
@@ -680,6 +920,8 @@
                         if (!data.success) {
                             throw new Error(data.message || 'Error al actualizar la fecha del evento');
                         }
+                        // Actualizar la vista de agenda si está activa
+                        updateAgendaViewIfActive();
                     })
                     .catch(error => {
                         console.error('Error:', error);
@@ -761,6 +1003,7 @@
                             modal.hide();
                             calendar.getEventById(id).remove();
                             calendar.refetchEvents();
+                            updateAgendaViewIfActive();
                             alert('Evento eliminado exitosamente.');
                         } else {
                             response.json().then(data => {
@@ -835,6 +1078,7 @@
                         let event = calendar.getEventById(id);
                         event.setProp('title', titulo);
                         event.setExtendedProp('descripcion', descripcion);
+                        updateAgendaViewIfActive();
                         alert('Evento actualizado exitosamente.');
                     } else {
                         alert('Error al actualizar el evento.');
@@ -919,6 +1163,7 @@
                         });
 
                         limpiarFormulario();
+                        updateAgendaViewIfActive();
                         alert('Evento creado exitosamente.');
                     }
                 })
@@ -1033,3 +1278,4 @@
     </script>
 </div>
 @endsection
+
