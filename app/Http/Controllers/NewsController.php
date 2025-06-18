@@ -53,6 +53,8 @@ class NewsController extends Controller
         ]);
 
         $data = $request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']);
+        // Guardar el valor del checkbox 'slide' (si está presente será true, si no, false)
+        $data['slide'] = $request->has('slide');
 
         // Manejar la subida de la imagen
         if ($request->hasFile('imagen')) {
@@ -108,6 +110,8 @@ class NewsController extends Controller
         ]);
 
         $data = $request->only(['titulo', 'contenido', 'autor', 'fecha_publicacion']);
+        // Guardar el valor del checkbox 'slide' (si está presente será true, si no, false)
+        $data['slide'] = $request->has('slide');
 
         // Manejar la actualización de la imagen
         if ($request->hasFile('imagen')) {

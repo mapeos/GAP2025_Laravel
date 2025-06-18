@@ -74,6 +74,16 @@
         </div>
 
         <div class="form-group mb-3">
+            <!-- Checkbox para indicar si la noticia va en el slide (carrusel) -->
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="slide" name="slide" value="1" {{ old('slide', $news->slide) ? 'checked' : '' }}>
+                <label class="form-check-label" for="slide">
+                    ¿Mostrar en slide?
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group mb-3">
             <label for="imagen">Imagen</label>
             <div class="image-upload-container">
                 <div class="image-upload-box" id="imageUploadBox">

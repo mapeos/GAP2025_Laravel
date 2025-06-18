@@ -57,6 +57,15 @@
 
     <p><strong>Fecha de Publicación:</strong> {{ $news->fecha_publicacion->format('d/m/Y H:i') }}</p>
 
+    <p><strong>¿Mostrar en slide?:</strong>
+        <!-- Mostrar si la noticia está en el slide -->
+        @if ($news->slide)
+            <span class="badge bg-primary">Sí</span>
+        @else
+            <span class="badge bg-secondary">No</span>
+        @endif
+    </p>
+
     <a href="{{ route('admin.news.index') }}" class="btn btn-secondary mt-3">Volver al listado</a>
 </div>
 @endsection

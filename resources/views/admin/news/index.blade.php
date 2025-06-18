@@ -153,6 +153,7 @@
                 <th>Modificada</th>
                 <th>Eliminada</th>
                 <th>Estado</th>
+                <th>Slide</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -191,6 +192,14 @@
                     <span class="badge bg-danger">Dada de baja</span>
                     @else
                     <span class="badge bg-success">Publicada</span>
+                    @endif
+                </td>
+
+                <td>
+                    @if ($item->slide)
+                        <span class="badge bg-primary">Sí</span>
+                    @else
+                        <span class="badge bg-secondary">No</span>
                     @endif
                 </td>
 
