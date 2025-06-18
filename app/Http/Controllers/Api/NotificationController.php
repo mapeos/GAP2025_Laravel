@@ -23,16 +23,27 @@ class NotificationController extends Controller
 
         $user = $request->user();
 
-        Device::updateOrCreate(
-            ['user_id' => $user->id],
-            [
+        // Buscar por device_id primero
+        $device = Device::where('device_id', $request->device_id)->first();
+        if ($device) {
+            // Si el device_id existe, reasignar user_id y actualizar fcm_token
+            $device->user_id = $user->id;
+            $device->fcm_token = $request->fcm_token;
+            $device->device_name = $request->device_name ?? 'Web Browser';
+            $device->device_os = $request->device_os ?? 'web';
+            $device->app_version = $request->app_version ?? 'web-1.0';
+            $device->save();
+        } else {
+            // Si no existe, crear nuevo registro
+            Device::create([
+                'user_id' => $user->id,
                 'device_id' => $request->device_id,
                 'fcm_token' => $request->fcm_token,
                 'device_name' => $request->device_name ?? 'Web Browser',
                 'device_os' => $request->device_os ?? 'web',
                 'app_version' => $request->app_version ?? 'web-1.0',
-            ]
-        );
+            ]);
+        }
 
         return response()->json(['success' => true]);
     }
