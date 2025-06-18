@@ -24,8 +24,9 @@ class NotificationController extends Controller
         $user = $request->user();
 
         Device::updateOrCreate(
-            ['device_id' => $request->device_id, 'user_id' => $user->id],
+            ['user_id' => $user->id],
             [
+                'device_id' => $request->device_id,
                 'fcm_token' => $request->fcm_token,
                 'device_name' => $request->device_name ?? 'Web Browser',
                 'device_os' => $request->device_os ?? 'web',
@@ -45,6 +46,7 @@ class NotificationController extends Controller
             'token' => 'required|string',
             'title' => 'required|string',
             'body' => 'required|string',
+            'data' => 'nullable|array',
         ]);
 
         $credentialsPath = env('FIREBASE_CREDENTIALS');
@@ -81,7 +83,10 @@ class NotificationController extends Controller
                     'title' => $request->input('title'),
                     'body' => $request->input('body'),
                 ],
-                // Puedes agregar 'data' => [...] si quieres datos personalizados
+                'data' => $request->input('data', [
+                    'title' => $request->input('title'),
+                    'body' => $request->input('body'),
+                ]),
             ]
         ];
 
@@ -102,6 +107,7 @@ class NotificationController extends Controller
             'body' => 'required|string',
             'icon' => 'nullable|string',
             'actions' => 'nullable|array',
+            'data' => 'nullable|array',
         ]);
 
         $credentialsPath = env('FIREBASE_CREDENTIALS');
@@ -139,6 +145,9 @@ class NotificationController extends Controller
                 'actions' => $request->input('actions', []),
             ],
         ];
+        if ($request->has('data')) {
+            $webpush['data'] = $request->input('data');
+        }
 
         $fcmPayload = [
             'message' => [

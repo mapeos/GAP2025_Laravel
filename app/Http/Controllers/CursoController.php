@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Curso;
+use Illuminate\Support\Facades\Storage;
 
 class CursoController extends Controller
 {
-
     public function index()
     {
         $cursos = Curso::all();
@@ -28,7 +28,6 @@ class CursoController extends Controller
     public function update(Request $request, $id)
     {
         $curso = Curso::findOrFail($id);
-        // Validar y actualizar campos
         $curso->update($request->all());
         return redirect()->route('admin.cursos.index')->with('success', 'Curso actualizado correctamente.');
     }
@@ -47,23 +46,35 @@ class CursoController extends Controller
 
     public function listarCursosActivos()
     {
-        $cursos = Curso::where('estado', 'activo')->get(); // Obtiene solo los cursos activos
-        return view('admin.inscripciones.cursos_activos', compact('cursos')); // Retorna la vista con los cursos
+        $cursos = Curso::where('estado', 'activo')->get();
+        return view('admin.inscripciones.cursos_activos', compact('cursos'));
     }
 
-    public function uploadTemario(Request $request, Curso $curso)
+    public function uploadTemario(Request $request, $id)
     {
+        //dd($request->all()); 
+        // Encuentra el curso por ID
+        $curso = Curso::findOrFail($id);
+
+        // Validación del archivo
         $request->validate([
-            'temario' => 'required|file|mimes:pdf,doc,docx|max:2048', // Solo permite archivos PDF, DOC y DOCX con un tamaño máximo de 2 MB
+            'temario' => 'required|file|mimes:pdf,doc,docx|max:5120', // 5MB máximo
         ]);
 
-        // Guardar el archivo en el almacenamiento
-        $path = $request->file('temario')->store('temarios', 'public');
+        // Subida y almacenamiento del archivo
+        if ($request->hasFile('temario')) {
+            $archivo = $request->file('temario');
+            $nombreArchivo = $curso->id . '_' . time() . '.' . $archivo->getClientOriginalExtension();
+            $ruta = $archivo->storeAs('temarios', $nombreArchivo, 'public');
+            // dd($ruta);
 
-        // Puedes guardar la ruta del archivo en la base de datos si es necesario
-        $curso->update(['temario_path' => $path]);
+            // Guardar la ruta en la BD en el campo correcto (temario_path)
+            $curso->update(['temario_path' => $ruta]);
 
-        return redirect()->route('admin.cursos.show', $curso->id)->with('success', 'Temario subido correctamente.');
+            return redirect()->back()->with('success', 'Temario subido correctamente.');
+        }
+
+        return redirect()->back()->with('error', 'Error al subir el temario.');
     }
 
     public function store(Request $request)
@@ -75,10 +86,23 @@ class CursoController extends Controller
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
             'plazas' => 'required|integer|min:1',
             'estado' => 'required|string|in:activo,inactivo',
+            'temario' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'portada' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // <-- validación de imagen
         ]);
 
-        Curso::create($request->all());
+        $data = $request->all();
 
-        return redirect()->route('admin.cursos.index')->with('success', 'Curso creado exitosamente.');
+        if ($request->hasFile('temario')) {
+            $path = $request->file('temario')->store('temarios', 'public');
+            $data['temario_path'] = $path;
+        }
+
+        if ($request->hasFile('portada')) {
+            $portadaPath = $request->file('portada')->store('portadas', 'public');
+            $data['portada_path'] = $portadaPath;
+        }
+
+        $curso = Curso::create($data);
+        return redirect()->route('admin.cursos.show', $curso->id)->with('success', 'Curso creado exitosamente.');
     }
 }

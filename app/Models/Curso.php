@@ -13,14 +13,14 @@ class Curso extends Model
         'fechaFin',
         'plazas',
         'estado',
+        'temario_path',
+        'portada_path',
     ];
 
-    // Relación many-to-many con Persona
-    // Relación many-to-many con Persona usando la tabla intermedia 'participacion'
-public function personas()
-{
-    return $this->belongsToMany(Persona::class, 'participacion', 'curso_id', 'persona_id')
-                ->withPivot('rol_participacion_id', 'estado')
-                ->withTimestamps();
-}
+    public function personas()
+    {
+        return $this->belongsToMany(Persona::class, 'participacion', 'curso_id', 'persona_id')
+                    ->withPivot('rol_participacion_id', 'estado')
+                    ->withTimestamps();
+    }
 }

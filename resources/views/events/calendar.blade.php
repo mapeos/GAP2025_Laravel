@@ -1,6 +1,64 @@
 @extends('template.base')
 
 @section('content')
+<style>
+    #calendar {
+        margin: 20px 0;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .fc-event {
+        cursor: pointer;
+    }
+    .fc-event-title {
+        font-weight: 500;
+    }
+    .fc-daygrid-event {
+        padding: 2px 4px;
+    }
+    .fc-daygrid-day-number {
+        font-size: 0.9em;
+        padding: 4px;
+    }
+    .fc-toolbar-title {
+        font-size: 1.5em !important;
+        font-weight: 500;
+    }
+    .fc-button-primary {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+    .fc-button-primary:hover {
+        background-color: #0b5ed7 !important;
+        border-color: #0a58ca !important;
+    }
+    .fc-button-primary:not(:disabled):active,
+    .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #0a58ca !important;
+        border-color: #0a53be !important;
+    }
+    /* Estilos para la vista de agenda */
+    #agendaView .list-group-item.list-group-item-secondary {
+        transition: background-color 0.2s;
+    }
+    #agendaView .list-group-item.list-group-item-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+    #agendaView .events-container {
+        transition: max-height 0.3s ease-in-out;
+        overflow: hidden;
+    }
+    #agendaView .events-container.d-none {
+        max-height: 0;
+    }
+    #agendaView .events-container:not(.d-none) {
+        max-height: 1000px;
+    }
+</style>
+
 <div class="container">
     <h1 class="mb-4">Calendario de eventos</h1>
     <div class="d-flex gap-2 mb-3">
@@ -32,6 +90,10 @@
                 <i class="ri-mail-line"></i> Ver mis solicitudes
             </a>
         @endif
+
+        <button id="btnAgendaView" class="btn btn-secondary">
+            <i class="ri-list-check-line"></i> Ver agenda
+        </button>
     </div>
 
     <div class="modal fade" id="solicitudCitaModal" tabindex="-1" aria-labelledby="solicitudCitaModalLabel" aria-hidden="true">
@@ -111,6 +173,20 @@
 
     <div id="calendar"></div>
 
+    <!-- Contenedor para la vista de agenda -->
+    <div id="agendaView" class="d-none">
+        <div class="card">
+            <div class="card-header bg-secondary text-white text-center py-3">
+                <h5 class="mb-0">Agenda de Eventos</h5>
+            </div>
+            <div class="card-body">
+                <div id="agendaList" class="list-group">
+                    <!-- Los eventos se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para crear nuevo evento -->
     <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -124,32 +200,44 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formCrearEvento">
+                    <form id="formCrearEvento" novalidate>
                         <div class="mb-3">
-                            <label for="nuevoTitulo" class="form-label">Título</label>
-                            <input type="text" class="form-control" id="nuevoTitulo" required>
+                            <label for="nuevoTitulo" class="form-label">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nuevoTitulo" required
+                                   maxlength="100" minlength="3"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="El título debe tener entre 3 y 100 caracteres">
+                            <div class="invalid-feedback">Por favor ingrese un título válido (3-100 caracteres)</div>
                         </div>
                         <div class="mb-3">
                             <label for="nuevaDescripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="nuevaDescripcion"></textarea>
+                            <textarea class="form-control" id="nuevaDescripcion" maxlength="500" rows="3"></textarea>
+                            <div class="form-text">Máximo 500 caracteres</div>
                         </div>
                         @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
                         <div class="mb-3">
                             <label for="nuevaUbicacion" class="form-label">Ubicación</label>
-                            <input type="text" class="form-control" id="nuevaUbicacion">
+                            <input type="text" class="form-control" id="nuevaUbicacion" maxlength="200">
                         </div>
                         <div class="mb-3">
                             <label for="nuevaUrlVirtual" class="form-label">URL Virtual</label>
-                            <input type="url" class="form-control" id="nuevaUrlVirtual">
+                            <input type="url" class="form-control" id="nuevaUrlVirtual"
+                                   pattern="https?://.+"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="Debe ser una URL válida comenzando con http:// o https://">
+                            <div class="invalid-feedback">Por favor ingrese una URL válida</div>
                         </div>
                         <div class="mb-3">
-                            <label for="nuevoTipoEvento" class="form-label">Tipo de evento</label>
+                            <label for="nuevoTipoEvento" class="form-label">Tipo de evento <span class="text-danger">*</span></label>
                             <select class="form-select" id="nuevoTipoEvento" required>
                                 <option value="">Seleccione un tipo</option>
                                 @foreach(\App\Models\TipoEvento::where('status', true)->get() as $tipo)
                                     <option value="{{ $tipo->id }}" data-color="{{ $tipo->color }}">{{ $tipo->nombre }}</option>
                                 @endforeach
                             </select>
+                            <div class="invalid-feedback">Por favor seleccione un tipo de evento</div>
                         </div>
                         @else
                         <input type="hidden" id="nuevaUbicacion" value="">
@@ -171,19 +259,57 @@
                         @endif
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="nuevaFechaInicio" class="form-label">Fecha inicio</label>
-                                <input type="datetime-local" class="form-control" id="nuevaFechaInicio" required>
+                                <label for="nuevaFechaInicio" class="form-label">Fecha inicio <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="nuevaFechaInicio" required
+                                           min="{{ date('Y-m-d') }}"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="La fecha debe ser hoy o posterior">
+                                    <select class="form-select" id="nuevaHoraInicio" style="max-width: 120px;" required>
+                                        @php
+                                            $horas = [];
+                                            for($hora = 12; $hora < 21; $hora++) {
+                                                for($minuto = 0; $minuto < 60; $minuto += 15) {
+                                                    $horas[] = sprintf('%02d:%02d', $hora, $minuto);
+                                                }
+                                            }
+                                        @endphp
+                                        @foreach($horas as $hora)
+                                            <option value="{{ $hora }}">{{ $hora }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="invalid-feedback">Por favor seleccione una fecha y hora de inicio válida</div>
+                                <input type="hidden" id="nuevaFechaInicioCompleta">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="nuevaFechaFin" class="form-label">Fecha fin</label>
-                                <input type="datetime-local" class="form-control" id="nuevaFechaFin" required>
+                                <label for="nuevaFechaFin" class="form-label">Fecha fin <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="nuevaFechaFin" required
+                                           min="{{ date('Y-m-d') }}"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="La fecha debe ser hoy o posterior">
+                                    <select class="form-select" id="nuevaHoraFin" style="max-width: 120px;" required>
+                                        @foreach($horas as $hora)
+                                            <option value="{{ $hora }}">{{ $hora }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="invalid-feedback">Por favor seleccione una fecha y hora de fin válida</div>
+                                <input type="hidden" id="nuevaFechaFinCompleta">
                             </div>
                         </div>
+                        <div id="errorContainer" class="alert alert-danger d-none"></div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="btnCrearEvento" class="btn btn-primary">Crear evento</button>
+                    <button type="button" id="btnCrearEvento" class="btn btn-primary">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Crear evento
+                    </button>
                 </div>
             </div>
         </div>
@@ -193,9 +319,19 @@
     <div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="eventoModalLabel">Detalles del evento</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <div class="modal-header d-flex align-items-start justify-content-between">
+            <div>
+              <h5 class="modal-title" id="eventoModalLabel">Detalles del evento</h5>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" id="btnEditarEvento" class="btn btn-sm btn-outline-secondary" title="Editar">
+                <i class="ri-pencil-line"></i>
+              </button>
+              <button type="button" id="btnEliminar" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+              <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
           </div>
           <div class="modal-body">
             <form id="formEditarEvento">
@@ -204,50 +340,58 @@
               <input type="hidden" id="eventoCreadoPor">
 
               <div class="row">
-                <div class="col-md-12 mb-2">
+                <div class="col-md-12 mb-2" id="grupoTitulo">
                   <label for="titulo" class="form-label">Título</label>
-                  <input type="text" class="form-control" id="titulo" required>
+                  <input type="text" class="form-control" id="titulo" required disabled>
                 </div>
               </div>
 
-              <div class="row">
+              <div class="row" id="grupoDescripcion" style="display:none;">
                 <div class="col-md-12 mb-2">
                   <label for="descripcion" class="form-label">Descripción</label>
-                  <textarea class="form-control" id="descripcion" rows="2"></textarea>
+                  <textarea class="form-control" id="descripcion" rows="2" disabled></textarea>
                 </div>
               </div>
 
-              <div class="row">
+              <div class="row" id="grupoTipoEvento" style="display:none;">
                 <div class="col-md-6 mb-2">
                   <label class="form-label">Tipo de evento</label>
                   <p id="tipoEventoNombre" class="form-control-plaintext small"></p>
                 </div>
+              </div>
+              <div class="row" id="grupoCreadoPor" style="display:none;">
                 <div class="col-md-6 mb-2">
                   <label class="form-label">Creado por</label>
                   <p id="creadoPorNombre" class="form-control-plaintext small"></p>
                 </div>
               </div>
 
-              <div class="row">
+              <div class="row" id="grupoUbicacion" style="display:none;">
                 <div class="col-md-6 mb-2">
                   <label class="form-label">Ubicación</label>
                   <p id="ubicacion" class="form-control-plaintext small"></p>
                 </div>
+              </div>
+              <div class="row" id="grupoUrlVirtual" style="display:none;">
                 <div class="col-md-6 mb-2">
                   <label class="form-label">URL Virtual</label>
                   <p id="urlVirtual" class="form-control-plaintext small"></p>
                 </div>
               </div>
 
-              <div class="row">
+              <div class="row" id="grupoFechaCreacion" style="display:none;">
                 <div class="col-md-4 mb-2">
                   <label class="form-label">Fecha de creación</label>
                   <p id="fechaCreacion" class="form-control-plaintext small"></p>
                 </div>
+              </div>
+              <div class="row" id="grupoFechaInicio" style="display:none;">
                 <div class="col-md-4 mb-2">
                   <label class="form-label">Fecha de inicio</label>
                   <p id="fechaInicio" class="form-control-plaintext small"></p>
                 </div>
+              </div>
+              <div class="row" id="grupoFechaFin" style="display:none;">
                 <div class="col-md-4 mb-2">
                   <label class="form-label">Fecha de fin</label>
                   <p id="fechaFin" class="form-control-plaintext small"></p>
@@ -256,17 +400,391 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" id="btnEliminar" class="btn btn-danger" style="display: none;">Eliminar</button>
             <button type="button" id="btnGuardar" class="btn btn-primary" style="display: none;">Guardar cambios</button>
           </div>
         </div>
       </div>
     </div>
+    <!-- Botón flotante para crear evento -->
+    <!-- Este btón abre el modal de creación de eventos al hacer click -->
+    <button id="fabCrearEvento" class="btn btn-primary rounded-circle"
+            style="position: fixed; bottom: 32px; right: 32px; z-index: 1050; width: 56px; height: 56px; font-size: 2rem;" >
+        +
+    </button>
 
+    <style>
+        /* Estilos para el calendario */
+        #calendar {
+            margin-bottom: 20px;
+        }
+
+        /* Estilos para el botón flotante */
+        .floating-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .floating-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-button i {
+            font-size: 24px;
+        }
+
+        /* Estilos para la vista de agenda */
+        #agendaView {
+            margin-bottom: 20px;
+        }
+
+        #agendaList .list-group-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        #agendaList .list-group-item:not(.list-group-item-secondary):hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #agendaList .badge {
+            font-weight: normal;
+        }
+    </style>
     <script>
+        // Variables de usuario para JS
+        const userRole = "{{ Auth::user()->getRoleNames()->first() }}";
+        const userId = {{ Auth::id() }};
+
         document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            // Función utilitaria para formato fechas en español
+            function formatearFecha(fecha) {
+                return fecha.toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            // Funciones para manejar fecha y hora
+            function combinarFechaHora(fecha, hora) {
+                return `${fecha}T${hora}`;
+            }
+
+            function separarFechaHora(fechaHora) {
+                const [fecha, hora] = fechaHora.split('T');
+                return { fecha, hora };
+            }
+
+            // Inicializar tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Función para validar el formulario
+            function validarFormulario() {
+                const form = document.getElementById('formCrearEvento');
+                const titulo = document.getElementById('nuevoTitulo').value;
+                const tipoEvento = document.getElementById('nuevoTipoEvento').value;
+                const fechaInicio = document.getElementById('nuevaFechaInicio').value;
+                const fechaFin = document.getElementById('nuevaFechaFin').value;
+                const horaInicio = document.getElementById('nuevaHoraInicio').value;
+                const horaFin = document.getElementById('nuevaHoraFin').value;
+                const urlVirtual = document.getElementById('nuevaUrlVirtual').value;
+
+                let isValid = true;
+                const errorContainer = document.getElementById('errorContainer');
+                errorContainer.classList.add('d-none');
+                errorContainer.innerHTML = '';
+
+                // Validar título
+                if (!titulo || titulo.length < 3 || titulo.length > 100) {
+                    document.getElementById('nuevoTitulo').classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    document.getElementById('nuevoTitulo').classList.remove('is-invalid');
+                }
+
+                // Validar tipo de evento
+                if (!tipoEvento) {
+                    document.getElementById('nuevoTipoEvento').classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    document.getElementById('nuevoTipoEvento').classList.remove('is-invalid');
+                }
+
+                // Validar fechas
+                if (!fechaInicio || !fechaFin) {
+                    document.getElementById('nuevaFechaInicio').classList.add('is-invalid');
+                    document.getElementById('nuevaFechaFin').classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    document.getElementById('nuevaFechaInicio').classList.remove('is-invalid');
+                    document.getElementById('nuevaFechaFin').classList.remove('is-invalid');
+                }
+
+                // Validar URL virtual si existe
+                if (urlVirtual && !urlVirtual.match(/^https?:\/\/.+/)) {
+                    document.getElementById('nuevaUrlVirtual').classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    document.getElementById('nuevaUrlVirtual').classList.remove('is-invalid');
+                }
+
+                // Validar que la fecha de fin sea posterior a la de inicio
+                if (fechaInicio && fechaFin) {
+                    const fechaInicioCompleta = new Date(`${fechaInicio}T${horaInicio}`);
+                    const fechaFinCompleta = new Date(`${fechaFin}T${horaFin}`);
+
+                    if (fechaFinCompleta <= fechaInicioCompleta) {
+                        errorContainer.classList.remove('d-none');
+                        errorContainer.innerHTML = 'La fecha y hora de fin debe ser posterior a la fecha y hora de inicio';
+                        isValid = false;
+                    }
+                }
+
+                return isValid;
+            }
+
+            // Función para mostrar errores del servidor
+            function mostrarErrorServidor(mensaje) {
+                const errorContainer = document.getElementById('errorContainer');
+                errorContainer.classList.remove('d-none');
+                errorContainer.innerHTML = mensaje;
+            }
+
+            // Función para limpiar el formulario
+            function limpiarFormulario() {
+                document.getElementById('formCrearEvento').reset();
+                document.getElementById('errorContainer').classList.add('d-none');
+                document.getElementById('errorContainer').innerHTML = '';
+                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            }
+
+            // Eventos para los campos de fecha y hora
+            document.getElementById('nuevaFechaInicio').addEventListener('change', function() {
+                const fecha = this.value;
+                const horaSelect = document.getElementById('nuevaHoraInicio');
+                // Si no hay hora seleccionada, asignar la hora por defecto
+                if (!horaSelect.value) {
+                    horaSelect.value = '12:00';
+                }
+                document.getElementById('nuevaFechaInicioCompleta').value = combinarFechaHora(fecha, horaSelect.value);
+            });
+
+            document.getElementById('nuevaHoraInicio').addEventListener('change', function() {
+                const fecha = document.getElementById('nuevaFechaInicio').value;
+                const hora = this.value;
+                document.getElementById('nuevaFechaInicioCompleta').value = combinarFechaHora(fecha, hora);
+            });
+
+            document.getElementById('nuevaFechaFin').addEventListener('change', function() {
+                const fecha = this.value;
+                const horaSelect = document.getElementById('nuevaHoraFin');
+                // Si no hay hora seleccionada, asignar la hora por defecto
+                if (!horaSelect.value) {
+                    horaSelect.value = '12:30';
+                }
+                document.getElementById('nuevaFechaFinCompleta').value = combinarFechaHora(fecha, horaSelect.value);
+            });
+
+            document.getElementById('nuevaHoraFin').addEventListener('change', function() {
+                const fecha = document.getElementById('nuevaFechaFin').value;
+                const hora = this.value;
+                document.getElementById('nuevaFechaFinCompleta').value = combinarFechaHora(fecha, hora);
+            });
+
+            // al hacer click en boton flotante, abre modal de crear eventos
+            document.getElementById('fabCrearEvento').onclick = function() {
+                // Asignar valores por defecto
+                document.getElementById('nuevaHoraInicio').value = '12:00';
+                document.getElementById('nuevaHoraFin').value = '12:30';
+                // También puedes asignar la fecha de hoy si quieres
+                let hoy = new Date().toISOString().split('T')[0];
+                document.getElementById('nuevaFechaInicio').value = hoy;
+                document.getElementById('nuevaFechaFin').value = hoy;
+                // Mostrar el modal
+                const modal = new bootstrap.Modal(document.getElementById('crearEventoModal'));
+                modal.show();
+            };
+
+            // Inicializar el calendario
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) {
+                console.error('No se encontró el elemento del calendario');
+                return;
+            }
+
+            // Variables para la vista de agenda
+            const agendaViewEl = document.getElementById('agendaView');
+            const agendaListEl = document.getElementById('agendaList');
+            let isAgendaView = false;
+
+            // Función para cambiar entre vista de calendario y agenda
+            function toggleAgendaView() {
+                isAgendaView = !isAgendaView;
+                if (isAgendaView) {
+                    calendarEl.classList.add('d-none');
+                    agendaViewEl.classList.remove('d-none');
+                    document.getElementById('btnAgendaView').innerHTML = '<i class="ri-calendar-line"></i> Ver calendario';
+                    loadAgendaView();
+                } else {
+                    calendarEl.classList.remove('d-none');
+                    agendaViewEl.classList.add('d-none');
+                    document.getElementById('btnAgendaView').innerHTML = '<i class="ri-list-check-line"></i> Ver agenda';
+                }
+            }
+
+            // Función para actualizar la vista de agenda si está activa
+            function updateAgendaViewIfActive() {
+                if (isAgendaView) {
+                    loadAgendaView();
+                }
+            }
+
+            // Evento para el botón de agenda
+            document.getElementById('btnAgendaView').addEventListener('click', toggleAgendaView);
+
+            // Función para cargar los eventos en la vista de agenda
+            function loadAgendaView() {
+                // Obtener todos los eventos del calendario
+                const events = calendar.getEvents();
+
+                // Ordenar eventos por fecha de inicio
+                events.sort((a, b) => a.start - b.start);
+
+                // Limpiar la lista de agenda
+                agendaListEl.innerHTML = '';
+
+                // Agrupar eventos por fecha
+                const eventsByDate = {};
+                events.forEach(event => {
+                    const dateStr = event.start.toISOString().split('T')[0];
+                    if (!eventsByDate[dateStr]) {
+                        eventsByDate[dateStr] = [];
+                    }
+                    eventsByDate[dateStr].push(event);
+                });
+
+                // Si no hay eventos, mostrar mensaje
+                if (Object.keys(eventsByDate).length === 0) {
+                    agendaListEl.innerHTML = '<div class="alert alert-info">No hay eventos para mostrar</div>';
+                    return;
+                }
+
+                // Crear elementos para cada fecha y sus eventos
+                for (const dateStr in eventsByDate) {
+                    const date = new Date(dateStr);
+                    const formattedDate = date.toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    // Crear encabezado de fecha desplegable
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'list-group-item list-group-item-secondary';
+                    dateHeader.style.cursor = 'pointer';
+                    dateHeader.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">${formattedDate}</h5>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                    `;
+                    agendaListEl.appendChild(dateHeader);
+
+                    // Crear contenedor para los eventos de esta fecha (inicialmente oculto)
+                    const eventsContainer = document.createElement('div');
+                    eventsContainer.className = 'events-container d-none';
+                    eventsContainer.dataset.date = dateStr;
+                    agendaListEl.appendChild(eventsContainer);
+
+                    // Añadir evento click al encabezado para mostrar/ocultar eventos
+                    dateHeader.addEventListener('click', function() {
+                        const icon = this.querySelector('i');
+                        if (eventsContainer.classList.contains('d-none')) {
+                            eventsContainer.classList.remove('d-none');
+                            icon.classList.remove('ri-arrow-down-s-line');
+                            icon.classList.add('ri-arrow-up-s-line');
+                        } else {
+                            eventsContainer.classList.add('d-none');
+                            icon.classList.remove('ri-arrow-up-s-line');
+                            icon.classList.add('ri-arrow-down-s-line');
+                        }
+                    });
+
+                    // Crear elementos para cada evento en esta fecha
+                    eventsByDate[dateStr].forEach(event => {
+                        const eventItem = document.createElement('div');
+                        eventItem.className = 'list-group-item';
+                        eventItem.style.borderLeft = `5px solid ${event.backgroundColor || event.borderColor || '#3788d8'}`;
+
+                        // Formatear hora
+                        let timeStr = '';
+                        if (event.allDay) {
+                            timeStr = 'Todo el día';
+                        } else {
+                            const startTime = event.start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                            const endTime = event.end ? event.end.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+                            timeStr = startTime + (endTime ? ` - ${endTime}` : '');
+                        }
+
+                        // Crear contenido del evento
+                        eventItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-1">${event.title}</h6>
+                                <span class="badge bg-secondary">${timeStr}</span>
+                            </div>
+                            <p class="mb-1 text-muted small">${event.extendedProps?.tipo_evento_nombre || ''}</p>
+                            ${event.extendedProps?.descripcion ? `<p class="mb-1">${event.extendedProps.descripcion}</p>` : ''}
+                            ${event.extendedProps?.ubicacion ? `<p class="mb-0 small"><i class="ri-map-pin-line"></i> ${event.extendedProps.ubicacion}</p>` : ''}
+                        `;
+
+                        // Añadir estilo de cursor para indicar que es clickeable
+                        eventItem.style.cursor = 'pointer';
+
+                        // Añadir evento para mostrar detalles al hacer clic
+                        eventItem.addEventListener('click', function() {
+                            // Usar la función mostrarModalEvento para mostrar los detalles del evento
+                            mostrarModalEvento(event);
+
+                            // La función mostrarModalEvento se encarga de llenar el modal con los datos del evento
+
+                            // La función mostrarModalEvento ya se encarga de mostrar todos los detalles del evento,
+                            // configurar la visibilidad de los campos, formatear las fechas y configurar los permisos
+                            // para los botones de edición y eliminación.
+                            // La función mostrarModalEvento ya se encarga de mostrar el modal
+                        });
+
+                        eventsContainer.appendChild(eventItem);
+                    });
+                }
+            }
+
+            // Evento para el botón de agenda
+            document.getElementById('btnAgendaView').addEventListener('click', toggleAgendaView);
+
+            const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'es',
                 headerToolbar: {
@@ -274,170 +792,109 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
+                buttonText: {
+                    prev: '<',
+                    next: '>',
+                    today: 'Hoy',
+                    month: 'Mes',
+                    week: 'Semana',
+                    day: 'Día'
+                },
+                views: {
+                    dayGridMonth: {
+                        titleFormat: { year: 'numeric', month: 'long' }
+                    },
+                    timeGridWeek: {
+                        titleFormat: { year: 'numeric', month: 'long', day: '2-digit' }
+                    },
+                    timeGridDay: {
+                        titleFormat: { year: 'numeric', month: 'long', day: '2-digit', weekday: 'long' }
+                    }
+                },
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                },
+                slotLabelFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                },
+                slotMinTime: '00:00:00',
+                slotMaxTime: '24:00:00',
+                slotDuration: '01:00:00',
+                slotLabelInterval: '01:00:00',
+                allDayText: 'Todo el día',
+                noEventsText: 'No hay eventos para mostrar',
+                moreLinkText: 'más',
                 events: @json($eventos ?? []),
-                editable: false, // Por defecto, los eventos no son arrastables
+                editable: false,
+                selectable: true,
+                dayMaxEventRows: 3,
+                moreLinkClick: 'popover',
                 eventDidMount: function(info) {
-                    // Determinar si el evento debe ser arrastrable según el rol del usuario y el tipo de evento
                     const props = info.event.extendedProps;
                     const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
-                    const esCreador = props.creado_por == {{ Auth::id() }};
-                    
-                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
-                        // Administradores y profesores pueden arrastrar cualquier evento
+                    const esCreador = props.creado_por == userId;
+
+                    if (userRole === 'Administrador' || userRole === 'Profesor') {
                         info.event.setProp('editable', true);
-                    @elseif(Auth::user()->hasRole('Alumno'))
-                        // Alumnos solo pueden arrastrar sus propios recordatorios personales
+                    } else if (userRole === 'Alumno') {
                         if (esRecordatorioPersonal && esCreador) {
                             info.event.setProp('editable', true);
                         } else {
                             info.event.setProp('editable', false);
                         }
-                    @endif
-                },
-                selectable: true, // Permite seleccionar fechas en el calendario
-                dayMaxEventRows: 3, // Limita a mostrar máximo 3 eventos por día
-                moreLinkText: '...', // Texto para el enlace "más"
-                moreLinkClick: 'popover', // Muestra los eventos adicionales en un popover al hacer clic
-                select: function(info) {
-                    // Cuando el usuario selecciona un rango de fechas en el calendario
-                    // Crear un objeto Date a partir de la fecha de inicio
-                    let startDate = new Date(info.start);
-
-                    // Formatear la fecha para el campo datetime-local (YYYY-MM-DDThh:mm)
-                    // Por defecto establecer la hora a las 8:00 AM
-                    startDate.setHours(8, 0, 0);
-                    let formattedStartDate = startDate.toISOString().slice(0, 16);
-                    document.getElementById('nuevaFechaInicio').value = formattedStartDate;
-
-                    // Si hay una fecha de fin, usarla; de lo contrario, usar la fecha de inicio + 1 hora
-                    let endDate;
-                    if (info.end) {
-                        endDate = new Date(info.end);
-                        // Restar un día si es un evento de día completo, ya que FullCalendar incluye el día siguiente
-                        if (info.allDay) {
-                            endDate.setDate(endDate.getDate() - 1);
-                        }
-                    } else {
-                        // Si no hay fecha de fin, establecer la misma fecha de inicio + 1 hora
-                        endDate = new Date(startDate);
-                        endDate.setHours(endDate.getHours() + 1);
                     }
-
-                    // Formatear la fecha de fin
-                    endDate.setHours(9, 0, 0); // Por defecto establecer la hora a las 9:00 AM
-                    let formattedEndDate = endDate.toISOString().slice(0, 16);
-                    document.getElementById('nuevaFechaFin').value = formattedEndDate;
-
-                    // Mostrar el modal para crear evento
-                    var modal = new bootstrap.Modal(document.getElementById('crearEventoModal'));
-                    modal.show();
                 },
-
+                dateClick: function(info) {
+                    if (calendar.view.type === 'timeGridDay') {
+                        // Preseleccionar fecha y hora en el formulario
+                        const startDate = new Date(info.date);
+                        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                        const startDateStr = startDate.toISOString().split('T')[0];
+                        const endDateStr = endDate.toISOString().split('T')[0];
+                        const startHour = startDate.getHours().toString().padStart(2, '0');
+                        const startMinute = Math.floor(startDate.getMinutes() / 15) * 15;
+                        const endHour = endDate.getHours().toString().padStart(2, '0');
+                        const endMinute = Math.floor(endDate.getMinutes() / 15) * 15;
+                        const startTimeStr = `${startHour}:${startMinute.toString().padStart(2, '0')}`;
+                        const endTimeStr = `${endHour}:${endMinute.toString().padStart(2, '0')}`;
+                        document.getElementById('nuevaFechaInicio').value = startDateStr;
+                        document.getElementById('nuevaFechaFin').value = endDateStr;
+                        document.getElementById('nuevaHoraInicio').value = startTimeStr;
+                        document.getElementById('nuevaHoraFin').value = endTimeStr;
+                        document.getElementById('nuevaFechaInicioCompleta').value = `${startDateStr}T${startTimeStr}`;
+                        document.getElementById('nuevaFechaFinCompleta').value = `${endDateStr}T${endTimeStr}`;
+                        const modal = new bootstrap.Modal(document.getElementById('crearEventoModal'));
+                        modal.show();
+                    } else {
+                        calendar.changeView('timeGridDay', info.date);
+                    }
+                },
                 eventClick: function(info) {
-                    info.jsEvent.preventDefault();
+                    const calendar = info.view.calendar;
+                    const event = info.event;
+                    const start = event.start;
 
-                    // Obtener datos del evento
-                    const evento = info.event;
-                    const props = evento.extendedProps;
-
-                    // Llenar el formulario con los datos del evento
-                    document.getElementById('eventoId').value = evento.id;
-                    document.getElementById('eventoTipoId').value = props.tipo_evento_id || '';
-                    document.getElementById('eventoCreadoPor').value = props.creado_por || '';
-                    document.getElementById('titulo').value = evento.title;
-                    document.getElementById('descripcion').value = props.descripcion || '';
-                    document.getElementById('tipoEventoNombre').textContent = props.tipo_evento_nombre || 'No especificado';
-                    document.getElementById('creadoPorNombre').textContent = props.creado_por_nombre || 'No especificado';
-                    document.getElementById('ubicacion').textContent = props.ubicacion || 'No especificado';
-                    document.getElementById('urlVirtual').textContent = props.url_virtual || 'No especificado';
-
-                    // Formatear y mostrar las fechas
-                    // Fecha de inicio
-                    const fechaInicio = new Date(evento.start);
-                    document.getElementById('fechaInicio').textContent = fechaInicio.toLocaleString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-
-                    // Fecha de fin
-                    if (evento.end) {
-                        const fechaFin = new Date(evento.end);
-                        document.getElementById('fechaFin').textContent = fechaFin.toLocaleString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
+                    if (calendar.view.type === 'timeGridDay') {
+                        mostrarModalEvento(event);
                     } else {
-                        document.getElementById('fechaFin').textContent = 'No especificado';
+                        calendar.changeView('timeGridDay', start);
                     }
-
-                    // Fecha de creación (si está disponible en los datos extendidos)
-                    if (props.created_at) {
-                        const fechaCreacion = new Date(props.created_at);
-                        document.getElementById('fechaCreacion').textContent = fechaCreacion.toLocaleString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-                    } else {
-                        document.getElementById('fechaCreacion').textContent = 'No disponible';
-                    }
-
-                    // Configurar permisos de edición según el rol del usuario
-                    const btnEliminar = document.getElementById('btnEliminar');
-                    const btnGuardar = document.getElementById('btnGuardar');
-                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
-                    const esCreador = props.creado_por == {{ Auth::id() }};
-
-                    // Por defecto, ocultar los botones
-                    btnEliminar.style.display = 'none';
-                    btnGuardar.style.display = 'none';
-
-                    // Configurar campos como solo lectura por defecto
-                    document.getElementById('titulo').readOnly = true;
-                    document.getElementById('descripcion').readOnly = true;
-
-                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
-                        // Administradores y profesores pueden editar y eliminar cualquier evento
-                        btnEliminar.style.display = 'block';
-                        btnGuardar.style.display = 'block';
-                        document.getElementById('titulo').readOnly = false;
-                        document.getElementById('descripcion').readOnly = false;
-                    @elseif(Auth::user()->hasRole('Alumno'))
-                        // Alumnos solo pueden editar sus propios recordatorios personales
-                        if (esRecordatorioPersonal && esCreador) {
-                            btnEliminar.style.display = 'block';
-                            btnGuardar.style.display = 'block';
-                            document.getElementById('titulo').readOnly = false;
-                            document.getElementById('descripcion').readOnly = false;
-                        }
-                    @endif
-
-                    // Mostrar el modal
-                    var modal = new bootstrap.Modal(document.getElementById('eventoModal'));
-                    modal.show();
                 },
                 eventDrop: function(info) {
-                    // Obtener propiedades extendidas del evento
                     const props = info.event.extendedProps;
                     const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
-                    const esCreador = props.creado_por == {{ Auth::id() }};
+                    const esCreador = props.creado_por == userId;
 
-                    // Determinar la URL correcta según el tipo de evento y el rol del usuario
                     let url = `/eventos/${info.event.id}`;
-
-                    @if(Auth::user()->hasRole('Alumno'))
+                    if (userRole === 'Alumno') {
                         if (esRecordatorioPersonal && esCreador) {
                             url = `/events/reminders/${info.event.id}`;
                         }
-                    @endif
+                    }
 
                     fetch(url, {
                         method: 'PUT',
@@ -463,48 +920,71 @@
                         if (!data.success) {
                             throw new Error(data.message || 'Error al actualizar la fecha del evento');
                         }
+                        // Actualizar la vista de agenda si está activa
+                        updateAgendaViewIfActive();
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         alert('Error al actualizar la fecha del evento.');
                         info.revert();
                     });
+                },
+                dateClick: function(info) {
+                    if (calendar.view.type === 'timeGridDay') {
+                        // Preseleccionar fecha y hora en el formulario
+                        const startDate = new Date(info.date);
+                        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                        const startDateStr = startDate.toISOString().split('T')[0];
+                        const endDateStr = endDate.toISOString().split('T')[0];
+                        const startHour = startDate.getHours().toString().padStart(2, '0');
+                        const startMinute = Math.floor(startDate.getMinutes() / 15) * 15;
+                        const endHour = endDate.getHours().toString().padStart(2, '0');
+                        const endMinute = Math.floor(endDate.getMinutes() / 15) * 15;
+                        const startTimeStr = `${startHour}:${startMinute.toString().padStart(2, '0')}`;
+                        const endTimeStr = `${endHour}:${endMinute.toString().padStart(2, '0')}`;
+                        document.getElementById('nuevaFechaInicio').value = startDateStr;
+                        document.getElementById('nuevaFechaFin').value = endDateStr;
+                        document.getElementById('nuevaHoraInicio').value = startTimeStr;
+                        document.getElementById('nuevaHoraFin').value = endTimeStr;
+                        document.getElementById('nuevaFechaInicioCompleta').value = `${startDateStr}T${startTimeStr}`;
+                        document.getElementById('nuevaFechaFinCompleta').value = `${endDateStr}T${endTimeStr}`;
+                        const modal = new bootstrap.Modal(document.getElementById('crearEventoModal'));
+                        modal.show();
+                    } else {
+                        calendar.changeView('timeGridDay', info.date);
+                    }
                 }
             });
+
+            // Renderizar el calendario
             calendar.render();
 
-            // Código existente para btnEliminar y btnGuardar
+            // Configurar los botones después de que el calendario esté inicializado
             document.getElementById('btnEliminar').onclick = function() {
-                // Referencia al botón
                 const btnEliminar = document.getElementById('btnEliminar');
-
-                // Verificar permisos antes de continuar
                 const tipoEventoId = document.getElementById('eventoTipoId').value;
                 const creadoPor = document.getElementById('eventoCreadoPor').value;
                 const esRecordatorioPersonal = document.getElementById('tipoEventoNombre').textContent === 'Recordatorio Personal';
-                const esCreador = creadoPor == {{ Auth::id() }};
+                const esCreador = creadoPor == userId;
 
-                @if(!Auth::user()->hasRole('Administrador') && !Auth::user()->hasRole('Profesor'))
-                    // Si no es admin ni profesor, verificar si puede eliminar este evento
+                if (!(userRole === 'Administrador' || userRole === 'Profesor')) {
                     if (!(esRecordatorioPersonal && esCreador)) {
                         alert('No tienes permiso para eliminar este evento.');
                         return;
                     }
-                @endif
+                }
 
                 let id = document.getElementById('eventoId').value;
                 if (confirm('¿Seguro que deseas eliminar este evento?')) {
-                    // Deshabilitar el botón y mostrar indicador de carga
                     btnEliminar.disabled = true;
                     btnEliminar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Eliminando...';
 
-                    // Determinar la URL correcta según el tipo de evento y el rol del usuario
                     let deleteUrl = `/eventos/${id}`;
-                    @if(Auth::user()->hasRole('Alumno'))
+                    if (userRole === 'Alumno') {
                         if (esRecordatorioPersonal && esCreador) {
                             deleteUrl = `/events/reminders/${id}`;
                         }
-                    @endif
+                    }
 
                     fetch(deleteUrl, {
                         method: 'DELETE',
@@ -515,7 +995,6 @@
                         }
                     })
                     .then(response => {
-                        // Restaurar el botón
                         btnEliminar.disabled = false;
                         btnEliminar.innerHTML = 'Eliminar';
 
@@ -523,7 +1002,8 @@
                             var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                             modal.hide();
                             calendar.getEventById(id).remove();
-                            calendar.refetchEvents(); // Refrescar todos los eventos del calendario
+                            calendar.refetchEvents();
+                            updateAgendaViewIfActive();
                             alert('Evento eliminado exitosamente.');
                         } else {
                             response.json().then(data => {
@@ -532,10 +1012,8 @@
                         }
                     })
                     .catch(error => {
-                        // Restaurar el botón en caso de error
                         btnEliminar.disabled = false;
                         btnEliminar.innerHTML = 'Eliminar';
-
                         console.error('Error:', error);
                         alert('Error al eliminar el evento.');
                     });
@@ -543,24 +1021,19 @@
             };
 
             document.getElementById('btnGuardar').onclick = function() {
-                // Referencia al botón
                 const btnGuardar = document.getElementById('btnGuardar');
-
-                // Verificar permisos antes de continuar
                 const tipoEventoId = document.getElementById('eventoTipoId').value;
                 const creadoPor = document.getElementById('eventoCreadoPor').value;
                 const esRecordatorioPersonal = document.getElementById('tipoEventoNombre').textContent === 'Recordatorio Personal';
-                const esCreador = creadoPor == {{ Auth::id() }};
+                const esCreador = creadoPor == userId;
 
-                @if(!Auth::user()->hasRole('Administrador') && !Auth::user()->hasRole('Profesor'))
-                    // Si no es admin ni profesor, verificar si puede editar este evento
+                if (!(userRole === 'Administrador' || userRole === 'Profesor')) {
                     if (!(esRecordatorioPersonal && esCreador)) {
                         alert('No tienes permiso para editar este evento.');
                         return;
                     }
-                @endif
+                }
 
-                // Deshabilitar el botón y mostrar indicador de carga
                 btnGuardar.disabled = true;
                 btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
 
@@ -568,22 +1041,19 @@
                 let titulo = document.getElementById('titulo').value;
                 let descripcion = document.getElementById('descripcion').value;
 
-                // Validar que el título no esté vacío
                 if (!titulo) {
-                    // Restaurar el botón si hay error de validación
                     btnGuardar.disabled = false;
                     btnGuardar.innerHTML = 'Guardar cambios';
                     alert('El título no puede estar vacío.');
                     return;
                 }
 
-                // Determinar la URL correcta según el tipo de evento y el rol del usuario
                 let updateUrl = `/eventos/${id}`;
-                @if(Auth::user()->hasRole('Alumno'))
+                if (userRole === 'Alumno') {
                     if (esRecordatorioPersonal && esCreador) {
                         updateUrl = `/events/reminders/${id}`;
                     }
-                @endif
+                }
 
                 fetch(updateUrl, {
                     method: 'PUT',
@@ -599,7 +1069,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Restaurar el botón
                     btnGuardar.disabled = false;
                     btnGuardar.innerHTML = 'Guardar cambios';
 
@@ -609,57 +1078,39 @@
                         let event = calendar.getEventById(id);
                         event.setProp('title', titulo);
                         event.setExtendedProp('descripcion', descripcion);
+                        updateAgendaViewIfActive();
                         alert('Evento actualizado exitosamente.');
                     } else {
                         alert('Error al actualizar el evento.');
                     }
                 })
                 .catch(error => {
-                    // Restaurar el botón en caso de error
                     btnGuardar.disabled = false;
                     btnGuardar.innerHTML = 'Guardar cambios';
-
                     console.error('Error:', error);
                     alert('Error al actualizar el evento.');
                 });
             };
 
-            // Nuevo código para crear eventos
+            // Evento para el botón de crear evento
             document.getElementById('btnCrearEvento').onclick = function() {
-                // Referencia al botón
+                if (!validarFormulario()) {
+                    return;
+                }
+
                 const btnCrearEvento = document.getElementById('btnCrearEvento');
-
-                // Deshabilitar el botón y mostrar indicador de carga
+                const spinner = btnCrearEvento.querySelector('.spinner-border');
                 btnCrearEvento.disabled = true;
-                btnCrearEvento.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creando...';
+                spinner.classList.remove('d-none');
 
-                let titulo = document.getElementById('nuevoTitulo').value;
-                let descripcion = document.getElementById('nuevaDescripcion').value;
-                let ubicacion = document.getElementById('nuevaUbicacion').value;
-                let url_virtual = document.getElementById('nuevaUrlVirtual').value;
-                let tipo_evento_id = document.getElementById('nuevoTipoEvento').value;
-                let fecha_inicio = document.getElementById('nuevaFechaInicio').value;
-                let fecha_fin = document.getElementById('nuevaFechaFin').value;
+                const titulo = document.getElementById('nuevoTitulo').value;
+                const descripcion = document.getElementById('nuevaDescripcion').value;
+                const ubicacion = document.getElementById('nuevaUbicacion').value;
+                const url_virtual = document.getElementById('nuevaUrlVirtual').value;
+                const tipo_evento_id = document.getElementById('nuevoTipoEvento').value;
+                const fecha_inicio = document.getElementById('nuevaFechaInicioCompleta').value;
+                const fecha_fin = document.getElementById('nuevaFechaFinCompleta').value;
 
-                // Validar que los campos requeridos estén completos
-                if (!titulo || !tipo_evento_id || !fecha_inicio || !fecha_fin) {
-                    // Restaurar el botón si hay error de validación
-                    btnCrearEvento.disabled = false;
-                    btnCrearEvento.innerHTML = 'Crear evento';
-                    alert('Por favor complete todos los campos requeridos.');
-                    return;
-                }
-
-                // Validar que la fecha de fin sea posterior o igual a la fecha de inicio
-                if (new Date(fecha_fin) < new Date(fecha_inicio)) {
-                    // Restaurar el botón si hay error de validación
-                    btnCrearEvento.disabled = false;
-                    btnCrearEvento.innerHTML = 'Crear evento';
-                    alert('La fecha de fin debe ser posterior o igual a la fecha de inicio.');
-                    return;
-                }
-
-                // Enviar solicitud para crear el evento
                 fetch('/eventos', {
                     method: 'POST',
                     headers: {
@@ -679,34 +1130,27 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Error al crear el evento.');
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Error al crear el evento');
+                        });
                     }
                     return response.json();
                 })
                 .then(data => {
-                    // Restaurar el botón
-                    btnCrearEvento.disabled = false;
-                    btnCrearEvento.innerHTML = 'Crear evento';
-
                     if (data.success) {
-                        // Cerrar el modal
                         var modal = bootstrap.Modal.getInstance(document.getElementById('crearEventoModal'));
                         modal.hide();
 
-                        // Obtener el color del tipo de evento seleccionado
                         let tipoEventoSelect = document.getElementById('nuevoTipoEvento');
                         let color;
 
-                        // Verificar si es un select (admin/profesor) o un input hidden (Alumno)
                         if (tipoEventoSelect.tagName === 'SELECT') {
                             let selectedOption = tipoEventoSelect.options[tipoEventoSelect.selectedIndex];
                             color = selectedOption.getAttribute('data-color');
                         } else {
-                            // Para alumnos, el color está en el atributo data-color del input hidden
                             color = tipoEventoSelect.getAttribute('data-color');
                         }
 
-                        // Añadir el evento al calendario
                         calendar.addEvent({
                             id: data.evento.id,
                             title: data.evento.titulo,
@@ -718,24 +1162,120 @@
                             }
                         });
 
-                        // Limpiar el formulario
-                        document.getElementById('formCrearEvento').reset();
-
+                        limpiarFormulario();
+                        updateAgendaViewIfActive();
                         alert('Evento creado exitosamente.');
-                    } else {
-                        alert(data.message || 'Error al crear el evento.');
                     }
                 })
                 .catch(error => {
-                    // Restaurar el botón en caso de error
+                    mostrarErrorServidor(error.message);
+                })
+                .finally(() => {
                     btnCrearEvento.disabled = false;
-                    btnCrearEvento.innerHTML = 'Crear evento';
-
-                    console.error('Error:', error);
-                    alert('Error al crear el evento.');
+                    spinner.classList.add('d-none');
                 });
             };
+
+            // Limpiar formulario cuando se cierra el modal
+            document.getElementById('crearEventoModal').addEventListener('hidden.bs.modal', function () {
+                limpiarFormulario();
+            });
+
+            // Habilitar edición solo tras click en el lápiz
+            document.getElementById('btnEditarEvento').onclick = function() {
+                document.getElementById('titulo').disabled = false;
+                document.getElementById('descripcion').disabled = false;
+                document.getElementById('btnGuardar').style.display = '';
+                document.getElementById('titulo').focus();
+            };
+
+            // Función para mostrar el modal de detalles del evento
+            function mostrarModalEvento(event) {
+                const props = event.extendedProps;
+                document.getElementById('eventoId').value = event.id;
+                document.getElementById('eventoTipoId').value = props.tipo_evento_id || '';
+                document.getElementById('eventoCreadoPor').value = props.creado_por || '';
+                document.getElementById('titulo').value = event.title;
+                document.getElementById('titulo').disabled = true;
+                // Descripción
+                if (props.descripcion) {
+                    document.getElementById('grupoDescripcion').style.display = '';
+                    document.getElementById('descripcion').value = props.descripcion;
+                } else {
+                    document.getElementById('grupoDescripcion').style.display = 'none';
+                }
+                document.getElementById('descripcion').disabled = true;
+                // Tipo de evento
+                if (props.tipo_evento_nombre) {
+                    document.getElementById('grupoTipoEvento').style.display = '';
+                    document.getElementById('tipoEventoNombre').textContent = props.tipo_evento_nombre;
+                } else {
+                    document.getElementById('grupoTipoEvento').style.display = 'none';
+                }
+                // Creado por
+                if (props.creado_por_nombre) {
+                    document.getElementById('grupoCreadoPor').style.display = '';
+                    document.getElementById('creadoPorNombre').textContent = props.creado_por_nombre;
+                } else {
+                    document.getElementById('grupoCreadoPor').style.display = 'none';
+                }
+                // Ubicación
+                if (props.ubicacion) {
+                    document.getElementById('grupoUbicacion').style.display = '';
+                    document.getElementById('ubicacion').textContent = props.ubicacion;
+                } else {
+                    document.getElementById('grupoUbicacion').style.display = 'none';
+                }
+                // URL Virtual
+                if (props.url_virtual) {
+                    document.getElementById('grupoUrlVirtual').style.display = '';
+                    document.getElementById('urlVirtual').textContent = props.url_virtual;
+                } else {
+                    document.getElementById('grupoUrlVirtual').style.display = 'none';
+                }
+                // Fechas
+                if (props.created_at) {
+                    document.getElementById('grupoFechaCreacion').style.display = '';
+                    const fechaCreacion = new Date(props.created_at);
+                    document.getElementById('fechaCreacion').textContent = formatearFecha(fechaCreacion);
+                } else {
+                    document.getElementById('grupoFechaCreacion').style.display = 'none';
+                }
+                if (event.start) {
+                    document.getElementById('grupoFechaInicio').style.display = '';
+                    const fechaInicio = new Date(event.start);
+                    document.getElementById('fechaInicio').textContent = formatearFecha(fechaInicio);
+                } else {
+                    document.getElementById('grupoFechaInicio').style.display = 'none';
+                }
+                if (event.end) {
+                    document.getElementById('grupoFechaFin').style.display = '';
+                    const fechaFin = new Date(event.end);
+                    document.getElementById('fechaFin').textContent = formatearFecha(fechaFin);
+                } else {
+                    document.getElementById('grupoFechaFin').style.display = 'none';
+                }
+                // Control de botones editar/borrar para alumnos
+                const btnEditar = document.getElementById('btnEditarEvento');
+                const btnEliminar = document.getElementById('btnEliminar');
+                let mostrarBotones = true;
+                if (userRole === 'Alumno') {
+                    // Solo puede editar/borrar si es recordatorio personal y es el creador
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == userId;
+                    mostrarBotones = esRecordatorioPersonal && esCreador;
+                }
+                btnEditar.style.display = mostrarBotones ? '' : 'none';
+                btnEliminar.style.display = mostrarBotones ? '' : 'none';
+                // Deshabilitar edición
+                document.getElementById('titulo').disabled = true;
+                document.getElementById('descripcion').disabled = true;
+                document.getElementById('btnGuardar').style.display = 'none';
+                const modal = new bootstrap.Modal(document.getElementById('eventoModal'));
+                modal.show();
+            }
         });
     </script>
 </div>
 @endsection
+
