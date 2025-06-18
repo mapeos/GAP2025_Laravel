@@ -6,15 +6,19 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Curso;
 
+use function Laravel\Prompts\search;
+
 class CursoController extends Controller
 {
     // Listar todos los cursos
-    public function index()
+    public function getAllCursos()
     {
         try {
             $query = Curso::all();
 
             return response()->json([
+                'status' => '200',
+                'message' => 'Cursos obtenidos correctamente',
                 'data' => $query
             ], 200);
         } catch (\Exception $e) {
@@ -27,11 +31,14 @@ class CursoController extends Controller
     }
 
     // Obtener un curso por ID
-    public function getCursoById($id){
+    public function getCursoById($id)
+    {
         try {
             $query = Curso::find($id);
 
             return response()->json([
+                'status' => '200',
+                'message' => 'Curso obtenidos correctamente',
                 'data' => $query
             ], 200);
         } catch (\Exception $e) {
@@ -46,12 +53,21 @@ class CursoController extends Controller
     // Obtener cursos con estado activo
     public function activos()
     {
-        $cursos = Curso::where('estado', 'activo')->get();
-        return response()->json([
-            'status' => '200',
-            'message' => 'Cursos activos obtenidos correctamente',
-            'data' => $cursos
-        ]);
+        try {
+            $query = Curso::where('estado', 'activo')->get();
+
+            return response()->json([
+                'status' => '200',
+                'message' => 'Cursos activos obtenidos correctamente',
+                'data' => $query
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Ocurrió un error al obtener los cursos.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
     // Obtener cursos con estado inactivo
     public function inactivos()
@@ -83,27 +99,42 @@ class CursoController extends Controller
             'data' => $cursos
         ]);
     }
-    public function buscarFiltrar(Request $request)
-{
-    $query = Curso::query();
+    public function index(Request $request)
+    {
+        try {
+            $perPage = $request->get('per_page', 10);
+            $state = $request->get('estado');
+            $order = $request->get('order', 'desc');
+            $search = $request->get('search');
 
-    if ($request->has('search')) {
-        $search = $request->input('search');
-        $query->where('titulo', 'like', "%{$search}%")
-              ->orWhere('descripcion', 'like', "%{$search}%");
-    }
+            $query = Curso::select(
+                'cursos.id',
+                'cursos.titulo',
+                'cursos.descripcion',
+                'cursos.fechaInicio',
+            );
 
-    if ($request->has('estado')) {
-        $estado = $request->input('estado'); // 'activo' o 'inactivo'
-        $query->where('estado', $estado);
-    }
+            if ($state) {
+                $query->where('cursos.estado',  $state);
+            }
 
-    if ($request->has('orden')) {
-        $orden = $request->input('orden'); // 'asc' o 'desc'
-        $query->orderBy('fecha_inicio', $orden);
-    }
+            if ($search) {
+                $query->where('cursos.titulo', 'like', "%$search%")
+                    ->orWhere('cursos.descripcion', 'like', "%$search%");
+            }
 
-    $cursos = $query->paginate(20);
-    return response()->json($cursos);
+            $cursos = $query->orderBy('cursos.created_at', $order)
+                ->paginate($perPage);
+
+            return response()->json([
+                $cursos
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Ocurrió un error al filtrar los cursos.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
