@@ -28,6 +28,7 @@ class NewsController extends Controller{
                     'news.titulo',
                     'news.contenido',
                     'news.fecha_publicacion',
+                    'news.imagen as urlImg',
                     'categorias.nombre as categoria'
                 );
 
@@ -39,7 +40,7 @@ class NewsController extends Controller{
                 ->paginate($perPage);
 
             return response()->json([
-                $news
+                 $news
             ], 200);
 
         } catch (\Exception $e) {
@@ -62,6 +63,7 @@ class NewsController extends Controller{
                     'news.titulo',
                     'news.contenido',
                     'news.fecha_publicacion',
+                    'news.imagen as urlImg',
                     'categorias.nombre as categoria',
                 )
                 ->where('news.id', $id)
@@ -88,6 +90,7 @@ class NewsController extends Controller{
                     'news.titulo',
                     'news.contenido',
                     'news.fecha_publicacion',
+                    'news.imagen as urlImg',
                     'categorias.nombre as categoria',
                 )->get();
 
