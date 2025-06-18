@@ -14,13 +14,13 @@
             </button>
         @endif
 
-        @if(Auth::user()->hasRole('alumno'))
+        @if(Auth::user()->hasRole('Alumno'))
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal">
                 Solicitar cita/consulta con profesor
             </button>
         @else
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal2">
-                Agendar cita/consulta con alumno
+                Agendar cita/consulta con Alumno
             </button>
         @endif
         @if(Auth::user()->hasRole('profesor'))
@@ -84,9 +84,9 @@
                         <div class="mb-3">
                             <label for="alumno_id" class="form-label">Alumno</label>
                             <select class="form-select" name="alumno_id" required>
-                                <option value="">Seleccione un alumno</option>
-                                @foreach($alumnos as $alumno)
-                                    <option value="{{ $alumno->id }}">{{ $alumno->name }}</option>
+                                <option value="">Seleccione un Alumno</option>
+                                @foreach($alumnos as $Alumno)
+                                    <option value="{{ $Alumno->id }}">{{ $Alumno->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -116,7 +116,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    @if(Auth::user()->hasRole('alumno'))
+                    @if(Auth::user()->hasRole('Alumno'))
                         <h5 class="modal-title" id="crearEventoModalLabel">Crear recordatorio personal</h5>
                     @else
                         <h5 class="modal-title" id="crearEventoModalLabel">Crear nuevo evento</h5>
@@ -200,20 +200,64 @@
           <div class="modal-body">
             <form id="formEditarEvento">
               <input type="hidden" id="eventoId">
-              <div class="mb-3">
-                <label for="titulo" class="form-label">Título</label>
-                <input type="text" class="form-control" id="titulo" required>
+              <input type="hidden" id="eventoTipoId">
+              <input type="hidden" id="eventoCreadoPor">
+
+              <div class="row">
+                <div class="col-md-12 mb-2">
+                  <label for="titulo" class="form-label">Título</label>
+                  <input type="text" class="form-control" id="titulo" required>
+                </div>
               </div>
-              <div class="mb-3">
-                <label for="descripcion" class="form-label">Descripción</label>
-                <textarea class="form-control" id="descripcion"></textarea>
+
+              <div class="row">
+                <div class="col-md-12 mb-2">
+                  <label for="descripcion" class="form-label">Descripción</label>
+                  <textarea class="form-control" id="descripcion" rows="2"></textarea>
+                </div>
               </div>
-              <!-- Puedes agregar más campos si lo necesitas -->
+
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Tipo de evento</label>
+                  <p id="tipoEventoNombre" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Creado por</label>
+                  <p id="creadoPorNombre" class="form-control-plaintext small"></p>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Ubicación</label>
+                  <p id="ubicacion" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">URL Virtual</label>
+                  <p id="urlVirtual" class="form-control-plaintext small"></p>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha de creación</label>
+                  <p id="fechaCreacion" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha de inicio</label>
+                  <p id="fechaInicio" class="form-control-plaintext small"></p>
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha de fin</label>
+                  <p id="fechaFin" class="form-control-plaintext small"></p>
+                </div>
+              </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" id="btnEliminar" class="btn btn-danger">Eliminar</button>
-            <button type="button" id="btnGuardar" class="btn btn-primary">Guardar cambios</button>
+            <button type="button" id="btnEliminar" class="btn btn-danger" style="display: none;">Eliminar</button>
+            <button type="button" id="btnGuardar" class="btn btn-primary" style="display: none;">Guardar cambios</button>
           </div>
         </div>
       </div>
@@ -231,7 +275,25 @@
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 events: @json($eventos ?? []),
-                editable: true,
+                editable: false, // Por defecto, los eventos no son arrastables
+                eventDidMount: function(info) {
+                    // Determinar si el evento debe ser arrastrable según el rol del usuario y el tipo de evento
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == {{ Auth::id() }};
+
+                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+                        // Administradores y profesores pueden arrastrar cualquier evento
+                        info.event.setProp('editable', true);
+                    @elseif(Auth::user()->hasRole('Alumno'))
+                        // Alumnos solo pueden arrastrar sus propios recordatorios personales
+                        if (esRecordatorioPersonal && esCreador) {
+                            info.event.setProp('editable', true);
+                        } else {
+                            info.event.setProp('editable', false);
+                        }
+                    @endif
+                },
                 selectable: true, // Permite seleccionar fechas en el calendario
                 dayMaxEventRows: 3, // Limita a mostrar máximo 3 eventos por día
                 moreLinkText: '...', // Texto para el enlace "más"
@@ -273,14 +335,111 @@
 
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    document.getElementById('eventoId').value = info.event.id;
-                    document.getElementById('titulo').value = info.event.title;
-                    document.getElementById('descripcion').value = info.event.extendedProps.descripcion || '';
+
+                    // Obtener datos del evento
+                    const evento = info.event;
+                    const props = evento.extendedProps;
+
+                    // Llenar el formulario con los datos del evento
+                    document.getElementById('eventoId').value = evento.id;
+                    document.getElementById('eventoTipoId').value = props.tipo_evento_id || '';
+                    document.getElementById('eventoCreadoPor').value = props.creado_por || '';
+                    document.getElementById('titulo').value = evento.title;
+                    document.getElementById('descripcion').value = props.descripcion || '';
+                    document.getElementById('tipoEventoNombre').textContent = props.tipo_evento_nombre || 'No especificado';
+                    document.getElementById('creadoPorNombre').textContent = props.creado_por_nombre || 'No especificado';
+                    document.getElementById('ubicacion').textContent = props.ubicacion || 'No especificado';
+                    document.getElementById('urlVirtual').textContent = props.url_virtual || 'No especificado';
+
+                    // Formatear y mostrar las fechas
+                    // Fecha de inicio
+                    const fechaInicio = new Date(evento.start);
+                    document.getElementById('fechaInicio').textContent = fechaInicio.toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Fecha de fin
+                    if (evento.end) {
+                        const fechaFin = new Date(evento.end);
+                        document.getElementById('fechaFin').textContent = fechaFin.toLocaleString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } else {
+                        document.getElementById('fechaFin').textContent = 'No especificado';
+                    }
+
+                    // Fecha de creación (si está disponible en los datos extendidos)
+                    if (props.created_at) {
+                        const fechaCreacion = new Date(props.created_at);
+                        document.getElementById('fechaCreacion').textContent = fechaCreacion.toLocaleString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } else {
+                        document.getElementById('fechaCreacion').textContent = 'No disponible';
+                    }
+
+                    // Configurar permisos de edición según el rol del usuario
+                    const btnEliminar = document.getElementById('btnEliminar');
+                    const btnGuardar = document.getElementById('btnGuardar');
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == {{ Auth::id() }};
+
+                    // Por defecto, ocultar los botones
+                    btnEliminar.style.display = 'none';
+                    btnGuardar.style.display = 'none';
+
+                    // Configurar campos como solo lectura por defecto
+                    document.getElementById('titulo').readOnly = true;
+                    document.getElementById('descripcion').readOnly = true;
+
+                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+                        // Administradores y profesores pueden editar y eliminar cualquier evento
+                        btnEliminar.style.display = 'block';
+                        btnGuardar.style.display = 'block';
+                        document.getElementById('titulo').readOnly = false;
+                        document.getElementById('descripcion').readOnly = false;
+                    @elseif(Auth::user()->hasRole('Alumno'))
+                        // Alumnos solo pueden editar sus propios recordatorios personales
+                        if (esRecordatorioPersonal && esCreador) {
+                            btnEliminar.style.display = 'block';
+                            btnGuardar.style.display = 'block';
+                            document.getElementById('titulo').readOnly = false;
+                            document.getElementById('descripcion').readOnly = false;
+                        }
+                    @endif
+
+                    // Mostrar el modal
                     var modal = new bootstrap.Modal(document.getElementById('eventoModal'));
                     modal.show();
                 },
                 eventDrop: function(info) {
-                    fetch(`/eventos/${info.event.id}`, {
+                    // Obtener propiedades extendidas del evento
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == {{ Auth::id() }};
+
+                    // Determinar la URL correcta según el tipo de evento y el rol del usuario
+                    let url = `/eventos/${info.event.id}`;
+
+                    @if(Auth::user()->hasRole('Alumno'))
+                        if (esRecordatorioPersonal && esCreador) {
+                            url = `/events/reminders/${info.event.id}`;
+                        }
+                    @endif
+
+                    fetch(url, {
                         method: 'PUT',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -319,13 +478,35 @@
                 // Referencia al botón
                 const btnEliminar = document.getElementById('btnEliminar');
 
+                // Verificar permisos antes de continuar
+                const tipoEventoId = document.getElementById('eventoTipoId').value;
+                const creadoPor = document.getElementById('eventoCreadoPor').value;
+                const esRecordatorioPersonal = document.getElementById('tipoEventoNombre').textContent === 'Recordatorio Personal';
+                const esCreador = creadoPor == {{ Auth::id() }};
+
+                @if(!Auth::user()->hasRole('Administrador') && !Auth::user()->hasRole('Profesor'))
+                    // Si no es admin ni profesor, verificar si puede eliminar este evento
+                    if (!(esRecordatorioPersonal && esCreador)) {
+                        alert('No tienes permiso para eliminar este evento.');
+                        return;
+                    }
+                @endif
+
                 let id = document.getElementById('eventoId').value;
                 if (confirm('¿Seguro que deseas eliminar este evento?')) {
                     // Deshabilitar el botón y mostrar indicador de carga
                     btnEliminar.disabled = true;
                     btnEliminar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Eliminando...';
 
-                    fetch(`/eventos/${id}`, {
+                    // Determinar la URL correcta según el tipo de evento y el rol del usuario
+                    let deleteUrl = `/eventos/${id}`;
+                    @if(Auth::user()->hasRole('Alumno'))
+                        if (esRecordatorioPersonal && esCreador) {
+                            deleteUrl = `/events/reminders/${id}`;
+                        }
+                    @endif
+
+                    fetch(deleteUrl, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -342,6 +523,7 @@
                             var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                             modal.hide();
                             calendar.getEventById(id).remove();
+                            calendar.refetchEvents(); // Refrescar todos los eventos del calendario
                             alert('Evento eliminado exitosamente.');
                         } else {
                             response.json().then(data => {
@@ -364,6 +546,20 @@
                 // Referencia al botón
                 const btnGuardar = document.getElementById('btnGuardar');
 
+                // Verificar permisos antes de continuar
+                const tipoEventoId = document.getElementById('eventoTipoId').value;
+                const creadoPor = document.getElementById('eventoCreadoPor').value;
+                const esRecordatorioPersonal = document.getElementById('tipoEventoNombre').textContent === 'Recordatorio Personal';
+                const esCreador = creadoPor == {{ Auth::id() }};
+
+                @if(!Auth::user()->hasRole('Administrador') && !Auth::user()->hasRole('Profesor'))
+                    // Si no es admin ni profesor, verificar si puede editar este evento
+                    if (!(esRecordatorioPersonal && esCreador)) {
+                        alert('No tienes permiso para editar este evento.');
+                        return;
+                    }
+                @endif
+
                 // Deshabilitar el botón y mostrar indicador de carga
                 btnGuardar.disabled = true;
                 btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
@@ -381,7 +577,15 @@
                     return;
                 }
 
-                fetch(`/eventos/${id}`, {
+                // Determinar la URL correcta según el tipo de evento y el rol del usuario
+                let updateUrl = `/eventos/${id}`;
+                @if(Auth::user()->hasRole('Alumno'))
+                    if (esRecordatorioPersonal && esCreador) {
+                        updateUrl = `/events/reminders/${id}`;
+                    }
+                @endif
+
+                fetch(updateUrl, {
                     method: 'PUT',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -492,8 +696,8 @@
                         // Obtener el color del tipo de evento seleccionado
                         let tipoEventoSelect = document.getElementById('nuevoTipoEvento');
                         let color;
-                        
-                        // Verificar si es un select (admin/profesor) o un input hidden (alumno)
+
+                        // Verificar si es un select (admin/profesor) o un input hidden (Alumno)
                         if (tipoEventoSelect.tagName === 'SELECT') {
                             let selectedOption = tipoEventoSelect.options[tipoEventoSelect.selectedIndex];
                             color = selectedOption.getAttribute('data-color');

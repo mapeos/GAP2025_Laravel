@@ -24,8 +24,9 @@ class NotificationController extends Controller
         $user = $request->user();
 
         Device::updateOrCreate(
-            ['device_id' => $request->device_id, 'user_id' => $user->id],
+            ['user_id' => $user->id],
             [
+                'device_id' => $request->device_id,
                 'fcm_token' => $request->fcm_token,
                 'device_name' => $request->device_name ?? 'Web Browser',
                 'device_os' => $request->device_os ?? 'web',
@@ -45,6 +46,7 @@ class NotificationController extends Controller
             'token' => 'required|string',
             'title' => 'required|string',
             'body' => 'required|string',
+            'data' => 'nullable|array',
         ]);
 
         $credentialsPath = env('FIREBASE_CREDENTIALS');
@@ -81,7 +83,76 @@ class NotificationController extends Controller
                     'title' => $request->input('title'),
                     'body' => $request->input('body'),
                 ],
-                // Puedes agregar 'data' => [...] si quieres datos personalizados
+                'data' => $request->input('data', [
+                    'title' => $request->input('title'),
+                    'body' => $request->input('body'),
+                ]),
+            ]
+        ];
+
+        $fcmResponse = Http::withToken($accessToken)
+            ->post($fcmUrl, $fcmPayload);
+
+        return response()->json($fcmResponse->json(), $fcmResponse->status());
+    }
+
+    /**
+     * Enviar notificación webpush personalizada (WebPush API)
+     */
+    public function sendWebPush(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'title' => 'required|string',
+            'body' => 'required|string',
+            'icon' => 'nullable|string',
+            'actions' => 'nullable|array',
+            'data' => 'nullable|array',
+        ]);
+
+        $credentialsPath = env('FIREBASE_CREDENTIALS');
+        $credentials = json_decode(file_get_contents($credentialsPath), true);
+
+        $now = time();
+        $payload = [
+            'iss' => $credentials['client_email'],
+            'sub' => $credentials['client_email'],
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'iat' => $now,
+            'exp' => $now + 3600,
+            'scope' => 'https://www.googleapis.com/auth/firebase.messaging'
+        ];
+        $privateKey = $credentials['private_key'];
+        $jwt = JWT::encode($payload, $privateKey, 'RS256');
+
+        $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt,
+        ]);
+        $accessToken = $tokenResponse->json('access_token');
+
+        $projectId = $credentials['project_id'];
+        $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+
+        $webpush = [
+            'headers' => [
+                'Urgency' => 'high',
+            ],
+            'notification' => [
+                'title' => $request->input('title'),
+                'body' => $request->input('body'),
+                'icon' => $request->input('icon', null),
+                'actions' => $request->input('actions', []),
+            ],
+        ];
+        if ($request->has('data')) {
+            $webpush['data'] = $request->input('data');
+        }
+
+        $fcmPayload = [
+            'message' => [
+                'token' => $request->input('token'),
+                'webpush' => $webpush,
             ]
         ];
 

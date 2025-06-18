@@ -11,29 +11,36 @@ class CursoController extends Controller
     // Listar todos los cursos
     public function index()
     {
-        $cursos = Curso::all();
-        return response()->json([
-            'status' => '200',
-            'message' => 'Cursos obtenidos correctamente',
-            'data' => $cursos
-        ]);
+        try {
+            $query = Curso::all();
+
+            return response()->json([
+                'data' => $query
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Ocurrió un error al obtener los cursos.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Obtener un curso por ID
-    public function show($id)
-    {
-        $curso = Curso::find($id);
-        if (!$curso) {
+    public function getCursoById($id){
+        try {
+            $query = Curso::find($id);
+
             return response()->json([
-                'status' => 'error',
-                'message' => 'Curso no encontrado'
-            ], 404);
+                'data' => $query
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Ocurrió un error al obtener los curso.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        return response()->json([
-            'status' => '200',
-            'message' => 'Curso obtenido correctamente',
-            'data' => $curso
-        ]);
     }
 
     // Obtener cursos con estado activo
@@ -98,48 +105,5 @@ class CursoController extends Controller
 
     $cursos = $query->paginate(20);
     return response()->json($cursos);
-}
-    // Crear un nuevo curso
-    /* public function store(Request $request)
-    {
-        $curso = Curso::create($request->all());
-        return response()->json([
-            'status' => '201',
-            'data' => $curso
-        ], 201);
-    } */
-
-    // Actualizar un curso existente
-    /* public function update(Request $request, $id)
-    {
-        $curso = Curso::find($id);
-        if (!$curso) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Curso no encontrado'
-            ], 404);
-        }
-        $curso->update($request->all());
-        return response()->json([
-            'status' => '200',
-            'data' => $curso
-        ]);
-    } */
-
-    // Eliminar un curso
-    /* public function destroy($id)
-    {
-        $curso = Curso::find($id);
-        if (!$curso) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Curso no encontrado'
-            ], 404);
-        }
-        $curso->delete();
-        return response()->json([
-            'status' => '200',
-            'message' => 'Curso eliminado correctamente'
-        ]);
-    } */
+    }
 }

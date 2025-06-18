@@ -27,9 +27,9 @@ class EventoController extends Controller
     {
         $userId = Auth::id();
         $tipoRecordatorio = TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-        
+
         $query = Evento::with(['tipoEvento', 'participantes', 'creador']);
-        
+
         // Si es un recordatorio personal, solo mostrar los creados por el usuario actual
         if ($tipoRecordatorio) {
             $query->where(function($q) use ($userId, $tipoRecordatorio) {
@@ -40,7 +40,7 @@ class EventoController extends Controller
                   });
             });
         }
-        
+
         $eventos = $query->get()
             ->map(function ($evento) {
                 return [
@@ -58,6 +58,7 @@ class EventoController extends Controller
                         'status' => $evento->status,
                         'creado_por' => $evento->creado_por,
                         'creado_por_nombre' => $evento->creador->name ?? 'N/A',
+                        'created_at' => $evento->created_at,
                         'participantes' => $evento->participantes->map(function($participante) {
                             return [
                                 'id' => $participante->id,
@@ -83,9 +84,9 @@ class EventoController extends Controller
     {
         $userId = Auth::id();
         $tipoRecordatorio = TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-        
+
         $query = Evento::with(['tipoEvento', 'participantes']);
-        
+
         // Si es un recordatorio personal, solo mostrar los creados por el usuario actual
         if ($tipoRecordatorio) {
             $query->where(function($q) use ($userId, $tipoRecordatorio) {
@@ -96,7 +97,7 @@ class EventoController extends Controller
                   });
             });
         }
-        
+
         $eventos = $query->get()
             ->map(function ($evento) {
                 return [
@@ -196,11 +197,11 @@ class EventoController extends Controller
     {
         // Verificar si es un recordatorio personal y si el usuario actual es el creador
         $tipoRecordatorio = TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-        
+
         if ($tipoRecordatorio && $evento->tipo_evento_id == $tipoRecordatorio->id && $evento->creado_por != Auth::id()) {
             abort(403, 'No tienes permiso para ver este recordatorio personal.');
         }
-        
+
         return view('admin.events.show', compact('evento'));
     }
 
@@ -211,11 +212,11 @@ class EventoController extends Controller
     {
         // Verificar si es un recordatorio personal y si el usuario actual es el creador
         $tipoRecordatorio = TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-        
+
         if ($tipoRecordatorio && $evento->tipo_evento_id == $tipoRecordatorio->id && $evento->creado_por != Auth::id()) {
             abort(403, 'No tienes permiso para editar este recordatorio personal.');
         }
-        
+
         $tiposEvento = TipoEvento::where('status', true)->get();
         return view('admin.events.edit', compact('evento', 'tiposEvento'));
     }
@@ -227,7 +228,7 @@ class EventoController extends Controller
     {
         // Verificar si es un recordatorio personal y si el usuario actual es el creador
         $tipoRecordatorio = TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-        
+
         if ($tipoRecordatorio && $evento->tipo_evento_id == $tipoRecordatorio->id && $evento->creado_por != Auth::id()) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -237,7 +238,7 @@ class EventoController extends Controller
             }
             abort(403, 'No tienes permiso para actualizar este recordatorio personal.');
         }
-        
+
         // Si la petición es AJAX, responde con JSON
         if ($request->expectsJson()) {
             $validator = Validator::make($request->all(), [
@@ -336,7 +337,7 @@ class EventoController extends Controller
     {
         // Verificar si es un recordatorio personal y si el usuario actual es el creador
         $tipoRecordatorio = TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-        
+
         if ($tipoRecordatorio && $evento->tipo_evento_id == $tipoRecordatorio->id && $evento->creado_por != Auth::id()) {
             if (request()->expectsJson()) {
                 return response()->json([
@@ -346,7 +347,7 @@ class EventoController extends Controller
             }
             abort(403, 'No tienes permiso para eliminar este recordatorio personal.');
         }
-        
+
         // Si la petición es AJAX, responde con JSON
         if (request()->expectsJson()) {
             $evento->delete();
@@ -420,9 +421,54 @@ class EventoController extends Controller
     {
         // Verificar que el usuario es el creador del recordatorio
         if ($evento->creado_por !== Auth::id()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para editar este recordatorio.'
+                ], 403);
+            }
             abort(403, 'No tienes permiso para editar este recordatorio.');
         }
 
+        // Si la petición es AJAX, responde con JSON
+        if ($request->expectsJson()) {
+            $validator = Validator::make($request->all(), [
+                'titulo' => 'sometimes|required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'fecha_inicio' => 'sometimes|required|date',
+                'fecha_fin' => 'sometimes|required|date|after_or_equal:fecha_inicio',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            try {
+                $evento->update($request->only([
+                    'titulo',
+                    'descripcion',
+                    'fecha_inicio',
+                    'fecha_fin'
+                ]));
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Recordatorio actualizado exitosamente',
+                    'evento' => $evento
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al actualizar el recordatorio: ' . $e->getMessage()
+                ], 500);
+            }
+        }
+
+        // Para peticiones de formulario tradicional
         $request->validate([
             'titulo' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -448,11 +494,23 @@ class EventoController extends Controller
     {
         // Verificar que el usuario es el creador del recordatorio
         if ($evento->creado_por !== Auth::id()) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para eliminar este recordatorio.'
+                ], 403);
+            }
             abort(403, 'No tienes permiso para eliminar este recordatorio.');
         }
 
         $evento->delete();
 
+        // Si la petición es AJAX, responde con JSON
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        // Petición normal (formulario)
         return redirect()->route('events.calendar')
             ->with('success', 'Recordatorio eliminado exitosamente.');
     }
