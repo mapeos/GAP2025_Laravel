@@ -31,7 +31,7 @@ class CursosSeeder extends Seeder
                 'estado' => 'activo',
             ],
             [
-                'titulo' => 'Desarrollo Web' ,
+                'titulo' => 'Desarrollo Web',
                 'descripcion' => 'HTML, CSS y JavaScript para principiantes.',
                 'fechaInicio' => '2025-08-01',
                 'fechaFin' => '2025-09-01',
@@ -40,9 +40,13 @@ class CursosSeeder extends Seeder
             ],
         ];
 
-        foreach ($cursos as $curso) {
-            Curso::create($curso);
-
+        foreach ($cursos as $cursoData) {
+            Curso::firstOrCreate(
+                ['titulo' => $cursoData['titulo']],
+                $cursoData
+            );
         }
+        
+        $this->command->info('✅ Cursos creados/verificados.');
     }
 }

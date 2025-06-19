@@ -5,20 +5,14 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Persona;
-use Illuminate\Support\Facades\DB;
 
 class PersonasSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
-public function run(): void
+    public function run(): void
     {
-    // Para añadir a posteriori nuevos datos, OJO!!Elimina primero los registros de la tabla pivote
-     DB::table('participacion')->delete();
-     Persona::query()->delete();
-
-
         $personas = [
             [
                 'nombre' => 'Luz',
@@ -40,8 +34,13 @@ public function run(): void
             ],
         ];
 
-        foreach ($personas as $persona) {
-            Persona::create($persona);
+        foreach ($personas as $personaData) {
+            Persona::firstOrCreate(
+                ['dni' => $personaData['dni']],
+                $personaData
+            );
         }
+        
+        $this->command->info('✅ Personas creadas/verificadas.');
     }
 }
