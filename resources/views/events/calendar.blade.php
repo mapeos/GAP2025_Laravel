@@ -1,6 +1,14 @@
 @extends('template.base')
 
 @section('content')
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
 <style>
     #calendar {
         margin: 20px 0;
@@ -56,6 +64,34 @@
     }
     #agendaView .events-container:not(.d-none) {
         max-height: 1000px;
+    }
+    
+    /* Estilos personalizados para Flatpickr */
+    .flatpickr-input {
+        cursor: pointer;
+    }
+    .flatpickr-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .flatpickr-calendar {
+        font-family: inherit;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .flatpickr-day.selected {
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .flatpickr-day.selected:hover {
+        background: #0b5ed7;
+        border-color: #0b5ed7;
+    }
+    .flatpickr-day.today {
+        border-color: #0d6efd;
+    }
+    .flatpickr-day.today:hover {
+        background: #e7f1ff;
     }
 </style>
 
@@ -117,13 +153,48 @@
                         </div>
                         <div class="mb-3">
                             <label for="motivo" class="form-label">Motivo</label>
-                            <input type="text" class="form-control" name="motivo" required>
+                            <input type="text" class="form-control" name="motivo" id="motivo" required>
                         </div>
                         <div class="mb-3">
                             <label for="fecha_propuesta" class="form-label">Fecha y hora propuesta</label>
-                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required
-                                   min="{{ date('Y-m-d\TH:i') }}"
-                                   step="1800">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control flatpickr-input" name="fecha_propuesta_fecha" id="fecha_propuesta_fecha" required
+                                           placeholder="dd-mm-yyyy"
+                                           pattern="\d{2}-\d{2}-\d{4}"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="Formato: dd-mm-yyyy (ej: 15-01-2025)">
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" name="fecha_propuesta_hora" id="fecha_propuesta_hora" required style="max-width: 120px;">
+                                        @php
+                                            $horas = [];
+                                            for($hora = 9; $hora < 19; $hora++) {
+                                                for($minuto = 0; $minuto < 60; $minuto += 30) {
+                                                    $horas[] = sprintf('%02d:%02d', $hora, $minuto);
+                                                }
+                                            }
+                                        @endphp
+                                        @foreach($horas as $hora)
+                                            <option value="{{ $hora }}">{{ $hora }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" name="fecha_propuesta" id="fecha_propuesta">
+                        </div>
+                        <!-- Botón de sugerencias IA fuera del formulario -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary" id="btnSugerenciasIA">
+                                <i class="ri-robot-line"></i> Sugerencias IA
+                            </button>
+                        </div>
+                        <div id="sugerenciasContainer" class="d-none">
+                            <div class="alert alert-info">
+                                <h6><i class="ri-lightbulb-line"></i> Sugerencias de IA</h6>
+                                <div id="sugerenciasList"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -158,9 +229,32 @@
                         </div>
                         <div class="mb-3">
                             <label for="fecha_propuesta" class="form-label">Fecha y hora propuesta</label>
-                            <input type="datetime-local" class="form-control" name="fecha_propuesta" required
-                                   min="{{ date('Y-m-d\TH:i') }}"
-                                   step="1800">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control flatpickr-input" name="fecha_propuesta_fecha" id="fecha_propuesta_fecha2" required
+                                           placeholder="dd-mm-yyyy"
+                                           pattern="\d{2}-\d{2}-\d{4}"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="Formato: dd-mm-yyyy (ej: 15-01-2025)">
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" name="fecha_propuesta_hora" id="fecha_propuesta_hora2" required style="max-width: 120px;">
+                                        @php
+                                            $horas = [];
+                                            for($hora = 9; $hora < 19; $hora++) {
+                                                for($minuto = 0; $minuto < 60; $minuto += 30) {
+                                                    $horas[] = sprintf('%02d:%02d', $hora, $minuto);
+                                                }
+                                            }
+                                        @endphp
+                                        @foreach($horas as $hora)
+                                            <option value="{{ $hora }}">{{ $hora }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" name="fecha_propuesta" id="fecha_propuesta2">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -1274,6 +1368,365 @@
                 const modal = new bootstrap.Modal(document.getElementById('eventoModal'));
                 modal.show();
             }
+
+            // Funcionalidad para sugerencias de IA
+            document.getElementById('btnSugerenciasIA').addEventListener('click', function(e) {
+                e.preventDefault(); // Prevenir cualquier comportamiento por defecto
+                
+                const profesorId = document.querySelector('select[name="profesor_id"]').value;
+                const motivo = document.getElementById('motivo').value;
+                
+                if (!profesorId) {
+                    alert('Por favor, selecciona un profesor primero.');
+                    return;
+                }
+                
+                if (!motivo) {
+                    alert('Por favor, ingresa el motivo de la cita.');
+                    return;
+                }
+
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line"></i> Generando...';
+
+                fetch('{{ route("ai.appointment-suggestions") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        profesor_id: parseInt(profesorId),
+                        motivo: motivo,
+                        duracion: '1 hora'
+                    }),
+                    // Aumentar timeout para peticiones de IA
+                    signal: AbortSignal.timeout(180000) // 3 minutos
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Manejar tanto la estructura nueva como la antigua
+                        const suggestions = data.data?.suggestions || data.suggestions || [];
+                        const message = data.data?.message || data.message || null;
+                        const source = data.data?.source || 'unknown';
+                        
+                        mostrarSugerencias(suggestions, message, source);
+                    } else {
+                        const suggestions = data.suggestions || [];
+                        const message = data.message || 'Error al generar sugerencias';
+                        mostrarSugerencias(suggestions, message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarSugerencias([], 'Error de conexión. Por favor, inténtalo de nuevo.', 'error');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            });
+
+            function mostrarSugerencias(sugerencias, mensaje = null, source = 'unknown') {
+                const container = document.getElementById('sugerenciasContainer');
+                const list = document.getElementById('sugerenciasList');
+                
+                if (sugerencias.length === 0) {
+                    list.innerHTML = '<p class="text-muted">No se encontraron sugerencias disponibles.</p>';
+                    container.classList.remove('d-none');
+                    return;
+                }
+
+                let html = '';
+                
+                // Mostrar mensaje informativo
+                if (mensaje) {
+                    const alertClass = source === 'error' ? 'alert-danger' : 'alert-info';
+                    html += `<div class="alert ${alertClass} mb-3">${mensaje}</div>`;
+                }
+                
+                // Mostrar información sobre la fuente
+                if (source === 'ollama') {
+                    html += '<div class="alert alert-success mb-3"><i class="ri-robot-line"></i> Sugerencias generadas con IA (Ollama)</div>';
+                } else if (source === 'fallback') {
+                    html += '<div class="alert alert-warning mb-3"><i class="ri-lightbulb-line"></i> Sugerencias automáticas (IA no disponible)</div>';
+                }
+
+                html += '<div class="list-group">';
+                sugerencias.forEach((sugerencia, index) => {
+                    const prioridadClass = sugerencia.prioridad === 'alta' ? 'border-primary' : 
+                                         sugerencia.prioridad === 'media' ? 'border-warning' : 'border-secondary';
+                    
+                    html += `
+                        <div class="list-group-item list-group-item-action ${prioridadClass} border-start border-4">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${sugerencia.fecha} - ${sugerencia.hora_inicio}</h6>
+                                    <p class="mb-1 text-muted">${sugerencia.razon}</p>
+                                    <small class="badge bg-${sugerencia.prioridad === 'alta' ? 'primary' : sugerencia.prioridad === 'media' ? 'warning' : 'secondary'}">${sugerencia.prioridad}</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="seleccionarSugerencia('${sugerencia.fecha}', '${sugerencia.hora_inicio}')">
+                                    <i class="ri-check-line"></i> Seleccionar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                list.innerHTML = html;
+                container.classList.remove('d-none');
+            }
+
+            function seleccionarSugerencia(fecha, hora) {
+                // Convertir formato de fecha de d-m-Y a dd-mm-yyyy si es necesario
+                let fechaFormateada = fecha;
+                if (fecha.includes('-') && fecha.split('-')[0].length === 1) {
+                    // Si es formato d-m-Y, convertir a dd-mm-yyyy
+                    const partes = fecha.split('-');
+                    fechaFormateada = `${partes[0].padStart(2, '0')}-${partes[1].padStart(2, '0')}-${partes[2]}`;
+                }
+                
+                // Actualizar los campos separados
+                document.getElementById('fecha_propuesta_fecha').value = fechaFormateada;
+                document.getElementById('fecha_propuesta_hora').value = hora;
+                
+                // Actualizar el campo hidden con el formato completo
+                const fechaInput = document.getElementById('fecha_propuesta');
+                // Convertir fecha española a ISO para el campo hidden
+                const fechaISO = convertirFechaEspanolAISO(fechaFormateada);
+                if (fechaISO) {
+                    const fechaCompleta = `${fechaISO}T${hora}`;
+                    fechaInput.value = fechaCompleta;
+                }
+                
+                // Ocultar sugerencias
+                document.getElementById('sugerenciasContainer').classList.add('d-none');
+                
+                // Mostrar confirmación
+                alert(`Horario seleccionado: ${fechaFormateada} a las ${hora}`);
+            }
+
+            // Limpiar sugerencias cuando se cierra el modal
+            document.getElementById('solicitudCitaModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('sugerenciasContainer').classList.add('d-none');
+                document.getElementById('sugerenciasList').innerHTML = '';
+            });
+
+            // Sincronizar campos de fecha y hora cuando el usuario los cambie manualmente
+            document.getElementById('fecha_propuesta_fecha').addEventListener('change', sincronizarFechaCompleta);
+            document.getElementById('fecha_propuesta_hora').addEventListener('change', sincronizarFechaCompleta);
+
+            function sincronizarFechaCompleta() {
+                const fecha = document.getElementById('fecha_propuesta_fecha').value;
+                const hora = document.getElementById('fecha_propuesta_hora').value;
+                
+                if (fecha && hora) {
+                    // Convertir formato español (dd-mm-yyyy) a formato ISO (yyyy-mm-dd)
+                    const fechaISO = convertirFechaEspanolAISO(fecha);
+                    if (fechaISO) {
+                        const fechaCompleta = `${fechaISO}T${hora}`;
+                        document.getElementById('fecha_propuesta').value = fechaCompleta;
+                    }
+                }
+            }
+
+            // Función para convertir fecha de formato español (dd-mm-yyyy) a ISO (yyyy-mm-dd)
+            function convertirFechaEspanolAISO(fechaEspanol) {
+                const regex = /^(\d{2})-(\d{2})-(\d{4})$/;
+                const match = fechaEspanol.match(regex);
+                
+                if (!match) {
+                    return null;
+                }
+                
+                const [, dia, mes, anio] = match;
+                const fecha = new Date(anio, mes - 1, dia);
+                
+                // Validar que la fecha sea válida y no sea anterior a hoy
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                if (fecha < hoy) {
+                    alert('La fecha debe ser hoy o posterior.');
+                    return null;
+                }
+                
+                return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+            }
+
+            // Función para validar formato de fecha español
+            function validarFechaEspanol(fecha) {
+                const regex = /^(\d{2})-(\d{2})-(\d{4})$/;
+                if (!regex.test(fecha)) {
+                    return false;
+                }
+                
+                const [, dia, mes, anio] = fecha.match(regex);
+                const fechaObj = new Date(anio, mes - 1, dia);
+                
+                return fechaObj.getDate() == dia && 
+                       fechaObj.getMonth() == mes - 1 && 
+                       fechaObj.getFullYear() == anio;
+            }
+
+            // Agregar validación en tiempo real al campo de fecha
+            document.getElementById('fecha_propuesta_fecha').addEventListener('input', function() {
+                const fecha = this.value;
+                const isValid = validarFechaEspanol(fecha);
+                
+                if (fecha && !isValid) {
+                    this.setCustomValidity('Formato inválido. Use dd-mm-yyyy');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.setCustomValidity('');
+                    this.classList.remove('is-invalid');
+                }
+            });
+
+            // Agregar máscara de entrada para el formato de fecha
+            document.getElementById('fecha_propuesta_fecha').addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                const currentValue = this.value;
+                
+                // Solo permitir números y guiones
+                if (!/\d/.test(char) && char !== '-') {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Auto-insertar guiones
+                if (/\d/.test(char)) {
+                    if (currentValue.length === 2 || currentValue.length === 5) {
+                        this.value = currentValue + '-';
+                    }
+                }
+            });
+
+            // Funciones para el segundo modal
+            document.getElementById('fecha_propuesta_fecha2').addEventListener('input', function() {
+                const fecha = this.value;
+                const isValid = validarFechaEspanol(fecha);
+                
+                if (fecha && !isValid) {
+                    this.setCustomValidity('Formato inválido. Use dd-mm-yyyy');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.setCustomValidity('');
+                    this.classList.remove('is-invalid');
+                }
+            });
+
+            document.getElementById('fecha_propuesta_fecha2').addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                const currentValue = this.value;
+                
+                // Solo permitir números y guiones
+                if (!/\d/.test(char) && char !== '-') {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Auto-insertar guiones
+                if (/\d/.test(char)) {
+                    if (currentValue.length === 2 || currentValue.length === 5) {
+                        this.value = currentValue + '-';
+                    }
+                }
+            });
+
+            // Sincronizar campos del segundo modal
+            document.getElementById('fecha_propuesta_fecha2').addEventListener('change', sincronizarFechaCompleta2);
+            document.getElementById('fecha_propuesta_hora2').addEventListener('change', sincronizarFechaCompleta2);
+
+            function sincronizarFechaCompleta2() {
+                const fecha = document.getElementById('fecha_propuesta_fecha2').value;
+                const hora = document.getElementById('fecha_propuesta_hora2').value;
+                
+                if (fecha && hora) {
+                    // Convertir formato español (dd-mm-yyyy) a formato ISO (yyyy-mm-dd)
+                    const fechaISO = convertirFechaEspanolAISO(fecha);
+                    if (fechaISO) {
+                        const fechaCompleta = `${fechaISO}T${hora}`;
+                        document.getElementById('fecha_propuesta2').value = fechaCompleta;
+                    }
+                }
+            }
+
+            // Configuración de Flatpickr para formato español
+            const flatpickrConfig = {
+                dateFormat: "d-m-Y",
+                locale: {
+                    firstDayOfWeek: 1,
+                    weekdays: {
+                        shorthand: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+                        longhand: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
+                    },
+                    months: {
+                        shorthand: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                        longhand: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+                    }
+                },
+                minDate: "today",
+                allowInput: true,
+                clickOpens: true,
+                disableMobile: false,
+                onChange: function(selectedDates, dateStr, instance) {
+                    // Convertir la fecha seleccionada al formato español
+                    if (selectedDates[0]) {
+                        const fecha = selectedDates[0];
+                        const dia = fecha.getDate().toString().padStart(2, '0');
+                        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+                        const anio = fecha.getFullYear();
+                        const fechaEspanol = `${dia}-${mes}-${anio}`;
+                        
+                        // Actualizar el campo con el formato español
+                        instance.input.value = fechaEspanol;
+                        
+                        // Sincronizar con el campo hidden
+                        const hora = document.getElementById(instance.input.id === 'fecha_propuesta_fecha' ? 'fecha_propuesta_hora' : 'fecha_propuesta_hora2').value;
+                        if (hora) {
+                            const fechaISO = `${anio}-${mes}-${dia}`;
+                            const fechaCompleta = `${fechaISO}T${hora}`;
+                            const hiddenField = document.getElementById(instance.input.id === 'fecha_propuesta_fecha' ? 'fecha_propuesta' : 'fecha_propuesta2');
+                            hiddenField.value = fechaCompleta;
+                        }
+                    }
+                }
+            };
+
+            // Función para inicializar Flatpickr
+            function inicializarFlatpickr() {
+                // Inicializar para el primer modal
+                const fechaInput1 = document.getElementById('fecha_propuesta_fecha');
+                if (fechaInput1 && !fechaInput1._flatpickr) {
+                    flatpickr("#fecha_propuesta_fecha", flatpickrConfig);
+                }
+                
+                // Inicializar para el segundo modal
+                const fechaInput2 = document.getElementById('fecha_propuesta_fecha2');
+                if (fechaInput2 && !fechaInput2._flatpickr) {
+                    flatpickr("#fecha_propuesta_fecha2", flatpickrConfig);
+                }
+            }
+
+            // Inicializar Flatpickr cuando los modales se abren
+            document.getElementById('solicitudCitaModal').addEventListener('shown.bs.modal', function() {
+                setTimeout(inicializarFlatpickr, 100);
+            });
+
+            document.getElementById('solicitudCitaModal2').addEventListener('shown.bs.modal', function() {
+                setTimeout(inicializarFlatpickr, 100);
+            });
+
+            // También inicializar cuando el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(inicializarFlatpickr, 100);
+            });
         });
     </script>
 </div>
