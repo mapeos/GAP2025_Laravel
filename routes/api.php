@@ -25,6 +25,7 @@ Route::get('/', function () {
 // Rutas para la gestión de noticias
 Route::prefix('news')->group(function () {
     Route::get('/', [NewsController::class, 'index']); // Listar noticias
+    Route::get('/sliderNews', [NewsController::class, 'getSliderNews']); // Listar noticias
     Route::get('/{id}', [NewsController::class, 'getNoticiaById']); // Obtener noticia por id
 });
 

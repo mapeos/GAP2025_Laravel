@@ -20,6 +20,9 @@ class NewsController extends Controller{
             $perPage = $request->get('per_page', 10);
             $categoryId = $request->get('category');
             $order = $request->get('order', 'desc');
+            $search = $request->get('search');
+
+            /* añadir search de news */
 
             $query = News::leftJoin('news_has_categorias', 'news.id', '=', 'news_has_categorias.news_id')
                 ->leftJoin('categorias', 'news_has_categorias.news_id', '=', 'categorias.id')
@@ -34,6 +37,11 @@ class NewsController extends Controller{
 
             if ($categoryId) {
                 $query->where('categorias.id', $categoryId);
+            }
+
+            if ($search) {
+                $query->where('news.titulo', 'like', "%$search%")
+                    ->orWhere('news.contenido', 'like', "%$search%");
             }
 
             $news = $query->orderBy('news.fecha_publicacion', $order)
@@ -93,6 +101,33 @@ class NewsController extends Controller{
                     'news.imagen as urlImg',
                     'categorias.nombre as categoria',
                 )->get();
+
+            return response()->json([
+                'data' => $news
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Ocurrió un error al obtener las noticias.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getSliderNews() {
+        try {
+            $news = News::leftJoin('news_has_categorias', 'news.id', '=', 'news_has_categorias.news_id')
+                ->leftJoin('categorias', 'news_has_categorias.news_id', '=', 'categorias.id')
+                ->select(
+                    'news.id',
+                    'news.titulo',
+                    'news.contenido',
+                    'news.fecha_publicacion',
+                    'news.imagen as urlImg',
+                    'categorias.nombre as categoria',
+                )
+                ->where('slide', true)
+                ->get();
 
             return response()->json([
                 'data' => $news
