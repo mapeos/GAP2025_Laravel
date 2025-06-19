@@ -35,7 +35,16 @@ class DireccionesSeeder extends Seeder
         ];
 
         foreach ($direcciones as $direccion) {
-            Direccion::create($direccion);
+            Direccion::firstOrCreate(
+                [
+                    'calle' => $direccion['calle'],
+                    'numero' => $direccion['numero'],
+                    'ciudad' => $direccion['ciudad']
+                ],
+                $direccion
+            );
         }
+        
+        $this->command->info('✅ Direcciones creadas/verificadas.');
     }
 }
