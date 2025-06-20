@@ -18,6 +18,9 @@
         <a href="{{ route('login') }}" class="btn btn-primary">Iniciar sesión</a>
         <a href="{{ route('register') }}" class="btn btn-secondary">Registrarse</a>
     </div>
+    <div style="margin-top: 1rem;">
+        <a href="{{ route('password.request') }}" class="btn btn-link">¿Olvidaste tu contraseña?</a>
+    </div>
 
     @if (session('error'))
         <div style="color: red; font-size: 1.2rem; margin-bottom: 1rem;">
