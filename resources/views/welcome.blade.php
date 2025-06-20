@@ -21,6 +21,11 @@
     <div style="margin-top: 1rem;">
         <a href="{{ route('password.request') }}" class="btn btn-link">¿Olvidaste tu contraseña?</a>
     </div>
+    <div style="margin-top: 1rem;">
+        <button id="google-login" class="btn btn-danger" type="button">
+            Iniciar sesión con Google
+        </button>
+    </div>
 
     @if (session('error'))
         <div style="color: red; font-size: 1.2rem; margin-bottom: 1rem;">
@@ -28,6 +33,49 @@
         </div>
     @endif
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script>
+      // Configuración de Firebase (reemplaza con tus datos reales)
+      const firebaseConfig = {
+        apiKey: "AIzaSyC-KaHfqWZYD2iUBF3CHDaPosCAIP9Cr9M",
+        authDomain: "academia-95951.firebaseapp.com",
+        projectId: "academia-95951",
+        appId: "1:1096768697439:web:ae4af46fe7b8bfad2cd7ea",
+        // ...otros datos si los tienes
+      };
+      firebase.initializeApp(firebaseConfig);
+
+      document.getElementById('google-login').addEventListener('click', function() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider)
+          .then(async (result) => {
+            const idToken = await result.user.getIdToken();
+            // Envía el token a tu backend para autenticar al usuario en Laravel
+            fetch('/login/firebase', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              },
+              body: JSON.stringify({ id_token: idToken })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                window.location.href = '/dashboard'; // O la ruta que corresponda
+              } else {
+                alert('Error al iniciar sesión con Google');
+              }
+            });
+          })
+          .catch((error) => {
+            alert('Error de autenticación con Google');
+            console.error(error);
+          });
+      });
+    </script>
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
