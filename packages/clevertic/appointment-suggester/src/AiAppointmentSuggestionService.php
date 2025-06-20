@@ -15,13 +15,19 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
     private string $apiKey;
     private const API_OLLAMA = "AAAAC3NzaC1lZDI1NTE5AAAAIDpUjBgYFtR7gAeDIzlSkBhN7/jeqXQiSqt5IC03vBbO";
 
-    public function __construct(string $ollamaUrl = 'http://192.168.1.42:11434', string $model = 'mistral')
+    public function __construct(string $ollamaUrl = null, string $model = 'mistral')
     {
-        $this->ollamaUrl = $ollamaUrl;
+        $this->ollamaUrl = $ollamaUrl ?? $this->buildOllamaUrl();
         $this->model = $model;
         $this->apiKey = env('OLLAMA_API_KEY', self::API_OLLAMA);
     }
 
+    private function buildOllamaUrl(): string
+    {
+        $host = env('OLLAMA_HOST', 'ai');
+        $port = env('OLLAMA_PORT', '11434');
+        return "http://{$host}:{$port}";
+    }
 
     /**
      * Envía un prompt real a Ollama vía POST HTTP.
@@ -39,6 +45,7 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
         }
 
         $response = Http::withHeaders($headers)
+            ->timeout(120)
             ->post("{$this->ollamaUrl}/api/generate", [
                 'model' => $this->model,
                 'prompt' => $prompt,

@@ -17,10 +17,12 @@ class News extends Model
         'autor',
         'fecha_publicacion',
         'imagen',
+        'slide',
     ];
 
     protected $casts = [
         'fecha_publicacion' => 'datetime',
+        'slide' => 'boolean',
     ];
 
     //Definir a ralacion muchos a muchos con Categorias

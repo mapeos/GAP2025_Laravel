@@ -12,6 +12,39 @@
     .fc-event {
         cursor: pointer;
     }
+    /* Estilos para eventos redimensionables */
+    .fc-event-resizable {
+        position: relative;
+    }
+    .fc-event-resizer {
+        position: absolute;
+        z-index: 4;
+        display: none;
+        background-color: rgba(13, 110, 253, 0.3);
+    }
+    .fc-event-resizable:hover .fc-event-resizer {
+        display: block;
+    }
+    .fc-event-resizer-start {
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        cursor: w-resize;
+    }
+    .fc-event-resizer-end {
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        cursor: e-resize;
+    }
+    .fc-event-resizer:hover {
+        background-color: rgba(13, 110, 253, 0.6);
+    }
+    .fc-event-resizing {
+        opacity: 0.8;
+    }
     .fc-event-title {
         font-weight: 500;
     }
@@ -38,6 +71,24 @@
     .fc-button-primary:not(:disabled).fc-button-active {
         background-color: #0a58ca !important;
         border-color: #0a53be !important;
+    }
+    /* Estilos para la vista de agenda */
+    #agendaView .list-group-item.list-group-item-secondary {
+        transition: background-color 0.2s;
+    }
+    #agendaView .list-group-item.list-group-item-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+    #agendaView .events-container {
+        transition: max-height 0.3s ease-in-out;
+        overflow: hidden;
+    }
+    #agendaView .events-container.d-none {
+        max-height: 0;
+    }
+    #agendaView .events-container:not(.d-none) {
+        max-height: 1000px;
     }
 </style>
 
@@ -72,6 +123,10 @@
                 <i class="ri-mail-line"></i> Ver mis solicitudes
             </a>
         @endif
+
+        <button id="btnAgendaView" class="btn btn-secondary">
+            <i class="ri-list-check-line"></i> Ver agenda
+        </button>
     </div>
 
     <div class="modal fade" id="solicitudCitaModal" tabindex="-1" aria-labelledby="solicitudCitaModalLabel" aria-hidden="true">
@@ -151,6 +206,20 @@
 
     <div id="calendar"></div>
 
+    <!-- Contenedor para la vista de agenda -->
+    <div id="agendaView" class="d-none">
+        <div class="card">
+            <div class="card-header bg-secondary text-white text-center py-3">
+                <h5 class="mb-0">Agenda de Eventos</h5>
+            </div>
+            <div class="card-body">
+                <div id="agendaList" class="list-group">
+                    <!-- Los eventos se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para crear nuevo evento -->
     <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -167,10 +236,10 @@
                     <form id="formCrearEvento" novalidate>
                         <div class="mb-3">
                             <label for="nuevoTitulo" class="form-label">Título <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nuevoTitulo" required 
+                            <input type="text" class="form-control" id="nuevoTitulo" required
                                    maxlength="100" minlength="3"
-                                   data-bs-toggle="tooltip" 
-                                   data-bs-placement="top" 
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
                                    title="El título debe tener entre 3 y 100 caracteres">
                             <div class="invalid-feedback">Por favor ingrese un título válido (3-100 caracteres)</div>
                         </div>
@@ -186,10 +255,10 @@
                         </div>
                         <div class="mb-3">
                             <label for="nuevaUrlVirtual" class="form-label">URL Virtual</label>
-                            <input type="url" class="form-control" id="nuevaUrlVirtual" 
+                            <input type="url" class="form-control" id="nuevaUrlVirtual"
                                    pattern="https?://.+"
-                                   data-bs-toggle="tooltip" 
-                                   data-bs-placement="top" 
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
                                    title="Debe ser una URL válida comenzando con http:// o https://">
                             <div class="invalid-feedback">Por favor ingrese una URL válida</div>
                         </div>
@@ -227,8 +296,8 @@
                                 <div class="input-group">
                                     <input type="date" class="form-control" id="nuevaFechaInicio" required
                                            min="{{ date('Y-m-d') }}"
-                                           data-bs-toggle="tooltip" 
-                                           data-bs-placement="top" 
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
                                            title="La fecha debe ser hoy o posterior">
                                     <select class="form-select" id="nuevaHoraInicio" style="max-width: 120px;" required>
                                         @php
@@ -252,8 +321,8 @@
                                 <div class="input-group">
                                     <input type="date" class="form-control" id="nuevaFechaFin" required
                                            min="{{ date('Y-m-d') }}"
-                                           data-bs-toggle="tooltip" 
-                                           data-bs-placement="top" 
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
                                            title="La fecha debe ser hoy o posterior">
                                     <select class="form-select" id="nuevaHoraFin" style="max-width: 120px;" required>
                                         @foreach($horas as $hora)
@@ -350,15 +419,35 @@
                 </div>
               </div>
               <div class="row" id="grupoFechaInicio" style="display:none;">
-                <div class="col-md-4 mb-2">
+                <div class="col-md-6 mb-2">
                   <label class="form-label">Fecha de inicio</label>
                   <p id="fechaInicio" class="form-control-plaintext small"></p>
+                  <div id="editFechaInicio" style="display:none;">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <input type="date" class="form-control form-control-sm" id="editFechaInicioDate">
+                      </div>
+                      <div class="col-md-6">
+                        <input type="time" class="form-control form-control-sm" id="editFechaInicioTime">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="row" id="grupoFechaFin" style="display:none;">
-                <div class="col-md-4 mb-2">
+                <div class="col-md-6 mb-2">
                   <label class="form-label">Fecha de fin</label>
                   <p id="fechaFin" class="form-control-plaintext small"></p>
+                  <div id="editFechaFin" style="display:none;">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <input type="date" class="form-control form-control-sm" id="editFechaFinDate">
+                      </div>
+                      <div class="col-md-6">
+                        <input type="time" class="form-control form-control-sm" id="editFechaFinTime">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </form>
@@ -373,9 +462,63 @@
     <!-- Este btón abre el modal de creación de eventos al hacer click -->
     <button id="fabCrearEvento" class="btn btn-primary rounded-circle"
             style="position: fixed; bottom: 32px; right: 32px; z-index: 1050; width: 56px; height: 56px; font-size: 2rem;" >
-        +    
+        +
     </button>
 
+    <style>
+        /* Estilos para el calendario */
+        #calendar {
+            margin-bottom: 20px;
+        }
+
+        /* Estilos para el botón flotante */
+        .floating-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .floating-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-button i {
+            font-size: 24px;
+        }
+
+        /* Estilos para la vista de agenda */
+        #agendaView {
+            margin-bottom: 20px;
+        }
+
+        #agendaList .list-group-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        #agendaList .list-group-item:not(.list-group-item-secondary):hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #agendaList .badge {
+            font-weight: normal;
+        }
+    </style>
     <script>
         // Variables de usuario para JS
         const userRole = "{{ Auth::user()->getRoleNames()->first() }}";
@@ -544,6 +687,156 @@
                 return;
             }
 
+            // Variables para la vista de agenda
+            const agendaViewEl = document.getElementById('agendaView');
+            const agendaListEl = document.getElementById('agendaList');
+            let isAgendaView = false;
+
+            // Función para cambiar entre vista de calendario y agenda
+            function toggleAgendaView() {
+                isAgendaView = !isAgendaView;
+                if (isAgendaView) {
+                    calendarEl.classList.add('d-none');
+                    agendaViewEl.classList.remove('d-none');
+                    document.getElementById('btnAgendaView').innerHTML = '<i class="ri-calendar-line"></i> Ver calendario';
+                    loadAgendaView();
+                } else {
+                    calendarEl.classList.remove('d-none');
+                    agendaViewEl.classList.add('d-none');
+                    document.getElementById('btnAgendaView').innerHTML = '<i class="ri-list-check-line"></i> Ver agenda';
+                }
+            }
+
+            // Función para actualizar la vista de agenda si está activa
+            function updateAgendaViewIfActive() {
+                if (isAgendaView) {
+                    loadAgendaView();
+                }
+            }
+
+            // Evento para el botón de agenda
+            document.getElementById('btnAgendaView').addEventListener('click', toggleAgendaView);
+
+            // Función para cargar los eventos en la vista de agenda
+            function loadAgendaView() {
+                // Obtener todos los eventos del calendario
+                const events = calendar.getEvents();
+
+                // Ordenar eventos por fecha de inicio
+                events.sort((a, b) => a.start - b.start);
+
+                // Limpiar la lista de agenda
+                agendaListEl.innerHTML = '';
+
+                // Agrupar eventos por fecha
+                const eventsByDate = {};
+                events.forEach(event => {
+                    const dateStr = event.start.toISOString().split('T')[0];
+                    if (!eventsByDate[dateStr]) {
+                        eventsByDate[dateStr] = [];
+                    }
+                    eventsByDate[dateStr].push(event);
+                });
+
+                // Si no hay eventos, mostrar mensaje
+                if (Object.keys(eventsByDate).length === 0) {
+                    agendaListEl.innerHTML = '<div class="alert alert-info">No hay eventos para mostrar</div>';
+                    return;
+                }
+
+                // Crear elementos para cada fecha y sus eventos
+                for (const dateStr in eventsByDate) {
+                    const date = new Date(dateStr);
+                    const formattedDate = date.toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    // Crear encabezado de fecha desplegable
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'list-group-item list-group-item-secondary';
+                    dateHeader.style.cursor = 'pointer';
+                    dateHeader.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">${formattedDate}</h5>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                    `;
+                    agendaListEl.appendChild(dateHeader);
+
+                    // Crear contenedor para los eventos de esta fecha (inicialmente oculto)
+                    const eventsContainer = document.createElement('div');
+                    eventsContainer.className = 'events-container d-none';
+                    eventsContainer.dataset.date = dateStr;
+                    agendaListEl.appendChild(eventsContainer);
+
+                    // Añadir evento click al encabezado para mostrar/ocultar eventos
+                    dateHeader.addEventListener('click', function() {
+                        const icon = this.querySelector('i');
+                        if (eventsContainer.classList.contains('d-none')) {
+                            eventsContainer.classList.remove('d-none');
+                            icon.classList.remove('ri-arrow-down-s-line');
+                            icon.classList.add('ri-arrow-up-s-line');
+                        } else {
+                            eventsContainer.classList.add('d-none');
+                            icon.classList.remove('ri-arrow-up-s-line');
+                            icon.classList.add('ri-arrow-down-s-line');
+                        }
+                    });
+
+                    // Crear elementos para cada evento en esta fecha
+                    eventsByDate[dateStr].forEach(event => {
+                        const eventItem = document.createElement('div');
+                        eventItem.className = 'list-group-item';
+                        eventItem.style.borderLeft = `5px solid ${event.backgroundColor || event.borderColor || '#3788d8'}`;
+
+                        // Formatear hora
+                        let timeStr = '';
+                        if (event.allDay) {
+                            timeStr = 'Todo el día';
+                        } else {
+                            const startTime = event.start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                            const endTime = event.end ? event.end.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+                            timeStr = startTime + (endTime ? ` - ${endTime}` : '');
+                        }
+
+                        // Crear contenido del evento
+                        eventItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-1">${event.title}</h6>
+                                <span class="badge bg-secondary">${timeStr}</span>
+                            </div>
+                            <p class="mb-1 text-muted small">${event.extendedProps?.tipo_evento_nombre || ''}</p>
+                            ${event.extendedProps?.descripcion ? `<p class="mb-1">${event.extendedProps.descripcion}</p>` : ''}
+                            ${event.extendedProps?.ubicacion ? `<p class="mb-0 small"><i class="ri-map-pin-line"></i> ${event.extendedProps.ubicacion}</p>` : ''}
+                        `;
+
+                        // Añadir estilo de cursor para indicar que es clickeable
+                        eventItem.style.cursor = 'pointer';
+
+                        // Añadir evento para mostrar detalles al hacer clic
+                        eventItem.addEventListener('click', function() {
+                            // Usar la función mostrarModalEvento para mostrar los detalles del evento
+                            mostrarModalEvento(event);
+
+                            // La función mostrarModalEvento se encarga de llenar el modal con los datos del evento
+
+                            // La función mostrarModalEvento ya se encarga de mostrar todos los detalles del evento,
+                            // configurar la visibilidad de los campos, formatear las fechas y configurar los permisos
+                            // para los botones de edición y eliminación.
+                            // La función mostrarModalEvento ya se encarga de mostrar el modal
+                        });
+
+                        eventsContainer.appendChild(eventItem);
+                    });
+                }
+            }
+
+            // Evento para el botón de agenda
+            document.getElementById('btnAgendaView').addEventListener('click', toggleAgendaView);
+
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'es',
@@ -593,19 +886,54 @@
                 selectable: true,
                 dayMaxEventRows: 3,
                 moreLinkClick: 'popover',
+                eventResizableFromStart: true, // Permite redimensionar desde el inicio del evento
+                eventStartEditable: true, // Permite mover el inicio del evento
+                eventDurationEditable: true, // Permite cambiar la duración del evento
                 eventDidMount: function(info) {
                     const props = info.event.extendedProps;
                     const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
                     const esCreador = props.creado_por == userId;
 
+                    // Determinar si el evento debe ser editable basado en el rol y tipo de evento
+                    let isEditable = false;
                     if (userRole === 'Administrador' || userRole === 'Profesor') {
-                        info.event.setProp('editable', true);
+                        isEditable = true;
                     } else if (userRole === 'Alumno') {
                         if (esRecordatorioPersonal && esCreador) {
-                            info.event.setProp('editable', true);
-                        } else {
-                            info.event.setProp('editable', false);
+                            isEditable = true;
                         }
+                    }
+
+                    // Aplicar configuración de edición y redimensionamiento
+                    info.event.setProp('editable', isEditable);
+
+                    // Configurar el elemento del evento para mostrar visualmente que es redimensionable
+                    if (isEditable) {
+                        // Añadir clase CSS para indicar que el evento es redimensionable
+                        info.el.classList.add('fc-event-resizable');
+
+                        // Añadir indicadores visuales de redimensionamiento
+                        const startHandle = document.createElement('div');
+                        startHandle.className = 'fc-event-resizer fc-event-resizer-start';
+                        startHandle.style.position = 'absolute';
+                        startHandle.style.left = '0';
+                        startHandle.style.top = '0';
+                        startHandle.style.bottom = '0';
+                        startHandle.style.width = '4px';
+                        startHandle.style.cursor = 'w-resize';
+
+                        const endHandle = document.createElement('div');
+                        endHandle.className = 'fc-event-resizer fc-event-resizer-end';
+                        endHandle.style.position = 'absolute';
+                        endHandle.style.right = '0';
+                        endHandle.style.top = '0';
+                        endHandle.style.bottom = '0';
+                        endHandle.style.width = '4px';
+                        endHandle.style.cursor = 'e-resize';
+
+                        // Añadir los indicadores al elemento del evento
+                        info.el.appendChild(startHandle);
+                        info.el.appendChild(endHandle);
                     }
                 },
                 dateClick: function(info) {
@@ -680,10 +1008,58 @@
                         if (!data.success) {
                             throw new Error(data.message || 'Error al actualizar la fecha del evento');
                         }
+                        // Actualizar la vista de agenda si está activa
+                        updateAgendaViewIfActive();
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         alert('Error al actualizar la fecha del evento.');
+                        info.revert();
+                    });
+                },
+                eventResize: function(info) {
+                    // Verificar permisos igual que en eventDrop
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == userId;
+
+                    let url = `/eventos/${info.event.id}`;
+                    if (userRole === 'Alumno') {
+                        if (esRecordatorioPersonal && esCreador) {
+                            url = `/events/reminders/${info.event.id}`;
+                        }
+                    }
+
+                    fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fecha_inicio: info.event.start.toISOString().slice(0, 19).replace('T', ' '),
+                            fecha_fin: info.event.end
+                                ? info.event.end.toISOString().slice(0, 19).replace('T', ' ')
+                                : info.event.start.toISOString().slice(0, 19).replace('T', ' ')
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al actualizar la duración del evento.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Error al actualizar la duración del evento');
+                        }
+                        // Actualizar la vista de agenda si está activa
+                        updateAgendaViewIfActive();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al actualizar la duración del evento.');
                         info.revert();
                     });
                 },
@@ -761,6 +1137,7 @@
                             modal.hide();
                             calendar.getEventById(id).remove();
                             calendar.refetchEvents();
+                            updateAgendaViewIfActive();
                             alert('Evento eliminado exitosamente.');
                         } else {
                             response.json().then(data => {
@@ -812,6 +1189,29 @@
                     }
                 }
 
+                // Preparar datos para enviar
+                let datosEvento = {
+                    titulo: titulo,
+                    descripcion: descripcion
+                };
+
+                // Añadir fechas si están siendo editadas
+                if (document.getElementById('editFechaInicio').style.display === 'block') {
+                    const fechaInicioDate = document.getElementById('editFechaInicioDate').value;
+                    const fechaInicioTime = document.getElementById('editFechaInicioTime').value;
+                    if (fechaInicioDate && fechaInicioTime) {
+                        datosEvento.fecha_inicio = `${fechaInicioDate} ${fechaInicioTime}:00`;
+                    }
+                }
+
+                if (document.getElementById('editFechaFin').style.display === 'block') {
+                    const fechaFinDate = document.getElementById('editFechaFinDate').value;
+                    const fechaFinTime = document.getElementById('editFechaFinTime').value;
+                    if (fechaFinDate && fechaFinTime) {
+                        datosEvento.fecha_fin = `${fechaFinDate} ${fechaFinTime}:00`;
+                    }
+                }
+
                 fetch(updateUrl, {
                     method: 'PUT',
                     headers: {
@@ -819,10 +1219,7 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        titulo: titulo,
-                        descripcion: descripcion
-                    })
+                    body: JSON.stringify(datosEvento)
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -833,11 +1230,26 @@
                         var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                         modal.hide();
                         let event = calendar.getEventById(id);
+
+                        // Actualizar propiedades básicas
                         event.setProp('title', titulo);
                         event.setExtendedProp('descripcion', descripcion);
+
+                        // Actualizar fechas si se modificaron
+                        if (datosEvento.fecha_inicio) {
+                            const nuevaFechaInicio = new Date(datosEvento.fecha_inicio);
+                            event.setStart(nuevaFechaInicio);
+                        }
+
+                        if (datosEvento.fecha_fin) {
+                            const nuevaFechaFin = new Date(datosEvento.fecha_fin);
+                            event.setEnd(nuevaFechaFin);
+                        }
+
+                        updateAgendaViewIfActive();
                         alert('Evento actualizado exitosamente.');
                     } else {
-                        alert('Error al actualizar el evento.');
+                        alert(data.message || 'Error al actualizar el evento.');
                     }
                 })
                 .catch(error => {
@@ -919,6 +1331,7 @@
                         });
 
                         limpiarFormulario();
+                        updateAgendaViewIfActive();
                         alert('Evento creado exitosamente.');
                     }
                 })
@@ -940,6 +1353,20 @@
             document.getElementById('btnEditarEvento').onclick = function() {
                 document.getElementById('titulo').disabled = false;
                 document.getElementById('descripcion').disabled = false;
+
+                // Mostrar campos de edición de fechas
+                if (document.getElementById('grupoFechaInicio').style.display !== 'none') {
+                    document.getElementById('fechaInicio').style.display = 'none';
+                    document.getElementById('editFechaInicio').style.display = 'block';
+                    // Los valores ya están establecidos en mostrarModalEvento
+                }
+
+                if (document.getElementById('grupoFechaFin').style.display !== 'none') {
+                    document.getElementById('fechaFin').style.display = 'none';
+                    document.getElementById('editFechaFin').style.display = 'block';
+                    // Los valores ya están establecidos en mostrarModalEvento
+                }
+
                 document.getElementById('btnGuardar').style.display = '';
                 document.getElementById('titulo').focus();
             };
@@ -1026,6 +1453,35 @@
                 document.getElementById('titulo').disabled = true;
                 document.getElementById('descripcion').disabled = true;
                 document.getElementById('btnGuardar').style.display = 'none';
+
+                // Ocultar campos de edición de fechas
+                document.getElementById('fechaInicio').style.display = '';
+                document.getElementById('fechaFin').style.display = '';
+                document.getElementById('editFechaInicio').style.display = 'none';
+                document.getElementById('editFechaFin').style.display = 'none';
+
+                // Preparar los campos de edición de fechas con los valores actuales
+                if (event.start) {
+                    const fechaInicio = new Date(event.start);
+                    const fechaInicioDate = fechaInicio.toISOString().split('T')[0];
+                    const horasInicio = fechaInicio.getHours().toString().padStart(2, '0');
+                    const minutosInicio = fechaInicio.getMinutes().toString().padStart(2, '0');
+                    const fechaInicioTime = `${horasInicio}:${minutosInicio}`;
+
+                    document.getElementById('editFechaInicioDate').value = fechaInicioDate;
+                    document.getElementById('editFechaInicioTime').value = fechaInicioTime;
+                }
+
+                if (event.end) {
+                    const fechaFin = new Date(event.end);
+                    const fechaFinDate = fechaFin.toISOString().split('T')[0];
+                    const horasFin = fechaFin.getHours().toString().padStart(2, '0');
+                    const minutosFin = fechaFin.getMinutes().toString().padStart(2, '0');
+                    const fechaFinTime = `${horasFin}:${minutosFin}`;
+
+                    document.getElementById('editFechaFinDate').value = fechaFinDate;
+                    document.getElementById('editFechaFinTime').value = fechaFinTime;
+                }
                 const modal = new bootstrap.Modal(document.getElementById('eventoModal'));
                 modal.show();
             }
@@ -1033,3 +1489,4 @@
     </script>
 </div>
 @endsection
+

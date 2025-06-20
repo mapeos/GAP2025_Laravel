@@ -43,7 +43,9 @@
         @include('template.partials.alerts')
     </div>
 
+    {{-- FILTROS EXISTENTES --}}
     <div class="mb-3 d-flex gap-3">
+        {{-- Filtro por estado --}}
         <div class="btn-group" role="group" aria-label="Filtrar por estado">
             <button type="button" class="btn btn-outline-secondary btn-sm filter-status active" data-status="all">
                 <i class="ri-list-check"></i> Todas
@@ -55,8 +57,58 @@
                 <i class="ri-delete-bin-line"></i> Dadas de baja
             </button>
         </div>
+
+        {{-- Botón de búsqueda avanzada --}}
+        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#searchFilters" aria-expanded="false" aria-controls="searchFilters" id="toggleFiltersBtn">
+            <i class="ri-filter-3-line"></i> Búsqueda Avanzada
+        </button>
     </div>
 
+    {{-- NUEVOS FILTROS: Búsqueda avanzada (colapsable) --}}
+    <div class="collapse mb-3" id="searchFilters">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Búsqueda Avanzada</h6>
+                <button type="button" class="btn-close" id="closeFiltersBtn" aria-label="Cerrar"></button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {{-- Búsqueda por nombre --}}
+                    <div class="col-md-6 mb-3">
+                        <label for="searchName" class="form-label">Buscar por nombre</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchName" placeholder="Escriba el nombre de la categoría...">
+                            <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Ordenamiento simplificado --}}
+                    <div class="col-md-6 mb-3">
+                        <label for="sortOrder" class="form-label">Ordenar por</label>
+                        <select class="form-select" id="sortOrder">
+                            <option value="default">Todas</option>
+                            <option value="name-asc">A-Z</option>
+                            <option value="name-desc">Z-A</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Botones de acción --}}
+                <div class="row">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFilters">
+                            <i class="ri-refresh-line"></i> Limpiar Filtros
+                        </button>
+                        <span class="text-muted ms-2" id="filterResults"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Spinner de carga --}}
     <div class="loading-spinner" id="loadingSpinner" style="display: none;">
         <div style="display: flex; align-items: center; gap: 1rem;">
             <div class="spinner-border text-primary" role="status">
@@ -66,6 +118,7 @@
         </div>
     </div>
 
+    {{-- Tabla de categorías --}}
     <table class="table align-middle">
         <thead>
             <tr>
@@ -263,6 +316,114 @@
 
             flashContainer.innerHTML = ''; // Limpia anteriores
             flashContainer.appendChild(wrapper);
+        }
+
+        // NUEVOS FILTROS: Funcionalidad de búsqueda y ordenamiento para categorías
+        const searchName = document.getElementById('searchName');
+        const sortOrder = document.getElementById('sortOrder');
+        const clearFilters = document.getElementById('clearFilters');
+        const clearSearch = document.getElementById('clearSearch');
+        const filterResults = document.getElementById('filterResults');
+
+        // Función para aplicar filtros y ordenamiento
+        function applyCategoryFilters() {
+            const searchValue = searchName.value.toLowerCase().trim();
+            const sortValue = sortOrder.value;
+
+            const rows = document.querySelectorAll('tbody tr');
+
+            // Filtrar por nombre
+            rows.forEach(row => {
+                let showRow = true;
+                
+                if (searchValue) {
+                    const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                    if (!name.includes(searchValue)) {
+                        showRow = false;
+                    }
+                }
+
+                // Aplicar visibilidad
+                if (showRow) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Ordenar las filas visibles
+            if (sortValue !== 'default') {
+                const tbody = document.querySelector('tbody');
+                const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(row => row.style.display !== 'none');
+                
+                visibleRows.sort((a, b) => {
+                    const nameA = a.querySelector('td:nth-child(1)').textContent.toLowerCase().trim();
+                    const nameB = b.querySelector('td:nth-child(1)').textContent.toLowerCase().trim();
+
+                    if (sortValue === 'name-asc') {
+                        return nameA.localeCompare(nameB, 'es');
+                    } else if (sortValue === 'name-desc') {
+                        return nameB.localeCompare(nameA, 'es');
+                    }
+                    return 0;
+                });
+
+                // Reordenar solo las filas visibles
+                visibleRows.forEach(row => {
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Mostrar resultados del filtro
+            const visibleCount = document.querySelectorAll('tbody tr:not([style*="display: none"])').length;
+            const totalRows = rows.length;
+            
+            if (searchValue || sortValue !== 'default') {
+                filterResults.textContent = `Mostrando ${visibleCount} de ${totalRows} categorías`;
+            } else {
+                filterResults.textContent = '';
+            }
+        }
+
+        // Event listeners para los nuevos filtros
+        clearFilters.addEventListener('click', function() {
+            // Limpiar todos los campos de filtro
+            searchName.value = '';
+            sortOrder.value = 'default';
+            filterResults.textContent = '';
+            
+            // Mostrar todas las filas
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+        });
+
+        clearSearch.addEventListener('click', function() {
+            searchName.value = '';
+            applyCategoryFilters();
+        });
+
+        // Búsqueda en tiempo real (con debounce)
+        let searchTimeout;
+        searchName.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(applyCategoryFilters, 300);
+        });
+
+        // Ordenamiento automático
+        sortOrder.addEventListener('change', applyCategoryFilters);
+
+        // Hacer que la X funcione correctamente
+        const closeButton = document.getElementById('closeFiltersBtn');
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                const searchFilters = document.getElementById('searchFilters');
+                if (searchFilters) {
+                    const bsCollapse = new bootstrap.Collapse(searchFilters);
+                    bsCollapse.hide();
+                }
+            });
         }
     });
 </script>

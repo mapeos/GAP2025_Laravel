@@ -248,3 +248,11 @@ Route::prefix('admin')
         Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
         Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
     });
+
+//--------------------------------------------
+// Rutas para sugerencias de IA
+//--------------------------------------------
+Route::middleware(['auth'])->group(function () {
+    Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])
+        ->name('ai.appointment-suggestions');
+});

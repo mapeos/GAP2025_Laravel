@@ -13,7 +13,7 @@ class RolesParticipacionSeeder extends Seeder
      */
     public function run(): void
     {
-         $roles = [
+        $roles = [
             ['nombre' => 'Administrador'],
             ['nombre' => 'Profesor'],
             ['nombre' => 'Alumno'],
@@ -22,5 +22,7 @@ class RolesParticipacionSeeder extends Seeder
         foreach ($roles as $rol) {
             RolParticipacion::firstOrCreate(['nombre' => $rol['nombre']]);
         }
+        
+        $this->command->info('✅ Roles de participación creados/verificados.');
     }
 }

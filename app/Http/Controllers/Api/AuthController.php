@@ -214,7 +214,14 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        Log::info('[Device][LOGOUT] Usuario cerró sesión en la app móvil', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'device_id' => $request->header('Device-Id') ?? null,
+            'ip' => $request->ip(),
+        ]);
+        $user->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada']);
     }
 

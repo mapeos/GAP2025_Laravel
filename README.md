@@ -62,260 +62,145 @@ Está disponible una página de ejemplo en la ruta: `admin.dashboard.test`
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @endpush
 ```
-
-# Asistente AI para citas en calendario
-
-Ejecutar la migración: `php artisan migrate`
-Se ha creado un comando `php artisan appointments:suggest 1 2 "2025-07-01"` para verificar si se genera una fecha mediate IA
-
-## Motor de IA
-
-Se utiliza un sistema basado en LLM basado en _Ollama + Mistral 7B_
-
--   Ollama es una plataforma de LLMs que se ejecuta en local
--   Mistral 7B es un modelo especializado en instrucciones, entiende cosas como "sugiereme un hueco en la agenda"
-
-### Guía de Implementación Local de Ollama
-
-Para implementar Ollama en tu versión local del proyecto, sigue estos pasos según tu sistema operativo:
-
-#### Opciones de Implementación
-
-##### A. Implementación con GPU NVIDIA (Máximo Rendimiento)
-
-Si tienes una GPU NVIDIA, puedes usar esta configuración optimizada:
-
-1. **Crear el Dockerfile.ai.gpu**
-   Crea un archivo `Dockerfile.ai.gpu` en la raíz del proyecto con este contenido:
-
-    ```dockerfile
-    FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
-
-    # Install system dependencies
-    RUN apt-get update && apt-get install -y \
-        python3 \
-        python3-pip \
-        curl \
-        && rm -rf /var/lib/apt/lists/*
-
-    # Install Ollama
-    RUN curl -fsSL https://ollama.com/install.sh | sh
-
-    # Set working directory
-    WORKDIR /app
-
-    # Expose Ollama port
-    EXPOSE 11434
-
-    # Start Ollama with GPU support
-    CMD ["ollama", "serve"]
-    ```
-
-2. **Modificar docker-compose.yml**
-   Usa esta configuración para el servicio AI:
-    ```yaml
-    ai:
-        build:
-            context: ./
-            dockerfile: Dockerfile.ai.gpu
-        container_name: gap2025_laravel-ai
-        restart: unless-stopped
-        ports:
-            - "11434:11434"
-        volumes:
-            - ollama_data:/root/.ollama
-        networks:
-            - alumnos-gap
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          count: 1
-                          capabilities: [gpu]
-    ```
-
-##### B. Implementación Estándar (CPU o GPU Básica)
-
-Si no tienes GPU NVIDIA o prefieres una configuración más simple:
-
-1. **Crear el Dockerfile.ai**
-   Crea un archivo `Dockerfile.ai` en la raíz del proyecto con este contenido:
-
-    ```dockerfile
-    FROM ubuntu:22.04
-
-    # Install system dependencies
-    RUN apt-get update && apt-get install -y \
-        python3 \
-        python3-pip \
-        curl \
-        && rm -rf /var/lib/apt/lists/*
-
-    # Install Ollama
-    RUN curl -fsSL https://ollama.com/install.sh | sh
-
-    # Set working directory
-    WORKDIR /app
-
-    # Expose Ollama port
-    EXPOSE 11434
-
-    # Start Ollama
-    CMD ["ollama", "serve"]
-    ```
-
-2. **Modificar docker-compose.yml**
-   Usa esta configuración para el servicio AI:
-    ```yaml
-    ai:
-        build:
-            context: ./
-            dockerfile: Dockerfile.ai
-        container_name: gap2025_laravel-ai
-        restart: unless-stopped
-        ports:
-            - "11434:11434"
-        volumes:
-            - ollama_data:/root/.ollama
-        networks:
-            - alumnos-gap
-    ```
-
-##### C. Implementación en Linux (Sin GPU NVIDIA)
-
-1. **Configurar el servicio**
-
-    - Usa el mismo `Dockerfile.ai` y configuración de `docker-compose.yml` que en la implementación estándar.
-    - No necesitas configuración adicional para GPU.
-
-2. **Consideraciones de rendimiento**
-
-    - El modelo funcionará más lento que con GPU NVIDIA
-    - Se recomienda tener al menos 8GB de RAM disponible
-    - Puedes ajustar el uso de memoria en el contenedor añadiendo estas líneas al servicio `ai` en `docker-compose.yml`:
-        ```yaml
-        deploy:
-            resources:
-                limits:
-                    memory: 4G
-        ```
-
-3. **Iniciar el servicio**
-
-    ```bash
-    docker-compose up -d ai
-    ```
-
-4. **Cargar el modelo Mistral**
-
-    ```bash
-    docker exec -it gap2025_laravel-ai ollama pull mistral
-    ```
-
-5. **Verificar la instalación**
-    ```bash
-    docker exec -it gap2025_laravel-ai ollama list
-    ```
-
-**Nota**: La versión con GPU NVIDIA ofrecerá un rendimiento significativamente mejor para el procesamiento de inferencias, pero requiere:
-
--   GPU NVIDIA compatible
--   Drivers NVIDIA actualizados
--   NVIDIA Container Toolkit instalado
-
-3. **Configurar variables de entorno**
-   Añade estas variables a tu archivo `.env`:
-
-    ```
-    OLLAMA_HOST=ai
-    OLLAMA_PORT=11434
-    ```
-
-4. **Iniciar el servicio**
-
-    ```bash
-    docker-compose up -d ai
-    ```
-
-5. **Cargar el modelo Mistral**
-
-    ```bash
-    docker exec -it gap2025_laravel-ai ollama pull mistral
-    ```
-
-6. **Verificar la instalación**
-
-    ```bash
-    docker exec -it gap2025_laravel-ai ollama list
-    ```
-
-7. **Interactuar con la IA**
-   Puedes interactuar directamente con Mistral usando el comando:
-
-    ```bash
-    docker exec -it gap2025_laravel-ai ollama run mistral
-    ```
-
-    Esto abrirá una consola interactiva donde puedes hacer preguntas directamente a la IA.
-
-    Si necesitas reiniciar el servicio de IA por algún motivo, puedes usar:
-
-    ```bash
-    docker-compose restart ai
-    ```
-
-    Si has modificado el Dockerfile.ai y necesitas reconstruir solo el servicio de IA:
-
-    ```bash
-    docker-compose up -d --build ai
-    ```
-
-Más adelante se podría incluir:
-
--   Phi-2 (Microsoft): modelo pequeño y muy preciso.
--   Gemma 2B Instruct (Google): excelente para correr en CPU, más pequeño que Mistral.
--   TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
-
-Para probar el sistema se puede utilizar el comando:
-
-```
-php artisan appointments:suggest-ai 1 2 5 "2025-07-01"
-```
-
-
 # Asistente AI para citas en calendario
 Ejecutar la migración: `php artisan migrate` 
-Se ha creado un comando `php artisan appointments:suggest 1 2 "2025-07-01"` para verificar si se genera una fecha mediate IA
+Se ha creado un comando `php artisan appointments:suggest-ai 1 2 5 "2025-07-01"` para verificar si se genera una fecha mediante IA
 
 ## Motor de IA
 Se utiliza un sistema basado en LLM basado en *Ollama + Mistral 7B*
-- Ollama es U una plataforma de LLMs que se ejecuta en local
+- Ollama es una plataforma de LLMs que se ejecuta en local
 - Mistral 7B es un modelo especializado en instrucciones, entiende cosas como "sugiereme un hueco en la agenda"
 
 Más adelante se podría incluir:
 - Phi-2 (Microsoft): modelo pequeño y muy preciso.
 - Gemma 2B Instruct (Google): excelente para correr en CPU, más pequeño que Mistral.
- - TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
+- TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
 
-### Instalación del sistema
-- En linux: `curl -fsSL https://ollama.com/install.sh | sh`
-- En windows:
-```
-# Windows (WSL)
-wsl --install # (Si no tienes WSL)
-wsl
-curl -fsSL https://ollama.com/install.sh | sh
+### Instalación del sistema (Docker)
+
+El sistema está configurado para ejecutar Ollama en un contenedor Docker separado:
+
+1. **Configuración automática:**
+   - El `docker-compose.yml` incluye un servicio `ai` que ejecuta Ollama
+   - El servicio `app` (Laravel) se comunica con Ollama vía HTTP
+
+2. **Variables de entorno necesarias:**
+   Agregar al archivo `.env`:
+   ```env
+   OLLAMA_HOST=ai
+   OLLAMA_PORT=11434
+   OLLAMA_MODEL=mistral
+   ```
+
+3. **Iniciar los servicios:**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Descargar el modelo Mistral:**
+   ```bash
+   docker exec -it gap2025_laravel-ai ollama pull mistral
+   ```
+
+5. **Verificar que Ollama esté funcionando:**
+   ```bash
+   docker exec -it gap2025_laravel-ai ollama list
+   ```
+   Debe mostrar: `mistral:latest`
+
+6. **Probar la comunicación:**
+   ```bash
+   docker-compose exec app curl http://ai:11434
+   ```
+   Debe responder: `Ollama is running`
+
+### Instalación manual (fuera de Docker)
+
+Si prefieres ejecutar Ollama fuera de Docker:
+
+1. **Instalar Ollama:**
+   - En Linux: `curl -fsSL https://ollama.com/install.sh | sh`
+   - En Windows (WSL):
+     ```bash
+     wsl --install # (Si no tienes WSL)
+     wsl
+     curl -fsSL https://ollama.com/install.sh | sh
+     ```
+
+2. **Configurar variables de entorno:**
+   ```bash
+   export OLLAMA_HOST=0.0.0.0
+   export OLLAMA_ORIGINS=*
+   ```
+
+3. **Descargar el modelo:**
+   ```bash
+   ollama pull mistral
+   ```
+
+4. **Iniciar Ollama:**
+   ```bash
+   ollama serve
+   ```
+
+5. **Actualizar variables en .env:**
+   ```env
+   OLLAMA_HOST=localhost
+   OLLAMA_PORT=11434
+   OLLAMA_MODEL=mistral
+   ```
+
+### Uso del comando
+
+Para probar el sistema se puede utilizar el comando:
+
+```bash
+# Comando básico
+php artisan appointments:suggest-ai 1 2 5 "2025-07-01"
+
+# Comando completo con opciones
+php artisan appointments:suggest-ai 1 2 5 "2025-07-01" \
+    --duration=60 \
+    --tolerance=7 \
+    --max=3 \
+    --workingDays='{"monday":["08:00","14:00"],"tuesday":["10:00","18:00"],"wednesday":["08:00","14:00"],"thursday":["08:00","14:00"]}' \
+    --excludedDates='["2025-07-04", "2025-07-15"]' \
+    --preferences='{"times_of_day":"morning","preferred_days":["tuesday","thursday"],"hour_range":["09:00","11:00"]}'
 ```
 
-- cargar el modelo (unos 4.1Gb de espacio): `ollama run mistral`
-- exportar variables de sistema (linux):
-```
-export OLLAMA_HOST=0.0.0.0
-export OLLAMA_ORIGINS=*
-```
-- arrancar *Ollama*: `ollama serve`
+**Parámetros del comando:**
+- `alumnoId`: ID del alumno/estudiante
+- `cursoId`: ID del curso o materia
+- `profesorId`: ID del profesor
+- `approximateDate`: Fecha aproximada (YYYY-MM-DD)
 
+**Opciones:**
+- `--duration`: Duración de la cita en minutos (default: 60)
+- `--tolerance`: Días de tolerancia alrededor de la fecha (default: 5)
+- `--max`: Número máximo de sugerencias (default: 3)
+- `--workingDays`: JSON con días laborables y horarios
+- `--excludedDates`: JSON con fechas bloqueadas
+- `--preferences`: JSON con preferencias del alumno
+
+### Solución de problemas
+
+1. **Error "Target class [appointments.suggester.ai] does not exist":**
+   - Verificar que el `AppointmentServiceProvider` esté registrado en `bootstrap/providers.php`
+   - Ejecutar: `php artisan config:clear`
+
+2. **Error de timeout (30 segundos):**
+   - El modelo tarda en cargar la primera vez
+   - Esperar 1-2 minutos y volver a intentar
+   - El timeout se ha configurado a 120 segundos
+
+3. **Error de conexión a Ollama:**
+   - Verificar que el contenedor `gap2025_laravel-ai` esté corriendo
+   - Verificar logs: `docker logs gap2025_laravel-ai`
+   - Probar conectividad: `docker-compose exec app curl http://ai:11434`
+
+4. **Modelo no encontrado:**
+   - Descargar el modelo: `docker exec -it gap2025_laravel-ai ollama pull mistral`
+   - Verificar: `docker exec -it gap2025_laravel-ai ollama list`
 
 # Agenda/Calendario (Arnaldo y Víctor)
 
@@ -1272,6 +1157,12 @@ composer require firebase/php-jwt
    ```
    FIREBASE_CREDENTIALS=/ruta/absoluta/a/storage/app/private/firebase/service-account.json
    ```
+3. Para que las notificaciones push se envíen inmediatamente (sin necesidad de un worker de colas), ajusta la siguiente variable en tu archivo `.env`:
+   ```
+   QUEUE_CONNECTION=sync
+   ```
+   **¿Por qué este cambio?**
+   Por defecto, Laravel usa un sistema de colas para procesar tareas en segundo plano (como el envío de notificaciones push). Si no tienes un worker ejecutándose (por ejemplo, en Docker sin un servicio adicional para la cola), los jobs quedan pendientes y no se envían hasta que se procese la cola manualmente. Al usar `QUEUE_CONNECTION=sync`, los jobs se ejecutan inmediatamente en el mismo request, lo que simplifica el flujo en entornos donde no se desea gestionar un worker de colas.
 
 ### Endpoints principales
 
