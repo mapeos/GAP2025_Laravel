@@ -24,26 +24,27 @@ class InscripcionController extends Controller
      * Inscribe una persona en un curso.
      */
     public function agregarInscripcion(Request $request, Curso $curso)
-    {
-        //dd($request->all());
-        // Inspecciona los datos enviados
+{
+    $request->validate([
+        'persona_id' => 'required|exists:personas,id',
+        'rol_participacion_id' => 'required|exists:roles_participacion,id',
+    ]);
 
+    // Verificar si la persona ya está inscrita en el curso
+    $yaInscrito = $curso->personas()->where('persona_id', $request->persona_id)->exists();
 
-        $request->validate([
-            'persona_id' => 'required|exists:personas,id',
-            'rol_participacion_id' => 'required|exists:roles_participacion,id',
-        ]);
-
-        // Agrega la persona al curso con el rol especificado
-        $curso->personas()->attach($request->persona_id, [
-            'rol_participacion_id' => $request->rol_participacion_id,
-            'estado' => 'pendiente', // Estado inicial
-        ]);
-
-        return redirect()->route('admin.inscripciones.cursos.inscribir.form', $curso->id)
-            ->with('success', 'Persona inscrita correctamente.');
+    if ($yaInscrito) {
+        return redirect()->back()->with('error', 'La persona ya está inscrita en este curso.');
     }
 
+    // Si no está inscrita, la inscribimos
+    $curso->personas()->attach($request->persona_id, [
+        'rol_participacion_id' => $request->rol_participacion_id,
+        'estado' => 'pendiente',
+    ]);
+
+    return redirect()->back()->with('success', 'Persona inscrita correctamente.');
+}
 
     /**
      * Muestra el listado de personas inscritas en un curso.

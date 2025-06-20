@@ -17,8 +17,15 @@ class Persona extends Model
     ];
 
     public function user()
-{
-    return $this->belongsTo(User::class, 'user_id', 'id'); // Relación user personas
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id'); // Relación user personas
+    }
+    
+    public function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'participacion')
+            ->withPivot('rol_participacion_id')
+            ->withTimestamps();
+    }
+    
 }
-}
-
