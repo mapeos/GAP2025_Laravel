@@ -212,4 +212,25 @@ class UserController extends Controller
             'persona' => $user->persona, // Devuelve los datos de la persona asociada
         ]);
     }
+
+    public function sincronizarUsuariosPersonas()
+{
+    $usuarios = \App\Models\User::all();
+
+    foreach ($usuarios as $usuario) {
+        if (!$usuario->persona) {
+            \App\Models\Persona::create([
+                'nombre' => $usuario->name,
+                'apellido1' => '',
+                'apellido2' => '',
+                'dni' => '',
+                'tfno' => '',
+                'direccion_id' => null,
+                'user_id' => $usuario->id,
+            ]);
+        }
+    }
+
+    return 'Sincronización completada';
+}
 }

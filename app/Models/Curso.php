@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
         'estado',
         'temario_path',
         'portada_path',
+        'precio',
     ];
 
     protected $dates = ['fechaInicio', 'fechaFin'];
