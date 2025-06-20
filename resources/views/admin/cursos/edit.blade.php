@@ -43,5 +43,6 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a href="{{ route('admin.cursos.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 @endsection

@@ -23,6 +23,26 @@
 </div>
 @endif
 
+{{-- Alertas de estado como en noticias --}}
+@if ($curso->trashed())
+<div class="alert alert-warning d-flex align-items-center" role="alert">
+    <i class="ri-close-circle-fill text-danger me-2 fs-4"></i>
+    <div>
+        Este curso ha sido <strong>eliminado</strong>.
+        @if($curso->deleted_at)
+            <br><small class="text-muted">Eliminado el: {{ $curso->deleted_at->format('d/m/Y H:i') }}</small>
+        @endif
+    </div>
+</div>
+@elseif($curso->estado === 'activo')
+<div class="alert alert-success d-flex align-items-center" role="alert">
+    <i class="ri-checkbox-circle-fill text-success me-2 fs-4"></i>
+    <div>
+        Este curso está <strong>activo</strong>.
+    </div>
+</div>
+@endif
+
 @if ($curso->portada_path)
     <div>
         <img src="{{ asset('storage/' . $curso->portada_path) }}" alt="Portada del curso" style="max-width: 300px;">
@@ -52,12 +72,35 @@
     </tr>
     <tr>
         <th>Plazas</th>
-        <td>{{ $curso->plazas }}</td>
+        <td>
+            <div class="{{ $curso->getPlazasColorClass() }}">
+                <strong>{{ $curso->getPlazasDisponibles() }}</strong> / {{ $curso->plazas }}
+            </div>
+            <small class="text-muted">
+                {{ number_format($curso->getPorcentajeOcupacion(), 1) }}% ocupado
+            </small>
+        </td>
     </tr>
     <tr>
         <th>Estado</th>
-        <td>{{ $curso->estado }}</td>
+        <td>
+            @if($curso->estado === 'activo')
+                <span class="badge bg-success">Activo</span>
+            @else
+                <span class="badge bg-danger">Inactivo</span>
+            @endif
+        </td>
     </tr>
+    @if($curso->trashed())
+    <tr>
+        <th>Fecha de Eliminación</th>
+        <td>
+            <span class="text-danger">
+                {{ $curso->deleted_at->format('d/m/Y H:i') }}
+            </span>
+        </td>
+    </tr>
+    @endif
 </table>
 
 {{-- Mostrar el temario si existe --}}

@@ -15,7 +15,7 @@
 </div>
 @endif
 
-<form action="{{ route('cursos.store') }}" method="POST" enctype="multipart/form-data">    @csrf
+<form action="{{ route('admin.cursos.store') }}" method="POST" enctype="multipart/form-data">    @csrf
     <div class="mb-3">
         <label for="portada" class="form-label">Imagen de Portada</label>
         <input type="file" name="portada" id="portada" class="form-control" accept="image/*">

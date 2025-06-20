@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Modelo de la tabla cursos
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
  class Curso extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'titulo',
         'descripcion',
@@ -28,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
         'portada_path',
     ];
 
-    protected $dates = ['fechaInicio', 'fechaFin'];
+    protected $dates = ['fechaInicio', 'fechaFin', 'deleted_at'];
 
     /**
      * Relación con participaciones (tabla pivote con información adicional)
@@ -91,6 +94,47 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
     public function scopeConEstado(Builder $query, string $estado): Builder
     {
         return $query->where('estado', $estado);
+    }
+
+    /**
+     * Obtener el número de participantes inscritos (solo alumnos)
+     */
+    public function getInscritosCount(): int
+    {
+        return $this->personasPorRol('alumno')->count();
+    }
+
+    /**
+     * Obtener el número de plazas disponibles
+     */
+    public function getPlazasDisponibles(): int
+    {
+        return max(0, $this->plazas - $this->getInscritosCount());
+    }
+
+    /**
+     * Obtener el porcentaje de ocupación del curso
+     */
+    public function getPorcentajeOcupacion(): float
+    {
+        if ($this->plazas == 0) return 0;
+        return ($this->getInscritosCount() / $this->plazas) * 100;
+    }
+
+    /**
+     * Obtener la clase CSS para el color de las plazas según ocupación
+     */
+    public function getPlazasColorClass(): string
+    {
+        $porcentaje = $this->getPorcentajeOcupacion();
+        
+        if ($porcentaje >= 90) {
+            return 'text-danger fw-bold'; // Rojo - menos del 10% disponible
+        } elseif ($porcentaje >= 50) {
+            return 'text-warning fw-bold'; // Amarillo - menos de la mitad disponible
+        } else {
+            return 'text-info'; // Azul claro - más de la mitad disponible
+        }
     }
     
 }
