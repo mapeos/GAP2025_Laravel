@@ -10,6 +10,7 @@ use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\SendFirebaseNotificationJob;
+use App\Models\Curso;
 
 class NotificationController extends Controller
 {
@@ -22,9 +23,13 @@ class NotificationController extends Controller
 
     public function create()
     {
-        $users = User::orderBy('name')->get();
-
-        return view('admin.notificaciones.create', compact('users'));
+        $users = User::with(['persona.cursos'])->orderBy('name')->get();
+        $courses = Curso::orderBy('titulo')->get();
+        // Filtros adicionales
+        $roles = ['alumno', 'profesor', 'admin'];
+        $activos = User::where('status', 'activo')->pluck('id')->toArray();
+        $inactivos = User::where('status', 'inactivo')->pluck('id')->toArray();
+        return view('admin.notificaciones.create', compact('users', 'courses', 'roles', 'activos', 'inactivos'));
     }
 
     public function store(Request $request)
