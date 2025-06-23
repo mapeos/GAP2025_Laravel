@@ -84,10 +84,10 @@
         <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
         <!-- CURSOS Section -->
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('admin.cursos.index') }}">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
                 <i class="ri-file-list-3-line"></i> <span>Cursos</span>
-            </a>
+                    </a>
         </li>
         <!-- PARTICIPANTES Section -->
         <li class="nav-item has-submenu parent">
