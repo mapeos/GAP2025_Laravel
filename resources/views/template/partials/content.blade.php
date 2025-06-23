@@ -134,9 +134,7 @@
                                   <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                       <h6 class="mb-0">
-                                        <!-- TODO Enlazar con la vista de detalles del curso -->
-                                        {{-- <a href="{{ route('cursos.show', $curso->id) }}" class="text-decoration-none">{{ $curso->titulo }}</a> --}}
-                                        {{ $curso->titulo }}
+                                        <a href="{{ route('admin.cursos.show', $curso->id) }}" class="text-decoration-none">{{ $curso->titulo }}</a>
                                       </h6>
                                       <small class="text-muted">{{ $curso->fechaInicio }} - {{ $curso->fechaFin }}</small>
                                     </div>
