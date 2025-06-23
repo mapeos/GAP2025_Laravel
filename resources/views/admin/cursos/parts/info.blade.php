@@ -1,8 +1,10 @@
 <div class="card mb-4 w-100 position-relative">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <span>Información del Curso</span>
+        <div class="flex-grow-1 text-center">
+            <span class="fw-bold fs-3">Información del Curso</span>
+        </div>
         <a href="{{ route('admin.cursos.edit', $curso->id) }}"
-           class="btn btn-warning btn-lg fw-bold shadow"
+           class="btn btn-warning btn-lg fw-bold shadow ms-3"
            style="font-size: 1.1rem; padding: 0.5rem 1.5rem;"
            title="Editar curso">
             <i class="fa fa-edit me-2"></i> Editar

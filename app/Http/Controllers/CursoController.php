@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Curso;
+use App\Models\RolParticipacion;
 use Illuminate\Support\Facades\Storage;
 
 class CursoController extends Controller
@@ -66,7 +67,8 @@ class CursoController extends Controller
 
     public function show(Curso $curso)
     {
-        return view('admin.cursos.show', compact('curso'));
+        $roles = RolParticipacion::pluck('nombre', 'id');
+        return view('admin.cursos.show', compact('curso', 'roles'));
     }
 
     public function listarCursosActivos()

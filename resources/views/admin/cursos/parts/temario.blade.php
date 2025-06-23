@@ -1,8 +1,7 @@
 <div class="card h-100">
-    <div class="card-header bg-info text-white">
-        Temario
+    <div class="card-header bg-info text-white d-flex justify-content-center align-items-center">
+        <span class="fw-bold fs-3">Temario</span>
     </div>
-    {{-- Separador visual --}}
     <div style="height: 24px;"></div>
     <div class="card-body">
         @if ($curso->temario_path && Storage::disk('public')->exists($curso->temario_path))

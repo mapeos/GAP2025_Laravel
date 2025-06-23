@@ -30,6 +30,14 @@
             </ul>
         </li>
 
+                <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
+        <!-- CURSOS Section -->
+        <li class="nav-item has-submenu parent">
+            <a class="nav-link" href="{{ route('admin.cursos.index') }}">
+                <i class="ri-file-list-3-line"></i> <span>Cursos</span>
+            </a>
+        </li>
+
         <!-- Seccion de Calendario -->
                 <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
@@ -81,55 +89,8 @@
             </ul>
         </li>
         <!-- Fin Notificaciones -->
-        <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
-        <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
-        <!-- CURSOS Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-file-list-3-line"></i> <span>Cursos</span> <i class="ri-arrow-right-s-line ms-auto"></i>
-            </a>
-            <ul class="submenu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
-                        <span>Ver Cursos</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.cursos.create') }}">
-                        <span>Crear Cursos</span>
-                    </a>
-                </li>
 
-            </ul>
-        </li>
-        <!-- PARTICIPANTES Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-table-line"></i> <span>Participantes</span> <i class="ri-arrow-right-s-line ms-auto"></i>
-            </a>
-            <ul class="submenu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.participantes.index') }}"> <span>Listar Participantes</span> </a>
-                </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.participantes.create') }}"> <span>Crear Participantes</span> </a>
-                </li> -->
-            </ul>
-        </li>
-        <!-- INSCRIPCIONES Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-file-list-3-line"></i> <span>Inscripciones</span> <i class="ri-arrow-right-s-line ms-auto"></i>
-            </a>
-            <ul class="submenu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.inscripciones.cursos.activos') }}"> <span>Inscribir</span> </a>
-                </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/select"> <span>Bajas</span> </a>
-                </li> -->
-            </ul>
-        </li>
+
         <!-- Pages Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Pages</span></li>
         <!-- Administración Section -->
