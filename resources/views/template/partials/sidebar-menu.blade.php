@@ -84,23 +84,10 @@
         <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
         <!-- CURSOS Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-file-list-3-line"></i> <span>Cursos</span> <i class="ri-arrow-right-s-line ms-auto"></i>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.cursos.index') }}">
+                <i class="ri-file-list-3-line"></i> <span>Cursos</span>
             </a>
-            <ul class="submenu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
-                        <span>Ver Cursos</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.cursos.create') }}">
-                        <span>Crear Cursos</span>
-                    </a>
-                </li>
-
-            </ul>
         </li>
         <!-- PARTICIPANTES Section -->
         <li class="nav-item has-submenu parent">

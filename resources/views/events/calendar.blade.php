@@ -47,6 +47,34 @@
         background-color: #0a58ca !important;
         border-color: #0a53be !important;
     }
+    /* Estilos para los manejadores de redimensionamiento */
+    .fc-event-resizable {
+        position: relative;
+    }
+    .fc-event-resizer {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background-color: #fff;
+        border: 1px solid #0d6efd;
+        z-index: 4;
+    }
+    .fc-event-resizer-start {
+        top: 50%;
+        left: -4px;
+        margin-top: -4px;
+        cursor: w-resize;
+    }
+    .fc-event-resizer-end {
+        top: 50%;
+        right: -4px;
+        margin-top: -4px;
+        cursor: e-resize;
+    }
+    .fc-event-resizing {
+        opacity: 0.8;
+    }
     /* Estilos para la vista de agenda */
     #agendaView .list-group-item.list-group-item-secondary {
         transition: background-color 0.2s;
@@ -65,7 +93,7 @@
     #agendaView .events-container:not(.d-none) {
         max-height: 1000px;
     }
-    
+
     /* Estilos personalizados para Flatpickr */
     .flatpickr-input {
         cursor: pointer;
@@ -480,15 +508,49 @@
                 </div>
               </div>
               <div class="row" id="grupoFechaInicio" style="display:none;">
-                <div class="col-md-4 mb-2">
+                <div class="col-md-6 mb-2">
                   <label class="form-label">Fecha de inicio</label>
-                  <p id="fechaInicio" class="form-control-plaintext small"></p>
+                  <div class="d-flex">
+                    <p id="fechaInicio" class="form-control-plaintext small"></p>
+                    <div id="editFechaInicio" class="ms-2" style="display:none;">
+                      <div class="input-group">
+                        <input type="date" class="form-control form-control-sm" id="editFechaInicioDate">
+                        <select class="form-select form-select-sm" id="editFechaInicioTime" style="max-width: 120px;">
+                          @php
+                              $horas = [];
+                              for($hora = 0; $hora < 24; $hora++) {
+                                  for($minuto = 0; $minuto < 60; $minuto += 15) {
+                                      $horas[] = sprintf('%02d:%02d', $hora, $minuto);
+                                  }
+                              }
+                          @endphp
+                          @foreach($horas as $hora)
+                              <option value="{{ $hora }}">{{ $hora }}</option>
+                          @endforeach
+                        </select>
+                      </div>
+                      <input type="hidden" id="editFechaInicioCompleta">
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="row" id="grupoFechaFin" style="display:none;">
-                <div class="col-md-4 mb-2">
+                <div class="col-md-6 mb-2">
                   <label class="form-label">Fecha de fin</label>
-                  <p id="fechaFin" class="form-control-plaintext small"></p>
+                  <div class="d-flex">
+                    <p id="fechaFin" class="form-control-plaintext small"></p>
+                    <div id="editFechaFin" class="ms-2" style="display:none;">
+                      <div class="input-group">
+                        <input type="date" class="form-control form-control-sm" id="editFechaFinDate">
+                        <select class="form-select form-select-sm" id="editFechaFinTime" style="max-width: 120px;">
+                          @foreach($horas as $hora)
+                              <option value="{{ $hora }}">{{ $hora }}</option>
+                          @endforeach
+                        </select>
+                      </div>
+                      <input type="hidden" id="editFechaFinCompleta">
+                    </div>
+                  </div>
                 </div>
               </div>
             </form>
@@ -924,6 +986,9 @@
                 moreLinkText: 'más',
                 events: @json($eventos ?? []),
                 editable: false,
+                eventResizableFromStart: true,
+                eventStartEditable: true,
+                eventDurationEditable: true,
                 selectable: true,
                 dayMaxEventRows: 3,
                 moreLinkClick: 'popover',
@@ -931,15 +996,35 @@
                     const props = info.event.extendedProps;
                     const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
                     const esCreador = props.creado_por == userId;
+                    let isEditable = false;
 
                     if (userRole === 'Administrador' || userRole === 'Profesor') {
                         info.event.setProp('editable', true);
+                        isEditable = true;
                     } else if (userRole === 'Alumno') {
                         if (esRecordatorioPersonal && esCreador) {
                             info.event.setProp('editable', true);
+                            isEditable = true;
                         } else {
                             info.event.setProp('editable', false);
+                            isEditable = false;
                         }
+                    }
+
+                    // Añadir indicadores visuales para eventos redimensionables
+                    if (isEditable) {
+                        const eventEl = info.el;
+                        eventEl.classList.add('fc-event-resizable');
+
+                        // Crear manejadores de redimensionamiento
+                        const startResizer = document.createElement('div');
+                        startResizer.className = 'fc-event-resizer fc-event-resizer-start';
+
+                        const endResizer = document.createElement('div');
+                        endResizer.className = 'fc-event-resizer fc-event-resizer-end';
+
+                        eventEl.appendChild(startResizer);
+                        eventEl.appendChild(endResizer);
                     }
                 },
                 dateClick: function(info) {
@@ -979,6 +1064,51 @@
                     }
                 },
                 eventDrop: function(info) {
+                    const props = info.event.extendedProps;
+                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
+                    const esCreador = props.creado_por == userId;
+
+                    let url = `/eventos/${info.event.id}`;
+                    if (userRole === 'Alumno') {
+                        if (esRecordatorioPersonal && esCreador) {
+                            url = `/events/reminders/${info.event.id}`;
+                        }
+                    }
+
+                    fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fecha_inicio: info.event.start.toISOString().slice(0, 19).replace('T', ' '),
+                            fecha_fin: info.event.end
+                                ? info.event.end.toISOString().slice(0, 19).replace('T', ' ')
+                                : info.event.start.toISOString().slice(0, 19).replace('T', ' ')
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al actualizar la fecha del evento.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Error al actualizar la fecha del evento');
+                        }
+                        // Actualizar la vista de agenda si está activa
+                        updateAgendaViewIfActive();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al actualizar la fecha del evento.');
+                        info.revert();
+                    });
+                },
+                eventResize: function(info) {
                     const props = info.event.extendedProps;
                     const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
                     const esCreador = props.creado_por == userId;
@@ -1134,6 +1264,8 @@
                 let id = document.getElementById('eventoId').value;
                 let titulo = document.getElementById('titulo').value;
                 let descripcion = document.getElementById('descripcion').value;
+                let fecha_inicio = document.getElementById('editFechaInicioCompleta').value;
+                let fecha_fin = document.getElementById('editFechaFinCompleta').value;
 
                 if (!titulo) {
                     btnGuardar.disabled = false;
@@ -1158,7 +1290,9 @@
                     },
                     body: JSON.stringify({
                         titulo: titulo,
-                        descripcion: descripcion
+                        descripcion: descripcion,
+                        fecha_inicio: fecha_inicio,
+                        fecha_fin: fecha_fin
                     })
                 })
                 .then(response => response.json())
@@ -1172,6 +1306,7 @@
                         let event = calendar.getEventById(id);
                         event.setProp('title', titulo);
                         event.setExtendedProp('descripcion', descripcion);
+                        event.setDates(new Date(fecha_inicio), new Date(fecha_fin));
                         updateAgendaViewIfActive();
                         alert('Evento actualizado exitosamente.');
                     } else {
@@ -1280,8 +1415,30 @@
                 document.getElementById('titulo').disabled = false;
                 document.getElementById('descripcion').disabled = false;
                 document.getElementById('btnGuardar').style.display = '';
+                document.getElementById('fechaInicio').style.display = 'none';
+                document.getElementById('fechaFin').style.display = 'none';
+                document.getElementById('editFechaInicio').style.display = '';
+                document.getElementById('editFechaFin').style.display = '';
                 document.getElementById('titulo').focus();
+
+                // Actualizar fechas completas cuando cambian los inputs
+                document.getElementById('editFechaInicioDate').addEventListener('change', actualizarFechaInicioCompleta);
+                document.getElementById('editFechaInicioTime').addEventListener('change', actualizarFechaInicioCompleta);
+                document.getElementById('editFechaFinDate').addEventListener('change', actualizarFechaFinCompleta);
+                document.getElementById('editFechaFinTime').addEventListener('change', actualizarFechaFinCompleta);
             };
+
+            function actualizarFechaInicioCompleta() {
+                const fecha = document.getElementById('editFechaInicioDate').value;
+                const hora = document.getElementById('editFechaInicioTime').value;
+                document.getElementById('editFechaInicioCompleta').value = `${fecha}T${hora}`;
+            }
+
+            function actualizarFechaFinCompleta() {
+                const fecha = document.getElementById('editFechaFinDate').value;
+                const hora = document.getElementById('editFechaFinTime').value;
+                document.getElementById('editFechaFinCompleta').value = `${fecha}T${hora}`;
+            }
 
             // Función para mostrar el modal de detalles del evento
             function mostrarModalEvento(event) {
@@ -1339,6 +1496,17 @@
                     document.getElementById('grupoFechaInicio').style.display = '';
                     const fechaInicio = new Date(event.start);
                     document.getElementById('fechaInicio').textContent = formatearFecha(fechaInicio);
+
+                    // Preparar campos editables para fecha inicio
+                    const startDateStr = fechaInicio.toISOString().split('T')[0];
+                    const startHour = fechaInicio.getHours().toString().padStart(2, '0');
+                    const startMinute = fechaInicio.getMinutes();
+                    const startMinuteRounded = Math.floor(startMinute / 15) * 15;
+                    const startTimeStr = `${startHour}:${startMinuteRounded.toString().padStart(2, '0')}`;
+
+                    document.getElementById('editFechaInicioDate').value = startDateStr;
+                    document.getElementById('editFechaInicioTime').value = startTimeStr;
+                    document.getElementById('editFechaInicioCompleta').value = `${startDateStr}T${startTimeStr}`;
                 } else {
                     document.getElementById('grupoFechaInicio').style.display = 'none';
                 }
@@ -1346,6 +1514,17 @@
                     document.getElementById('grupoFechaFin').style.display = '';
                     const fechaFin = new Date(event.end);
                     document.getElementById('fechaFin').textContent = formatearFecha(fechaFin);
+
+                    // Preparar campos editables para fecha fin
+                    const endDateStr = fechaFin.toISOString().split('T')[0];
+                    const endHour = fechaFin.getHours().toString().padStart(2, '0');
+                    const endMinute = fechaFin.getMinutes();
+                    const endMinuteRounded = Math.floor(endMinute / 15) * 15;
+                    const endTimeStr = `${endHour}:${endMinuteRounded.toString().padStart(2, '0')}`;
+
+                    document.getElementById('editFechaFinDate').value = endDateStr;
+                    document.getElementById('editFechaFinTime').value = endTimeStr;
+                    document.getElementById('editFechaFinCompleta').value = `${endDateStr}T${endTimeStr}`;
                 } else {
                     document.getElementById('grupoFechaFin').style.display = 'none';
                 }
@@ -1372,15 +1551,15 @@
             // Funcionalidad para sugerencias de IA
             document.getElementById('btnSugerenciasIA').addEventListener('click', function(e) {
                 e.preventDefault(); // Prevenir cualquier comportamiento por defecto
-                
+
                 const profesorId = document.querySelector('select[name="profesor_id"]').value;
                 const motivo = document.getElementById('motivo').value;
-                
+
                 if (!profesorId) {
                     alert('Por favor, selecciona un profesor primero.');
                     return;
                 }
-                
+
                 if (!motivo) {
                     alert('Por favor, ingresa el motivo de la cita.');
                     return;
@@ -1413,7 +1592,7 @@
                         const suggestions = data.data?.suggestions || data.suggestions || [];
                         const message = data.data?.message || data.message || null;
                         const source = data.data?.source || 'unknown';
-                        
+
                         mostrarSugerencias(suggestions, message, source);
                     } else {
                         const suggestions = data.suggestions || [];
@@ -1434,7 +1613,7 @@
             function mostrarSugerencias(sugerencias, mensaje = null, source = 'unknown') {
                 const container = document.getElementById('sugerenciasContainer');
                 const list = document.getElementById('sugerenciasList');
-                
+
                 if (sugerencias.length === 0) {
                     list.innerHTML = '<p class="text-muted">No se encontraron sugerencias disponibles.</p>';
                     container.classList.remove('d-none');
@@ -1442,13 +1621,13 @@
                 }
 
                 let html = '';
-                
+
                 // Mostrar mensaje informativo
                 if (mensaje) {
                     const alertClass = source === 'error' ? 'alert-danger' : 'alert-info';
                     html += `<div class="alert ${alertClass} mb-3">${mensaje}</div>`;
                 }
-                
+
                 // Mostrar información sobre la fuente
                 if (source === 'ollama') {
                     html += '<div class="alert alert-success mb-3"><i class="ri-robot-line"></i> Sugerencias generadas con IA (Ollama)</div>';
@@ -1458,9 +1637,9 @@
 
                 html += '<div class="list-group">';
                 sugerencias.forEach((sugerencia, index) => {
-                    const prioridadClass = sugerencia.prioridad === 'alta' ? 'border-primary' : 
+                    const prioridadClass = sugerencia.prioridad === 'alta' ? 'border-primary' :
                                          sugerencia.prioridad === 'media' ? 'border-warning' : 'border-secondary';
-                    
+
                     html += `
                         <div class="list-group-item list-group-item-action ${prioridadClass} border-start border-4">
                             <div class="d-flex w-100 justify-content-between align-items-center">
@@ -1490,11 +1669,11 @@
                     const partes = fecha.split('-');
                     fechaFormateada = `${partes[0].padStart(2, '0')}-${partes[1].padStart(2, '0')}-${partes[2]}`;
                 }
-                
+
                 // Actualizar los campos separados
                 document.getElementById('fecha_propuesta_fecha').value = fechaFormateada;
                 document.getElementById('fecha_propuesta_hora').value = hora;
-                
+
                 // Actualizar el campo hidden con el formato completo
                 const fechaInput = document.getElementById('fecha_propuesta');
                 // Convertir fecha española a ISO para el campo hidden
@@ -1503,10 +1682,10 @@
                     const fechaCompleta = `${fechaISO}T${hora}`;
                     fechaInput.value = fechaCompleta;
                 }
-                
+
                 // Ocultar sugerencias
                 document.getElementById('sugerenciasContainer').classList.add('d-none');
-                
+
                 // Mostrar confirmación
                 alert(`Horario seleccionado: ${fechaFormateada} a las ${hora}`);
             }
@@ -1524,7 +1703,7 @@
             function sincronizarFechaCompleta() {
                 const fecha = document.getElementById('fecha_propuesta_fecha').value;
                 const hora = document.getElementById('fecha_propuesta_hora').value;
-                
+
                 if (fecha && hora) {
                     // Convertir formato español (dd-mm-yyyy) a formato ISO (yyyy-mm-dd)
                     const fechaISO = convertirFechaEspanolAISO(fecha);
@@ -1539,23 +1718,23 @@
             function convertirFechaEspanolAISO(fechaEspanol) {
                 const regex = /^(\d{2})-(\d{2})-(\d{4})$/;
                 const match = fechaEspanol.match(regex);
-                
+
                 if (!match) {
                     return null;
                 }
-                
+
                 const [, dia, mes, anio] = match;
                 const fecha = new Date(anio, mes - 1, dia);
-                
+
                 // Validar que la fecha sea válida y no sea anterior a hoy
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
-                
+
                 if (fecha < hoy) {
                     alert('La fecha debe ser hoy o posterior.');
                     return null;
                 }
-                
+
                 return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
             }
 
@@ -1565,12 +1744,12 @@
                 if (!regex.test(fecha)) {
                     return false;
                 }
-                
+
                 const [, dia, mes, anio] = fecha.match(regex);
                 const fechaObj = new Date(anio, mes - 1, dia);
-                
-                return fechaObj.getDate() == dia && 
-                       fechaObj.getMonth() == mes - 1 && 
+
+                return fechaObj.getDate() == dia &&
+                       fechaObj.getMonth() == mes - 1 &&
                        fechaObj.getFullYear() == anio;
             }
 
@@ -1578,7 +1757,7 @@
             document.getElementById('fecha_propuesta_fecha').addEventListener('input', function() {
                 const fecha = this.value;
                 const isValid = validarFechaEspanol(fecha);
-                
+
                 if (fecha && !isValid) {
                     this.setCustomValidity('Formato inválido. Use dd-mm-yyyy');
                     this.classList.add('is-invalid');
@@ -1592,13 +1771,13 @@
             document.getElementById('fecha_propuesta_fecha').addEventListener('keypress', function(e) {
                 const char = String.fromCharCode(e.which);
                 const currentValue = this.value;
-                
+
                 // Solo permitir números y guiones
                 if (!/\d/.test(char) && char !== '-') {
                     e.preventDefault();
                     return;
                 }
-                
+
                 // Auto-insertar guiones
                 if (/\d/.test(char)) {
                     if (currentValue.length === 2 || currentValue.length === 5) {
@@ -1611,7 +1790,7 @@
             document.getElementById('fecha_propuesta_fecha2').addEventListener('input', function() {
                 const fecha = this.value;
                 const isValid = validarFechaEspanol(fecha);
-                
+
                 if (fecha && !isValid) {
                     this.setCustomValidity('Formato inválido. Use dd-mm-yyyy');
                     this.classList.add('is-invalid');
@@ -1624,13 +1803,13 @@
             document.getElementById('fecha_propuesta_fecha2').addEventListener('keypress', function(e) {
                 const char = String.fromCharCode(e.which);
                 const currentValue = this.value;
-                
+
                 // Solo permitir números y guiones
                 if (!/\d/.test(char) && char !== '-') {
                     e.preventDefault();
                     return;
                 }
-                
+
                 // Auto-insertar guiones
                 if (/\d/.test(char)) {
                     if (currentValue.length === 2 || currentValue.length === 5) {
@@ -1646,7 +1825,7 @@
             function sincronizarFechaCompleta2() {
                 const fecha = document.getElementById('fecha_propuesta_fecha2').value;
                 const hora = document.getElementById('fecha_propuesta_hora2').value;
-                
+
                 if (fecha && hora) {
                     // Convertir formato español (dd-mm-yyyy) a formato ISO (yyyy-mm-dd)
                     const fechaISO = convertirFechaEspanolAISO(fecha);
@@ -1683,10 +1862,10 @@
                         const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
                         const anio = fecha.getFullYear();
                         const fechaEspanol = `${dia}-${mes}-${anio}`;
-                        
+
                         // Actualizar el campo con el formato español
                         instance.input.value = fechaEspanol;
-                        
+
                         // Sincronizar con el campo hidden
                         const hora = document.getElementById(instance.input.id === 'fecha_propuesta_fecha' ? 'fecha_propuesta_hora' : 'fecha_propuesta_hora2').value;
                         if (hora) {
@@ -1706,7 +1885,7 @@
                 if (fechaInput1 && !fechaInput1._flatpickr) {
                     flatpickr("#fecha_propuesta_fecha", flatpickrConfig);
                 }
-                
+
                 // Inicializar para el segundo modal
                 const fechaInput2 = document.getElementById('fecha_propuesta_fecha2');
                 if (fechaInput2 && !fechaInput2._flatpickr) {
