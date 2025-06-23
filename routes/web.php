@@ -14,10 +14,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
-use App\Http\Controllers\Admin\NotificationController;
-use App\Http\Controllers\ProfesorController;
-use App\Http\Controllers\FirebaseAuthController;
-
+use App\Http\Controllers\GastoController;
+use App\Http\Controllers\PagoController;
+use App\Http\Controllers\PaymentMethodController;
 
 // --------------------------------------------
 // Rutas públicas y generales
