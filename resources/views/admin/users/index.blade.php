@@ -66,9 +66,12 @@
                             @if($user->trashed())
                                 <span class="badge bg-danger">Eliminado</span>
                             @else
-                                <span class="badge status-badge bg-{{ $user->status === 'activo' ? 'success' : 'warning' }}" data-id="{{ $user->id }}" style="cursor:pointer">
-                                    {{ ucfirst($user->status) }}
-                                </span>
+                                <div class="form-check form-switch d-flex align-items-center justify-content-center">
+                                    <input class="form-check-input user-status-switch" type="checkbox" role="switch" id="switch-{{ $user->id }}" data-id="{{ $user->id }}" {{ $user->status === 'activo' ? 'checked' : '' }} @if($user->trashed()) disabled @endif>
+                                    <label class="form-check-label ms-2" for="switch-{{ $user->id }}">
+                                        <span class="badge bg-{{ $user->status === 'activo' ? 'success' : 'warning' }}">{{ ucfirst($user->status) }}</span>
+                                    </label>
+                                </div>
                             @endif
                         </td>
                         <td>
@@ -126,11 +129,12 @@
             window.location.href = url.toString();
         });
 
-        // Cambio de estado AJAX
-        document.querySelectorAll('.status-badge').forEach(function(badge) {
-            badge.addEventListener('click', function() {
+        // Cambio de estado AJAX con switch
+        document.querySelectorAll('.user-status-switch').forEach(function(switchEl) {
+            switchEl.addEventListener('change', function() {
                 let userId = this.dataset.id;
-                let badgeEl = this;
+                let checked = this.checked;
+                let label = this.closest('.form-check').querySelector('label span');
                 fetch(`/admin/users/${userId}/toggle-status`, {
                     method: 'POST',
                     headers: {
@@ -141,9 +145,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.status) {
-                        badgeEl.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
-                        badgeEl.classList.toggle('bg-success');
-                        badgeEl.classList.toggle('bg-warning');
+                        label.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                        label.className = 'badge bg-' + (data.status === 'activo' ? 'success' : 'warning');
                     }
                 });
             });

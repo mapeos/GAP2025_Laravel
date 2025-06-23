@@ -13,6 +13,7 @@ use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\ProfesorController;
+use App\Http\Controllers\FirebaseAuthController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -95,16 +96,24 @@ Route::middleware(['auth'])->group(function () {
 
 // Rutas protegidas para cursos
 Route::middleware(['auth'])->group(function () {
-    Route::post('/cursos', [CursoController::class, 'store'])->name('cursos.store');
-    Route::get('/admin/cursos', [CursoController::class, 'index'])->name('admin.cursos.index');
-    Route::get('/admin/cursos/create', [CursoController::class, 'create'])->name('admin.cursos.create');
-    Route::get('/cursos/{curso}/edit', [CursoController::class, 'edit'])->name('admin.cursos.edit');
-    Route::delete('/cursos/{curso}', [CursoController::class, 'destroy'])->name('admin.cursos.destroy');
-    Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
-    Route::put('/cursos/{curso}', [CursoController::class, 'update'])->name('cursos.update');
-    Route::get('/admin/cursos/{curso}', [CursoController::class, 'show'])->name('admin.cursos.show');
-    Route::post('/admin/cursos/{curso}/upload', [CursoController::class, 'uploadTemario'])->name('admin.cursos.upload');
+    // Rutas administrativas de cursos
+    Route::prefix('admin/cursos')->name('admin.cursos.')->group(function () {
+        Route::get('/', [CursoController::class, 'index'])->name('index');
+        Route::get('/create', [CursoController::class, 'create'])->name('create');
+        Route::post('/', [CursoController::class, 'store'])->name('store');
+        Route::get('/{curso}', [CursoController::class, 'show'])->name('show');
+        Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit');
+        Route::put('/{curso}', [CursoController::class, 'update'])->name('update');
+        Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy');
+        Route::post('/{curso}/upload', [CursoController::class, 'uploadTemario'])->name('upload');
+        Route::post('/{id}/toggle-status', [CursoController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{id}/toggle-estado', [CursoController::class, 'toggleEstado'])->name('toggle-estado');
+        Route::post('/{id}/delete', [CursoController::class, 'delete'])->name('delete');
+        Route::post('/{id}/restore', [CursoController::class, 'restore'])->name('restore');
+    });
     
+    // Rutas públicas de cursos (para ver detalles) -
+    Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
 });
 
 // Rutas de PARTICIPANTES
@@ -256,3 +265,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])
         ->name('ai.appointment-suggestions');
 });
+
+// Rutas de autenticación con Firebase
+Route::post('/login/firebase', [FirebaseAuthController::class, 'login']);

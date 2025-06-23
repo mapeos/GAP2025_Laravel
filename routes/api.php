@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CursoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,10 @@ Route::get('/categorias', [CategoriasController::class, 'index']); // Listar cat
 // Endpoints de autenticación (públicos)
 Route::post('auth/register', [AuthController::class, 'register']); // Registro de usuario móvil
 Route::post('auth/login', [AuthController::class, 'login']);       // Login de usuario móvil
+
+// Endpoints de recuperación de contraseña para la app móvil
+Route::post('auth/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('auth/reset-password', [ForgotPasswordController::class, 'reset']);
 
 // Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
