@@ -128,7 +128,7 @@
         });
     });
 
-    // Toggle de estado (Publicado/Dado de baja)
+    // Toggle de estado (activo/inactivo) - Cambia el estado del curso
     document.querySelectorAll('.toggle-estado').forEach(function(checkbox) {
         checkbox.addEventListener('change', function() {
             const cursoId = this.dataset.cursoId;
@@ -188,7 +188,7 @@
         });
     });
 
-    // Toggle de eliminación (Soft delete)
+    // Toggle de eliminación (soft delete) - Elimina o restaura el curso
     document.querySelectorAll('.toggle-delete').forEach(function(button) {
         button.addEventListener('click', function() {
             const cursoId = this.dataset.cursoId;
@@ -283,7 +283,7 @@
         });
     });
 
-    // Funciones auxiliares
+    // Función auxiliar - Muestra mensajes flash con iconos
     function showFlashMessage(type, message) {
         const container = document.getElementById('flash-messages');
         if (!container) return;
@@ -308,6 +308,7 @@
 
 @push('css')
 <style>
+    /* Estilos para el switch de estado - Colores y transiciones */
     .form-check-input.toggle-estado {
         background-color: #e9ecef;
         border-color: #dee2e6;
@@ -323,6 +324,7 @@
         box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
     }
     
+    /* Estilos para el texto de estado - Colores dinámicos */
     .estado-texto {
         font-size: 0.875rem;
         color: #6c757d;

@@ -122,3 +122,46 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+<script>
+    // Preview de imagen - Muestra vista previa al seleccionar archivo
+    document.getElementById('portada').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('image-preview');
+        const container = document.getElementById('preview-container');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                container.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    // Validación de fechas - Asegura que fecha fin sea posterior a fecha inicio
+    document.getElementById('fechaInicio').addEventListener('change', function() {
+        const fechaInicio = this.value;
+        const fechaFin = document.getElementById('fechaFin').value;
+        
+        if (fechaFin && fechaInicio > fechaFin) {
+            alert('La fecha de fin debe ser posterior a la fecha de inicio');
+            this.value = '';
+        }
+    });
+
+    document.getElementById('fechaFin').addEventListener('change', function() {
+        const fechaFin = this.value;
+        const fechaInicio = document.getElementById('fechaInicio').value;
+        
+        if (fechaInicio && fechaFin < fechaInicio) {
+            alert('La fecha de fin debe ser posterior a la fecha de inicio');
+            this.value = '';
+        }
+    });
+</script>
+@endpush
