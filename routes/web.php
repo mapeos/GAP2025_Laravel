@@ -13,6 +13,7 @@ use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\ProfesorController;
+use App\Http\Controllers\FirebaseAuthController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -264,3 +265,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])
         ->name('ai.appointment-suggestions');
 });
+
+// Rutas de autenticación con Firebase
+Route::post('/login/firebase', [FirebaseAuthController::class, 'login']);

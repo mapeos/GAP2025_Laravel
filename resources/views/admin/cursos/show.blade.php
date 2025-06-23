@@ -5,8 +5,10 @@
 @section('title', 'Detalles del Curso')
 
 @section('content')
-<h1>Detalles del Curso: {{ $curso->titulo }}</h1>
+    {{-- Tarjeta Info (100% ancho) --}}
+    @include('admin.cursos.parts.info', ['curso' => $curso])
 
+<<<<<<< HEAD
 @if (session('success'))
 <div class="alert alert-success">
     {{ session('success') }}
@@ -46,9 +48,19 @@
 @if ($curso->portada_path)
     <div>
         <img src="{{ asset('storage/' . $curso->portada_path) }}" alt="Portada del curso" style="max-width: 300px;">
+=======
+    {{-- Dos tarjetas al 50%: Participante y Temario --}}
+    <div class="row">
+        <div class="col-md-6">
+            @include('admin.cursos.parts.participante', ['curso' => $curso])
+        </div>
+        <div class="col-md-6">
+            @include('admin.cursos.parts.temario', ['curso' => $curso])
+        </div>
+>>>>>>> 5c3efe0af35118b67f3be72ca4f270b9063c0b3a
     </div>
-@endif
 
+<<<<<<< HEAD
 <table class="table table-bordered">
     <tr>
         <th>ID</th>
@@ -125,4 +137,7 @@
 </form>
 
 <a href="{{ route('admin.cursos.index') }}" class="btn btn-secondary mt-3">Volver al listado</a>
+=======
+    <a href="{{ route('admin.cursos.index') }}" class="btn btn-secondary mt-3">Volver al listado</a>
+>>>>>>> 5c3efe0af35118b67f3be72ca4f270b9063c0b3a
 @endsection

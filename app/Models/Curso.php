@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
         'estado',
         'temario_path',
         'portada_path',
+        'precio',
     ];
 
     protected $dates = ['fechaInicio', 'fechaFin', 'deleted_at'];

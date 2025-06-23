@@ -39,7 +39,7 @@ class CursoController extends Controller
     */
     public function update(Request $request, $id)
     {
-        $curso = Curso::withTrashed()->findOrFail($id);
+        $curso = Curso::findOrFail($id);
         $curso->update($request->all());
         return redirect()->route('admin.cursos.index')->with('success', 'Curso actualizado correctamente.');
     }
@@ -77,23 +77,22 @@ class CursoController extends Controller
      */
     public function uploadTemario(Request $request, $id)
     {
-        // Encuentra el curso por ID (incluyendo eliminados)
-        $curso = Curso::withTrashed()->findOrFail($id);
+        //dd($request->all()); 
+        // Encuentra el curso por ID
+        $curso = Curso::findOrFail($id);
 
-        // Validación del archivo
         $request->validate([
-            'temario' => 'required|file|mimes:pdf,doc,docx|max:5120', // 5MB máximo
+            'temario' => 'required|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
-        // Subida y almacenamiento del archivo
         if ($request->hasFile('temario')) {
             $archivo = $request->file('temario');
             $nombreArchivo = $curso->id . '_' . time() . '.' . $archivo->getClientOriginalExtension();
             $ruta = $archivo->storeAs('temarios', $nombreArchivo, 'public');
+            // dd($ruta);
 
             // Guardar la ruta en la BD en el campo correcto (temario_path)
             $curso->update(['temario_path' => $ruta]);
-
             return redirect()->back()->with('success', 'Temario subido correctamente.');
         }
 
@@ -112,6 +111,7 @@ class CursoController extends Controller
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
             'plazas' => 'required|integer|min:1',
             'estado' => 'required|string|in:activo,inactivo',
+            'precio' => 'nullable|numeric|min:0',
             'temario' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
             'portada' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);

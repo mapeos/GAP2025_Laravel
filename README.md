@@ -64,143 +64,46 @@ Está disponible una página de ejemplo en la ruta: `admin.dashboard.test`
 ```
 # Asistente AI para citas en calendario
 Ejecutar la migración: `php artisan migrate` 
-Se ha creado un comando `php artisan appointments:suggest-ai 1 2 5 "2025-07-01"` para verificar si se genera una fecha mediante IA
+Se ha creado un comando `php artisan appointments:suggest 1 2 "2025-07-01"` para verificar si se genera una fecha mediate IA
 
 ## Motor de IA
 Se utiliza un sistema basado en LLM basado en *Ollama + Mistral 7B*
-- Ollama es una plataforma de LLMs que se ejecuta en local
+- Ollama es U una plataforma de LLMs que se ejecuta en local
 - Mistral 7B es un modelo especializado en instrucciones, entiende cosas como "sugiereme un hueco en la agenda"
 
 Más adelante se podría incluir:
 - Phi-2 (Microsoft): modelo pequeño y muy preciso.
 - Gemma 2B Instruct (Google): excelente para correr en CPU, más pequeño que Mistral.
-- TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
+ - TinyLlama 1.1B: modelo de 1B de parámetros, ultra ligero.
 
-### Instalación del sistema (Docker)
-
-El sistema está configurado para ejecutar Ollama en un contenedor Docker separado:
-
-1. **Configuración automática:**
-   - El `docker-compose.yml` incluye un servicio `ai` que ejecuta Ollama
-   - El servicio `app` (Laravel) se comunica con Ollama vía HTTP
-
-2. **Variables de entorno necesarias:**
-   Agregar al archivo `.env`:
-   ```env
-   OLLAMA_HOST=ai
-   OLLAMA_PORT=11434
-   OLLAMA_MODEL=mistral
-   ```
-
-3. **Iniciar los servicios:**
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Descargar el modelo Mistral:**
-   ```bash
-   docker exec -it gap2025_laravel-ai ollama pull mistral
-   ```
-
-5. **Verificar que Ollama esté funcionando:**
-   ```bash
-   docker exec -it gap2025_laravel-ai ollama list
-   ```
-   Debe mostrar: `mistral:latest`
-
-6. **Probar la comunicación:**
-   ```bash
-   docker-compose exec app curl http://ai:11434
-   ```
-   Debe responder: `Ollama is running`
-
-### Instalación manual (fuera de Docker)
-
-Si prefieres ejecutar Ollama fuera de Docker:
-
-1. **Instalar Ollama:**
-   - En Linux: `curl -fsSL https://ollama.com/install.sh | sh`
-   - En Windows (WSL):
-     ```bash
-     wsl --install # (Si no tienes WSL)
-     wsl
-     curl -fsSL https://ollama.com/install.sh | sh
-     ```
-
-2. **Configurar variables de entorno:**
-   ```bash
-   export OLLAMA_HOST=0.0.0.0
-   export OLLAMA_ORIGINS=*
-   ```
-
-3. **Descargar el modelo:**
-   ```bash
-   ollama pull mistral
-   ```
-
-4. **Iniciar Ollama:**
-   ```bash
-   ollama serve
-   ```
-
-5. **Actualizar variables en .env:**
-   ```env
-   OLLAMA_HOST=localhost
-   OLLAMA_PORT=11434
-   OLLAMA_MODEL=mistral
-   ```
-
-### Uso del comando
-
-Para probar el sistema se puede utilizar el comando:
-
-```bash
-# Comando básico
-php artisan appointments:suggest-ai 1 2 5 "2025-07-01"
-
-# Comando completo con opciones
-php artisan appointments:suggest-ai 1 2 5 "2025-07-01" \
-    --duration=60 \
-    --tolerance=7 \
-    --max=3 \
-    --workingDays='{"monday":["08:00","14:00"],"tuesday":["10:00","18:00"],"wednesday":["08:00","14:00"],"thursday":["08:00","14:00"]}' \
-    --excludedDates='["2025-07-04", "2025-07-15"]' \
-    --preferences='{"times_of_day":"morning","preferred_days":["tuesday","thursday"],"hour_range":["09:00","11:00"]}'
+### Instalación del sistema
+- En linux: `curl -fsSL https://ollama.com/install.sh | sh`
+- En windows:
+```
+# Windows (WSL)
+wsl --install # (Si no tienes WSL)
+wsl
+curl -fsSL https://ollama.com/install.sh | sh
 ```
 
-**Parámetros del comando:**
-- `alumnoId`: ID del alumno/estudiante
-- `cursoId`: ID del curso o materia
-- `profesorId`: ID del profesor
-- `approximateDate`: Fecha aproximada (YYYY-MM-DD)
+- cargar el modelo (unos 4.1Gb de espacio): `ollama run mistral`
+- exportar variables de sistema (linux):
+```
+export OLLAMA_HOST=0.0.0.0
+export OLLAMA_ORIGINS=*
+```
+- arrancar *Ollama*: `ollama serve`
 
-**Opciones:**
-- `--duration`: Duración de la cita en minutos (default: 60)
-- `--tolerance`: Días de tolerancia alrededor de la fecha (default: 5)
-- `--max`: Número máximo de sugerencias (default: 3)
-- `--workingDays`: JSON con días laborables y horarios
-- `--excludedDates`: JSON con fechas bloqueadas
-- `--preferences`: JSON con preferencias del alumno
-
-### Solución de problemas
-
-1. **Error "Target class [appointments.suggester.ai] does not exist":**
-   - Verificar que el `AppointmentServiceProvider` esté registrado en `bootstrap/providers.php`
-   - Ejecutar: `php artisan config:clear`
-
-2. **Error de timeout (30 segundos):**
-   - El modelo tarda en cargar la primera vez
-   - Esperar 1-2 minutos y volver a intentar
-   - El timeout se ha configurado a 120 segundos
-
-3. **Error de conexión a Ollama:**
-   - Verificar que el contenedor `gap2025_laravel-ai` esté corriendo
-   - Verificar logs: `docker logs gap2025_laravel-ai`
-   - Probar conectividad: `docker-compose exec app curl http://ai:11434`
-
-4. **Modelo no encontrado:**
-   - Descargar el modelo: `docker exec -it gap2025_laravel-ai ollama pull mistral`
-   - Verificar: `docker exec -it gap2025_laravel-ai ollama list`
+Para probar el sistema se puede utilizar un comando como el siguiente:
+```
+php artisan appointments:suggest-ai 1 2 5 "2025-07-01"   
+    --duration=60   
+    --tolerance=7   
+    --max=3   
+    --workingDays='{"monday":["08:00","14:00"],"tuesday":["10:00","18:00"],"wednesday":["08:00","14:00"],"thursday":["08:00","14:00"]}'   
+    --excludedDates='["2025-07-04", "2025-07-15"]'   
+    --preferences='{"times_of_day":"morning","preferred_days":["tuesday","thursday"],"hour_range":["09:00","11:00"]}'
+```
 
 # Agenda/Calendario (Arnaldo y Víctor)
 

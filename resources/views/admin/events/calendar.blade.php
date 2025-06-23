@@ -12,39 +12,6 @@
     .fc-event {
         cursor: pointer;
     }
-    /* Estilos para eventos redimensionables */
-    .fc-event-resizable {
-        position: relative;
-    }
-    .fc-event-resizer {
-        position: absolute;
-        z-index: 4;
-        display: none;
-        background-color: rgba(13, 110, 253, 0.3);
-    }
-    .fc-event-resizable:hover .fc-event-resizer {
-        display: block;
-    }
-    .fc-event-resizer-start {
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        cursor: w-resize;
-    }
-    .fc-event-resizer-end {
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        cursor: e-resize;
-    }
-    .fc-event-resizer:hover {
-        background-color: rgba(13, 110, 253, 0.6);
-    }
-    .fc-event-resizing {
-        opacity: 0.8;
-    }
     .fc-event-title {
         font-weight: 500;
     }
@@ -419,35 +386,15 @@
                 </div>
               </div>
               <div class="row" id="grupoFechaInicio" style="display:none;">
-                <div class="col-md-6 mb-2">
+                <div class="col-md-4 mb-2">
                   <label class="form-label">Fecha de inicio</label>
                   <p id="fechaInicio" class="form-control-plaintext small"></p>
-                  <div id="editFechaInicio" style="display:none;">
-                    <div class="row">
-                      <div class="col-md-6">
-                        <input type="date" class="form-control form-control-sm" id="editFechaInicioDate">
-                      </div>
-                      <div class="col-md-6">
-                        <input type="time" class="form-control form-control-sm" id="editFechaInicioTime">
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
               <div class="row" id="grupoFechaFin" style="display:none;">
-                <div class="col-md-6 mb-2">
+                <div class="col-md-4 mb-2">
                   <label class="form-label">Fecha de fin</label>
                   <p id="fechaFin" class="form-control-plaintext small"></p>
-                  <div id="editFechaFin" style="display:none;">
-                    <div class="row">
-                      <div class="col-md-6">
-                        <input type="date" class="form-control form-control-sm" id="editFechaFinDate">
-                      </div>
-                      <div class="col-md-6">
-                        <input type="time" class="form-control form-control-sm" id="editFechaFinTime">
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </form>
@@ -886,54 +833,19 @@
                 selectable: true,
                 dayMaxEventRows: 3,
                 moreLinkClick: 'popover',
-                eventResizableFromStart: true, // Permite redimensionar desde el inicio del evento
-                eventStartEditable: true, // Permite mover el inicio del evento
-                eventDurationEditable: true, // Permite cambiar la duración del evento
                 eventDidMount: function(info) {
                     const props = info.event.extendedProps;
                     const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
                     const esCreador = props.creado_por == userId;
 
-                    // Determinar si el evento debe ser editable basado en el rol y tipo de evento
-                    let isEditable = false;
                     if (userRole === 'Administrador' || userRole === 'Profesor') {
-                        isEditable = true;
+                        info.event.setProp('editable', true);
                     } else if (userRole === 'Alumno') {
                         if (esRecordatorioPersonal && esCreador) {
-                            isEditable = true;
+                            info.event.setProp('editable', true);
+                        } else {
+                            info.event.setProp('editable', false);
                         }
-                    }
-
-                    // Aplicar configuración de edición y redimensionamiento
-                    info.event.setProp('editable', isEditable);
-
-                    // Configurar el elemento del evento para mostrar visualmente que es redimensionable
-                    if (isEditable) {
-                        // Añadir clase CSS para indicar que el evento es redimensionable
-                        info.el.classList.add('fc-event-resizable');
-
-                        // Añadir indicadores visuales de redimensionamiento
-                        const startHandle = document.createElement('div');
-                        startHandle.className = 'fc-event-resizer fc-event-resizer-start';
-                        startHandle.style.position = 'absolute';
-                        startHandle.style.left = '0';
-                        startHandle.style.top = '0';
-                        startHandle.style.bottom = '0';
-                        startHandle.style.width = '4px';
-                        startHandle.style.cursor = 'w-resize';
-
-                        const endHandle = document.createElement('div');
-                        endHandle.className = 'fc-event-resizer fc-event-resizer-end';
-                        endHandle.style.position = 'absolute';
-                        endHandle.style.right = '0';
-                        endHandle.style.top = '0';
-                        endHandle.style.bottom = '0';
-                        endHandle.style.width = '4px';
-                        endHandle.style.cursor = 'e-resize';
-
-                        // Añadir los indicadores al elemento del evento
-                        info.el.appendChild(startHandle);
-                        info.el.appendChild(endHandle);
                     }
                 },
                 dateClick: function(info) {
@@ -1014,52 +926,6 @@
                     .catch(error => {
                         console.error('Error:', error);
                         alert('Error al actualizar la fecha del evento.');
-                        info.revert();
-                    });
-                },
-                eventResize: function(info) {
-                    // Verificar permisos igual que en eventDrop
-                    const props = info.event.extendedProps;
-                    const esRecordatorioPersonal = props.tipo_evento_nombre === 'Recordatorio Personal';
-                    const esCreador = props.creado_por == userId;
-
-                    let url = `/eventos/${info.event.id}`;
-                    if (userRole === 'Alumno') {
-                        if (esRecordatorioPersonal && esCreador) {
-                            url = `/events/reminders/${info.event.id}`;
-                        }
-                    }
-
-                    fetch(url, {
-                        method: 'PUT',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            fecha_inicio: info.event.start.toISOString().slice(0, 19).replace('T', ' '),
-                            fecha_fin: info.event.end
-                                ? info.event.end.toISOString().slice(0, 19).replace('T', ' ')
-                                : info.event.start.toISOString().slice(0, 19).replace('T', ' ')
-                        })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Error al actualizar la duración del evento.');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (!data.success) {
-                            throw new Error(data.message || 'Error al actualizar la duración del evento');
-                        }
-                        // Actualizar la vista de agenda si está activa
-                        updateAgendaViewIfActive();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error al actualizar la duración del evento.');
                         info.revert();
                     });
                 },
@@ -1189,29 +1055,6 @@
                     }
                 }
 
-                // Preparar datos para enviar
-                let datosEvento = {
-                    titulo: titulo,
-                    descripcion: descripcion
-                };
-
-                // Añadir fechas si están siendo editadas
-                if (document.getElementById('editFechaInicio').style.display === 'block') {
-                    const fechaInicioDate = document.getElementById('editFechaInicioDate').value;
-                    const fechaInicioTime = document.getElementById('editFechaInicioTime').value;
-                    if (fechaInicioDate && fechaInicioTime) {
-                        datosEvento.fecha_inicio = `${fechaInicioDate} ${fechaInicioTime}:00`;
-                    }
-                }
-
-                if (document.getElementById('editFechaFin').style.display === 'block') {
-                    const fechaFinDate = document.getElementById('editFechaFinDate').value;
-                    const fechaFinTime = document.getElementById('editFechaFinTime').value;
-                    if (fechaFinDate && fechaFinTime) {
-                        datosEvento.fecha_fin = `${fechaFinDate} ${fechaFinTime}:00`;
-                    }
-                }
-
                 fetch(updateUrl, {
                     method: 'PUT',
                     headers: {
@@ -1219,7 +1062,10 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify(datosEvento)
+                    body: JSON.stringify({
+                        titulo: titulo,
+                        descripcion: descripcion
+                    })
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -1230,26 +1076,12 @@
                         var modal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
                         modal.hide();
                         let event = calendar.getEventById(id);
-
-                        // Actualizar propiedades básicas
                         event.setProp('title', titulo);
                         event.setExtendedProp('descripcion', descripcion);
-
-                        // Actualizar fechas si se modificaron
-                        if (datosEvento.fecha_inicio) {
-                            const nuevaFechaInicio = new Date(datosEvento.fecha_inicio);
-                            event.setStart(nuevaFechaInicio);
-                        }
-
-                        if (datosEvento.fecha_fin) {
-                            const nuevaFechaFin = new Date(datosEvento.fecha_fin);
-                            event.setEnd(nuevaFechaFin);
-                        }
-
                         updateAgendaViewIfActive();
                         alert('Evento actualizado exitosamente.');
                     } else {
-                        alert(data.message || 'Error al actualizar el evento.');
+                        alert('Error al actualizar el evento.');
                     }
                 })
                 .catch(error => {
@@ -1353,20 +1185,6 @@
             document.getElementById('btnEditarEvento').onclick = function() {
                 document.getElementById('titulo').disabled = false;
                 document.getElementById('descripcion').disabled = false;
-
-                // Mostrar campos de edición de fechas
-                if (document.getElementById('grupoFechaInicio').style.display !== 'none') {
-                    document.getElementById('fechaInicio').style.display = 'none';
-                    document.getElementById('editFechaInicio').style.display = 'block';
-                    // Los valores ya están establecidos en mostrarModalEvento
-                }
-
-                if (document.getElementById('grupoFechaFin').style.display !== 'none') {
-                    document.getElementById('fechaFin').style.display = 'none';
-                    document.getElementById('editFechaFin').style.display = 'block';
-                    // Los valores ya están establecidos en mostrarModalEvento
-                }
-
                 document.getElementById('btnGuardar').style.display = '';
                 document.getElementById('titulo').focus();
             };
@@ -1453,35 +1271,6 @@
                 document.getElementById('titulo').disabled = true;
                 document.getElementById('descripcion').disabled = true;
                 document.getElementById('btnGuardar').style.display = 'none';
-
-                // Ocultar campos de edición de fechas
-                document.getElementById('fechaInicio').style.display = '';
-                document.getElementById('fechaFin').style.display = '';
-                document.getElementById('editFechaInicio').style.display = 'none';
-                document.getElementById('editFechaFin').style.display = 'none';
-
-                // Preparar los campos de edición de fechas con los valores actuales
-                if (event.start) {
-                    const fechaInicio = new Date(event.start);
-                    const fechaInicioDate = fechaInicio.toISOString().split('T')[0];
-                    const horasInicio = fechaInicio.getHours().toString().padStart(2, '0');
-                    const minutosInicio = fechaInicio.getMinutes().toString().padStart(2, '0');
-                    const fechaInicioTime = `${horasInicio}:${minutosInicio}`;
-
-                    document.getElementById('editFechaInicioDate').value = fechaInicioDate;
-                    document.getElementById('editFechaInicioTime').value = fechaInicioTime;
-                }
-
-                if (event.end) {
-                    const fechaFin = new Date(event.end);
-                    const fechaFinDate = fechaFin.toISOString().split('T')[0];
-                    const horasFin = fechaFin.getHours().toString().padStart(2, '0');
-                    const minutosFin = fechaFin.getMinutes().toString().padStart(2, '0');
-                    const fechaFinTime = `${horasFin}:${minutosFin}`;
-
-                    document.getElementById('editFechaFinDate').value = fechaFinDate;
-                    document.getElementById('editFechaFinTime').value = fechaFinTime;
-                }
                 const modal = new bootstrap.Modal(document.getElementById('eventoModal'));
                 modal.show();
             }
