@@ -220,8 +220,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/pages/authentication/basic/register" target="_blank">
-                                <span>Lista</span>
+                            <a class="nav-link" href="{{ route('payment-methods.index') }}">
+                                <span>Estado de los Pagos</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('facturas.index') }}">
+                                <span>Facturas</span>
                             </a>
                         </li>
                     </ul>

@@ -14,6 +14,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
+use App\Http\Controllers\GastoController;
+use App\Http\Controllers\PagoController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\FacturaController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -30,9 +34,17 @@ Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class,
 Route::get('/admin/pagina-test', function () {
     return view('admin.dashboard.test');
 });
-Route::get('/admin/pagos', function () {
-    return view('admin.dashboard.pagos.pagos');
+Route::middleware(['auth'])->prefix('admin/pagos')->group(function () {
+    Route::view('/', 'admin.dashboard.pagos.pagos')->name('admin.pagos.index');
+    Route::view('/estado', 'admin.dashboard.pagos.estado')->name('admin.pagos.estado');
+    Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('admin.pagos.facturas');
+    Route::get('/facturas/list', [FacturaController::class, 'index'])->name('facturas.index');
 });
+Route::middleware(['auth'])->group(function () {
+    Route::resource('gastos', GastoController::class);
+    Route::resource('pagos', PagoController::class);
+});
+Route::resource('payment-methods', PaymentMethodController::class);
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -248,6 +260,27 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
         Route::delete('/reminders/{evento}', [EventoController::class, 'destroyReminder'])->name('reminders.destroy');
     });
 });
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth']) // make sure auth middleware is correct for your app (web guard)
+    ->group(function () {
+        Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
+        Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
+        Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
+    });
+
+//--------------------------------------------
+// Rutas para sugerencias de IA
+//--------------------------------------------
+Route::middleware(['auth'])->group(function () {
+    Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])
+        ->name('ai.appointment-suggestions');
+});
+
+// Rutas de autenticación con Firebase
+Route::post('/login/firebase', [FirebaseAuthController::class, 'login']);
+
 
 Route::prefix('admin')
     ->name('admin.')
