@@ -14,7 +14,7 @@
     </div>
     <div class="col-10 mx-auto">
       <div class="team-slider">
-        <!-- Islem (chico) -->
+        <!-- Islem (chico, con chascarrillos) -->
         <div class="team-member">
           <div class="d-flex mb-4">
             <div class="mr-3">
@@ -25,7 +25,7 @@
               <h6 class="text-color">Fullstack Angular</h6>
             </div>
           </div>
-          <p>Desarrollador fullstack experto en Angular, encargado de crear experiencias robustas y escalables para la academia.</p>
+          <p>Desarrollador fullstack experto en Angular, especialista en “bombas” de código y con C4 de inglés (¡nivel explosivo!). Si algo explota, seguro que es porque Islem lo ha optimizado.</p>
         </div>
         <!-- Daniel Lamas -->
         <div class="team-member">

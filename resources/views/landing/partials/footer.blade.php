@@ -7,9 +7,9 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-4 text-center text-lg-left mb-4 mb-lg-0">
-        <!-- logo -->
-        <a href="/">
-          <img class="img-fluid" src="/assets/landing/images/logo.png" alt="logo">
+        <!-- logo reemplazado por nombre -->
+        <a href="/" style="font-weight: bold; font-size: 2rem; color: #6366f1; text-decoration: none; letter-spacing: 1px;">
+          Auria Academy
         </a>
       </div>
       <!-- footer menu -->

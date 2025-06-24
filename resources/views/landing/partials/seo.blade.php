@@ -5,20 +5,22 @@
 <!-- marketing -->
 <section class="section-lg seo">
   <div class="container">
-    <div class="row">
+    <div class="row align-items-center">
       <div class="col-md-6">
         <div class="seo-image">
-          <img class="img-fluid" src="/assets/landing/images/marketing/marketing.png" alt="form-img">
+          <img class="img-fluid" src="/assets/landing/images/marketing/marketing.png" alt="Auria Academy marketing">
         </div>
       </div>
       <div class="col-md-5">
-        <h2 class="section-title">A Complete Range Of SEO Marketing Services!</h2>
-        <p>Far far away, behind the word mountains, far
-          from the countries Vokalia and Consonantia.<br>
-          There live the blind texts. Separated they
-          live in Bookmarksgrove right at the coast of
-          the Semantics, a large language ocean.
+        <h2 class="section-title">Impulsa tu aprendizaje con Auria Academy</h2>
+        <p>En Auria Academy, combinamos tecnología, innovación y una comunidad activa para que tu formación tenga verdadero impacto. 
+          <br>Accede a recursos exclusivos, participa en eventos y haz crecer tu red profesional mientras aprendes de los mejores.
         </p>
+        <ul style="list-style: disc; padding-left: 1.2em; color: #444;">
+          <li>Promociones y descuentos para nuevos estudiantes</li>
+          <li>Webinars y talleres de marketing digital y empleabilidad</li>
+          <li>Acceso a una comunidad de networking y oportunidades</li>
+        </ul>
       </div>
     </div>
   </div>
