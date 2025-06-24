@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
+use App\Http\Controllers\WhatsAppController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -251,11 +252,15 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth']) // make sure auth middleware is correct for your app (web guard)
+    ->middleware(['auth', 'role:Administrador'])
     ->group(function () {
         Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
         Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
         Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
+
+        // WhatsApp
+        Route::get('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'showForm'])->name('whatsapp.form');
+        Route::post('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'send'])->name('whatsapp.send');
     });
 
 //--------------------------------------------

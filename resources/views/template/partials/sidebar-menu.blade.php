@@ -81,6 +81,12 @@
             </ul>
         </li>
         <!-- Fin Notificaciones -->
+        <!-- WhatsApp Notificación -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.whatsapp.form') }}">
+                <i class="ri-whatsapp-line"></i> <span>WhatsApp Notificación</span>
+            </a>
+        </li>
         <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
         <!-- CURSOS Section -->
