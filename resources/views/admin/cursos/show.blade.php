@@ -6,26 +6,26 @@
 
 @section('content')
     {{-- Mensajes flash --}}
-    @if (session('success'))
+@if (session('success'))
         <div class="alert alert-success d-flex align-items-center" role="alert">
             <i class="ri-checkbox-circle-fill text-success me-2 fs-4"></i>
             <div>{{ session('success') }}</div>
-        </div>
-    @endif
+</div>
+@endif
 
-    @if ($errors->any())
+@if ($errors->any())
         <div class="alert alert-danger d-flex align-items-center" role="alert">
             <i class="ri-close-circle-fill text-danger me-2 fs-4"></i>
             <div>
                 <strong>Errores encontrados:</strong>
                 <ul class="mb-0 mt-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-    @endif
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+    </div>
+@endif
 
     {{-- Alertas de estado --}}
     @include('admin.cursos.parts.status-alerts', ['curso' => $curso])
@@ -45,4 +45,4 @@
             @include('admin.cursos.parts.temario', ['curso' => $curso])
         </div>
     </div>
-@endsection 
+@endsection

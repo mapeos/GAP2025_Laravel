@@ -26,7 +26,7 @@
     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
         <span>
             <i class="ri-file-text-line me-2"></i>
-            Temario
+        Temario
         </span>
     </div>
     <div class="card-body">
@@ -40,7 +40,7 @@
                    class="btn btn-info btn-lg shadow-sm">
                     <i class="ri-download-line me-2"></i> 
                     Ver/Descargar Temario
-                </a>
+            </a>
                 <small class="text-muted d-block mt-2">
                     <i class="ri-time-line me-1"></i>
                     Subido el {{ \Carbon\Carbon::parse(Storage::disk('public')->lastModified($curso->temario_path))->format('d/m/Y H:i') }}
