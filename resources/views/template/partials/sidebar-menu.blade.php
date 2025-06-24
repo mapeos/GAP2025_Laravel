@@ -30,16 +30,16 @@
             </ul>
         </li>
 
-                <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
+        <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
         <!-- CURSOS Section -->
-        <li class="nav-item has-submenu parent">
+        <li class="nav-item">
             <a class="nav-link" href="{{ route('admin.cursos.index') }}">
                 <i class="ri-file-list-3-line"></i> <span>Cursos</span>
             </a>
         </li>
 
         <!-- Seccion de Calendario -->
-                <li class="nav-item has-submenu parent">
+        <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
                 <i class="ri-calendar-event-fill"></i></i> <span>Eventos</span> <i class="ri-arrow-right-s-line"></i>
             </a>
@@ -49,10 +49,10 @@
                         <i class="ri-calendar-line""></i> <span>Calendario</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.events.index') }}">
-                        <i class="ri-calendar-2-line"></i> <span>listado de eventos</span>
-                    </a>
+                <li class=" nav-item">
+                            <a class="nav-link" href="{{ route('admin.events.index') }}">
+                                <i class="ri-calendar-2-line"></i> <span>listado de eventos</span>
+                            </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.events.types.index') }}">
