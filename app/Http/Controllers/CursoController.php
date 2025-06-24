@@ -13,7 +13,7 @@ class CursoController extends Controller
      */
     public function index()
     {
-        $cursos = Curso::withTrashed()->get();
+        $cursos = Curso::withTrashed()->paginate(15);
         return view('admin.cursos.index', compact('cursos'));
     }
 
