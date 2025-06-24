@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Curso;
-use App\Models\RolParticipacion;
 use Illuminate\Support\Facades\Storage;
 
 class CursoController extends Controller
@@ -37,7 +36,7 @@ class CursoController extends Controller
 
     /**
      * Actualizar un curso existente en la base de datos
-     */
+    */
     public function update(Request $request, $id)
     {
         $curso = Curso::findOrFail($id);
@@ -61,7 +60,6 @@ class CursoController extends Controller
     public function show($id)
     {
         $curso = Curso::withTrashed()->findOrFail($id);
-        $roles = RolParticipacion::pluck('nombre', 'id');
         return view('admin.cursos.show', compact('curso'));
     }
 
@@ -160,15 +158,15 @@ class CursoController extends Controller
     public function toggleEstado($id)
     {
         $curso = Curso::withTrashed()->findOrFail($id);
-
+        
         // Cambiar estado
         $nuevoEstado = $curso->estado === 'activo' ? 'inactivo' : 'activo';
         $curso->update(['estado' => $nuevoEstado]);
-
-        $mensaje = $nuevoEstado === 'activo'
-            ? 'Curso activado correctamente'
+        
+        $mensaje = $nuevoEstado === 'activo' 
+            ? 'Curso activado correctamente' 
             : 'Curso desactivado correctamente';
-
+        
         return response()->json([
             'success' => true,
             'message' => $mensaje,
@@ -182,16 +180,16 @@ class CursoController extends Controller
     public function delete($id)
     {
         $curso = Curso::withTrashed()->findOrFail($id);
-
+        
         if ($curso->trashed()) {
             return response()->json([
                 'success' => false,
                 'message' => 'El curso ya está eliminado'
             ]);
         }
-
+        
         $curso->delete();
-
+        
         return response()->json([
             'success' => true,
             'message' => 'Curso eliminado correctamente'
@@ -204,16 +202,16 @@ class CursoController extends Controller
     public function restore($id)
     {
         $curso = Curso::withTrashed()->findOrFail($id);
-
+        
         if (!$curso->trashed()) {
             return response()->json([
                 'success' => false,
                 'message' => 'El curso no está eliminado'
             ]);
         }
-
+        
         $curso->restore();
-
+        
         return response()->json([
             'success' => true,
             'message' => 'Curso activado correctamente'
