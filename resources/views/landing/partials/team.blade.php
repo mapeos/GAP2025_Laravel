@@ -27,7 +27,7 @@
           </div>
           <p>Desarrollador fullstack experto en Angular, especialista en “bombas” de código y con C4 de inglés (¡nivel explosivo!). Si algo explota, seguro que es porque Islem lo ha optimizado.</p>
         </div>
-        <!-- Daniel Lamas -->
+        <!-- Daniel Lamas (con chascarrillos) -->
         <div class="team-member">
           <div class="d-flex mb-4">
             <div class="mr-3">
@@ -38,9 +38,9 @@
               <h6 class="text-color">Front End - Especialista en botones</h6>
             </div>
           </div>
-          <p>Apasionado del diseño de interfaces, se especializa en crear y perfeccionar botones que invitan a la acción.</p>
+          <p>El Picasso de los botones: si ves un botón bonito, seguro que es suyo. Capaz de pasar horas eligiendo el color perfecto y de hacer que hasta el “Cancelar” te den ganas de pulsarlo. ¡Cuidado, sus botones son adictivos!</p>
         </div>
-        <!-- Alicia (ahora con la foto de Alexis) -->
+        <!-- Alicia (con chascarrillos) -->
         <div class="team-member">
           <div class="d-flex mb-4">
             <div class="mr-3">
@@ -51,9 +51,9 @@
               <h6 class="text-color">Gestión de cobros en backend</h6>
             </div>
           </div>
-          <p>Responsable de la integración y gestión de pagos, asegurando que todo funcione de forma segura y eficiente.</p>
+          <p>La única capaz de encontrar un céntimo perdido en la base de datos. Si no pagas, Alicia lo sabe. Su superpoder: detectar facturas impagadas a kilómetros y hacer magia con los cobros automáticos. ¡Cuidado con deberle algo!</p>
         </div>
-        <!-- Alexis (ahora con la foto de Alicia) -->
+        <!-- Alexis (con chascarrillos) -->
         <div class="team-member">
           <div class="d-flex mb-4">
             <div class="mr-3">
@@ -64,9 +64,9 @@
               <h6 class="text-color">Descifrador de IA y limpia códigos de front end</h6>
             </div>
           </div>
-          <p>Especialista en inteligencia artificial y en mantener el código limpio, eficiente y comprensible para todo el equipo.</p>
+          <p>El único capaz de entender lo que dice la IA... ¡y de explicarlo con memes! Si tu código tiene bugs, Alexis los encuentra y los limpia antes de que te des cuenta. Su lema: “Si no lo entiende ni la IA, lo arreglo yo”.</p>
         </div>
-        <!-- Victor -->
+        <!-- Victor (con chascarrillos) -->
         <div class="team-member">
           <div class="d-flex mb-4">
             <div class="mr-3">
@@ -77,7 +77,7 @@
               <h6 class="text-color">Creador de ramas en Git - Full Stack</h6>
             </div>
           </div>
-          <p>Full stack developer y maestro de Git, encargado de la gestión de ramas y flujos de trabajo colaborativos.</p>
+          <p>El mago de las ramas: si existe un conflicto en Git, Victor ya lo resolvió antes de que apareciera. Puede crear más ramas que un árbol y nunca se pierde en el bosque del código. ¡Mergear con él es deporte de riesgo!</p>
         </div>
       </div>
     </div>
