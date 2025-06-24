@@ -37,23 +37,23 @@
 
         <div class="row">
             <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="fechaInicio" class="form-label">Fecha Inicio</label>
-                    <input type="date" name="fechaInicio" id="fechaInicio" class="form-control" value="{{ $curso->fechaInicio }}" required>
-                </div>
+        <div class="mb-3">
+            <label for="fechaInicio" class="form-label">Fecha Inicio</label>
+            <input type="date" name="fechaInicio" id="fechaInicio" class="form-control" value="{{ $curso->fechaInicio }}" required>
+        </div>
             </div>
             <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="fechaFin" class="form-label">Fecha Fin</label>
-                    <input type="date" name="fechaFin" id="fechaFin" class="form-control" value="{{ $curso->fechaFin }}" required>
+        <div class="mb-3">
+            <label for="fechaFin" class="form-label">Fecha Fin</label>
+            <input type="date" name="fechaFin" id="fechaFin" class="form-control" value="{{ $curso->fechaFin }}" required>
                 </div>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="plazas" class="form-label">Plazas</label>
+        <div class="mb-3">
+            <label for="plazas" class="form-label">Plazas</label>
                     <input type="number" name="plazas" id="plazas" class="form-control" value="{{ $curso->plazas }}" min="1" required>
                 </div>
             </div>
@@ -85,7 +85,7 @@
         </div>
 
         <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
             <a href="{{ route('admin.cursos.index') }}" class="btn btn-secondary">Cancelar</a>
         </div>
     </form>
