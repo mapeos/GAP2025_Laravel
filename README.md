@@ -1260,3 +1260,46 @@ composer require firebase/php-jwt
 - El resto de endpoints requieren el token de usuario (Sanctum) en la cabecera.
 - Si el FCM token cambia, vuelve a registrar el dispositivo o usa `/api/fcm-token`.
 - Para recibir notificaciones, el dispositivo debe tener el FCM token actualizado en backend.
+
+---
+
+## Notificaciones WhatsApp (WhatsApp Cloud API)
+
+La aplicación permite enviar notificaciones de WhatsApp a través de la API de nube de Meta.
+
+### Configuración
+
+1. Obtén tu **token de acceso** y **ID de número de teléfono** en [Meta for Developers](https://developers.facebook.com/).
+2. Añade las credenciales en el archivo `.env`:
+   ```env
+   WHATSAPP_TOKEN=tu_token
+   WHATSAPP_PHONE_ID=tu_phone_id
+   ```
+3. El archivo `config/services.php` debe tener:
+   ```php
+   'whatsapp' => [
+       'token' => env('WHATSAPP_TOKEN'),
+       'phone_id' => env('WHATSAPP_PHONE_ID'),
+   ],
+   ```
+
+### Uso desde el panel de administración
+
+- Accede al menú lateral: **WhatsApp Notificación**.
+- El formulario permite enviar una plantilla de WhatsApp (por defecto `hello_world`) a uno o varios números.
+- El envío se realiza usando la API oficial de Meta.
+
+### Ejemplo de envío (cURL)
+
+```bash
+curl -i -X POST \
+  https://graph.facebook.com/v22.0/<PHONE_ID>/messages \
+  -H 'Authorization: Bearer <TOKEN>' \
+  -H 'Content-Type: application/json' \
+  -d '{ "messaging_product": "whatsapp", "to": "34684245005", "type": "template", "template": { "name": "hello_world", "language": { "code": "en_US" } } }'
+```
+
+### Notas
+- El token de acceso puede expirar; si ocurre un error 401, genera uno nuevo en Meta for Developers.
+- Puedes modificar los números destinatarios en el servicio `WhatsAppService`.
+- El sistema registra en el log de Laravel la respuesta de la API para cada envío.
