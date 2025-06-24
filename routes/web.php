@@ -19,7 +19,10 @@ use App\Http\Controllers\WhatsAppController;
 // --------------------------------------------
 // Rutas públicas y generales
 // --------------------------------------------
-Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/', function () {
+    return view('landing.landing');
+})->name('landing');
+// Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 Route::view('astro', 'template.base')->name('astro');
 
 // --------------------------------------------
