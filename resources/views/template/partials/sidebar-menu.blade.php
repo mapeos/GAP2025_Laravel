@@ -64,10 +64,10 @@
             </ul>
         </li>
 
-        <!-- Analytics -->
+        <!-- Usuarios -->
         <li class="nav-item">
-            <a class="nav-link" href="/pages/analytics">
-                <i class="ri-line-chart-line"></i> <span>Analytics</span>
+            <a class="nav-link" href="{{ route('admin.users.index') }}">
+                <i class="ri-user-line"></i> <span>Usuarios</span>
             </a>
         </li>
         <!-- Notificaciones Section -->
@@ -133,118 +133,7 @@
         </li>
         <!-- Pages Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Pages</span></li>
-        <!-- Administración Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-settings-3-line"></i> <span>Administración</span>
-                <i class="ri-arrow-right-s-line"></i>
-            </a>
-            <ul class="submenu">
-
-                <!-- Users Section -->
-                <li class="nav-item has-submenu">
-                    <a class="nav-link" href="#">
-                        <i class="ri-user-line"></i> <span>Usuarios</span>
-                        <i class="ri-arrow-right-s-line"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.users.create') }}">
-                                <span>Añadir Usuario</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.users.index') }}">
-                                <span>Lista Usuarios</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/users/profile">
-                                <span>Perfiles</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/users/security">
-                                <span>Seguridad</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- Roles & Permissions Section -->
-                <li class="nav-item has-submenu">
-                    <a class="nav-link" href="#">
-                        <i class="ri-shield-user-line"></i> <span>Roles & Permisos</span>
-                        <i class="ri-arrow-right-s-line"></i>
-                    </a>
-                    <ul class="submenu">
-
-                        <!-- Roles Subsection -->
-                        <li class="nav-item has-submenu">
-                            <a class="nav-link" href="#">
-                                <span>Roles</span>
-                                <i class="ri-arrow-right-s-line"></i>
-                            </a>
-                            <ul class="submenu">
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/pages/roles-permissions/roles/list">
-                                        <span>Lista</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/pages/roles-permissions/roles/add">
-                                        <span>Añadir</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <!-- Permissions Subsection -->
-                        <li class="nav-item has-submenu">
-                            <a class="nav-link" href="#">
-                                <span>Permisos</span>
-                                <i class="ri-arrow-right-s-line"></i>
-                            </a>
-                            <ul class="submenu">
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/pages/roles-permissions/permissions/list">
-                                        <span>Lista</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/pages/roles-permissions/permissions/add">
-                                        <span>Añadir</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <!-- Groups Subsection -->
-                        <li class="nav-item has-submenu">
-                            <a class="nav-link" href="#">
-                                <span>Grupos</span>
-                                <i class="ri-arrow-right-s-line"></i>
-                            </a>
-                            <ul class="submenu">
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/pages/roles-permissions/groups/list">
-                                        <span>Lista</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/pages/roles-permissions/groups/add">
-                                        <span>Añadir</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                    </ul>
-                </li>
-
-            </ul>
-        </li>
-
+        
         <!-- Gestión de pagos -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
