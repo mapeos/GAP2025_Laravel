@@ -16,7 +16,7 @@
         </ul>
       </div>
       <div class="col-md-7 order-1 order-md-2">
-        <img class="img-fluid layer-3" src="/assets/landing/images/service/service.png" alt="Servicios Auria Academy">
+        <img class="img-fluid layer-3" src="/assets/landing/images/service/CABECERA-7-01.png" alt="Servicios Auria Academy">
       </div>
     </div>
   </div>

@@ -7,16 +7,11 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-12 text-center">
-        <h2>Subscribe to our newsletter</h2>
-        <p class="mb-5">Receive updates, news and deals</p>
+        <h2>¿Aún no te has registrado?</h2>
+        <p class="mb-5">No te pierdas las novedades, cursos y oportunidades de Auria Academy.<br>¡Regístrate ahora y forma parte de nuestra comunidad!</p>
       </div>
-      <div class="col-lg-8 col-sm-10 col-12 mx-auto">
-        <form action="#">
-          <div class="input-wrapper position-relative">
-            <input type="email" class="newsletter-form" id="newsletter" placeholder="Enter your email">
-            <button type="submit" value="send" class="btn newsletter-btn">subscribe</button>
-          </div>
-        </form>
+      <div class="col-lg-8 col-sm-10 col-12 mx-auto text-center">
+        <a href="{{ route('register') }}" class="btn btn-primary btn-lg" style="min-width:200px; font-weight:600;">Registrarse</a>
       </div>
     </div>
   </div>

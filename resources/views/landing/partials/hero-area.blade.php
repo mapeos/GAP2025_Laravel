@@ -14,7 +14,7 @@
         </p>
         <a href="{{ route('register') }}" class="btn btn-primary btn-lg" style="min-width:180px; font-weight:600;">Registrarse</a>
         <!-- banner image -->
-        <img class="img-fluid w-100 banner-image mt-4" src="/assets/landing/images/hero-area/banner-img.png" alt="banner-img">
+        <img class="img-fluid banner-image mt-4" src="/assets/landing/images/hero-area/estudiantes.png" alt="banner estudiantes Auria Academy" style="max-width:1000px; width:100%; max-height:400px; object-fit:cover; margin:0 auto; display:block;">
       </div>
     </div>
   </div>

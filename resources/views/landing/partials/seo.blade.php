@@ -8,7 +8,7 @@
     <div class="row align-items-center">
       <div class="col-md-6">
         <div class="seo-image">
-          <img class="img-fluid" src="/assets/landing/images/marketing/marketing.png" alt="Auria Academy marketing">
+          <img class="img-fluid" src="/assets/landing/images/marketing/Group-4.png" alt="Auria Academy marketing">
         </div>
       </div>
       <div class="col-md-5">
