@@ -17,6 +17,7 @@ use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\FacturaController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->prefix('admin/pagos')->group(function () {
     Route::view('/', 'admin.dashboard.pagos.pagos')->name('admin.pagos.index');
     Route::view('/estado', 'admin.dashboard.pagos.estado')->name('admin.pagos.estado');
     Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('admin.pagos.facturas');
+    Route::get('/facturas/list', [FacturaController::class, 'index'])->name('facturas.index');
 });
 Route::middleware(['auth'])->group(function () {
     Route::resource('gastos', GastoController::class);

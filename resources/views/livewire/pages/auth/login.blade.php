@@ -24,26 +24,13 @@ new #[Layout('layouts.guest')] class extends Component
         Session::regenerate();
 
         $user = Auth::user();
-        $isAdmin = DB::table('model_has_roles')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('model_has_roles.model_id', $user->id)
-            ->where('roles.name', 'Administrador')
-            ->exists();
-        $isAlumno = DB::table('model_has_roles')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('model_has_roles.model_id', $user->id)
-            ->where('roles.name', 'Alumno')
-            ->exists();
-        $isProfesor = DB::table('model_has_roles')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('model_has_roles.model_id', $user->id)
-            ->where('roles.name', 'Profesor')
-            ->exists();
-        if ($isAdmin) {
+        
+        // Sistema de roles de Spatie
+        if ($user->hasRole('Administrador')) {
             $this->redirectIntended(default: route('admin.dashboard'), navigate: true);
-        } elseif ($isAlumno) {
+        } elseif ($user->hasRole('Alumno')) {
             $this->redirectIntended(default: route('alumno.home'), navigate: true);
-        } elseif ($isProfesor) {
+        } elseif ($user->hasRole('Profesor')) {
             $this->redirectIntended(default: route('profesor.home'), navigate: true);
         } else {
             $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
