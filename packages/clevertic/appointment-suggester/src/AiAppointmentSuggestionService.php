@@ -6,6 +6,8 @@ use CleverTIC\AppointmentSuggester\Contracts\AppointmentSuggesterInterface;
 use CleverTIC\AppointmentSuggester\DTO\SuggestionRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use App\Models\SolicitudCita;
 
 class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
 {
@@ -37,28 +39,65 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
      */
     public function suggest(SuggestionRequest $request): Collection
     {
-        $prompt = $this->buildPrompt($request);
+        try {
+            $prompt = $this->buildPrompt($request);
 
-        $headers = [];
-        if (!empty($this->apiKey)) {
-            $headers['Authorization'] = 'Bearer ' . $this->apiKey;
-        }
+            $headers = [];
+            if (!empty($this->apiKey)) {
+                $headers['Authorization'] = 'Bearer ' . $this->apiKey;
+            }
 
-        $response = Http::withHeaders($headers)
-            ->timeout(120)
-            ->post("{$this->ollamaUrl}/api/generate", [
-                'model' => $this->model,
-                'prompt' => $prompt,
-                'stream' => false
+            // Intentar con timeout más corto primero
+            try {
+                $response = Http::withHeaders($headers)
+                    ->timeout(60) // 1 minuto para la primera prueba
+                    ->post("{$this->ollamaUrl}/api/generate", [
+                        'model' => $this->model,
+                        'prompt' => $prompt,
+                        'stream' => false
+                    ]);
+
+                if ($response->ok()) {
+                    $output = $response->json('response');
+                    $suggestions = $this->parseSuggestions($output, $request->maxSuggestions);
+                    return $this->filterConflicts($suggestions, $request);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Primera prueba de IA falló, intentando con timeout más largo', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Si la primera prueba falló, intentar con timeout más largo
+            $response = Http::withHeaders($headers)
+                ->timeout(300) // 5 minutos para la segunda prueba
+                ->post("{$this->ollamaUrl}/api/generate", [
+                    'model' => $this->model,
+                    'prompt' => $prompt,
+                    'stream' => false
+                ]);
+
+            if (!$response->ok()) {
+                Log::warning('Error comunicándose con Ollama, usando fallback', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return $this->fallbackSuggestions($request);
+            }
+
+            $output = $response->json('response');
+            $suggestions = $this->parseSuggestions($output, $request->maxSuggestions);
+
+            // Filtrar conflictos con citas existentes
+            return $this->filterConflicts($suggestions, $request);
+
+        } catch (\Exception $e) {
+            Log::error('Error en AiAppointmentSuggestionService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-
-        if (!$response->ok()) {
-            throw new \RuntimeException('Error comunicándose con Ollama: ' . $response->body());
+            return $this->fallbackSuggestions($request);
         }
-
-        $output = $response->json('response');
-
-        return $this->parseSuggestions($output, $request->maxSuggestions);
     }
 
     private function buildPrompt(SuggestionRequest $request): string
@@ -89,6 +128,17 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
             $workingDaysText .= ucfirst($day) . " de {$start} a {$end}. ";
         }
 
+        // Obtener citas existentes para el prompt
+        $existingAppointments = $this->getExistingAppointments($request);
+        $existingAppointmentsText = '';
+        if ($existingAppointments->isNotEmpty()) {
+            $existingAppointmentsText = "\n- Citas ya programadas: ";
+            foreach ($existingAppointments as $appointment) {
+                $existingAppointmentsText .= $appointment->format('Y-m-d H:i') . ", ";
+            }
+            $existingAppointmentsText = rtrim($existingAppointmentsText, ", ");
+        }
+
         return sprintf(
             "Quiero que actúes como un asistente para asignar citas en una agenda de forma optimizada.\n\n" .
             "- Sugiere %d huecos de cita disponibles en las fechas cercanas al %s.\n" .
@@ -96,15 +146,59 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
             "- El cliente prefiere%s.\n" .
             "- La persona que lo va a atender trabaja estos días: %s\n" .
             "- No propongas citas en estos días bloqueados: %s.\n" .
+            "%s\n" .
             "- Las sugerencias deben estar en formato exacto: YYYY-MM-DD HH:MM.\n" .
+            "- NO propongas horarios que coincidan con las citas ya programadas.\n" .
             "Responde únicamente con las fechas sugeridas, una por línea, sin texto adicional.",
             $request->maxSuggestions,
             $request->approximateDate->format('Y-m-d'),
             $request->durationMinutes,
             $preferencesText ?: ' sin preferencias',
             $workingDaysText,
-            implode(', ', $request->excludedDates)
+            implode(', ', $request->excludedDates),
+            $existingAppointmentsText
         );
+    }
+
+    private function getExistingAppointments(SuggestionRequest $request): Collection
+    {
+        $approximateDate = $request->approximateDate instanceof \DateTimeImmutable 
+            ? $request->approximateDate 
+            : \DateTimeImmutable::createFromInterface($request->approximateDate);
+
+        $startDate = $approximateDate->modify("-{$request->toleranceDays} days");
+        $endDate = $approximateDate->modify("+{$request->toleranceDays} days");
+
+        return SolicitudCita::query()
+            ->where('profesor_id', $request->doctorId)
+            ->whereBetween('fecha_propuesta', [$startDate, $endDate])
+            ->whereNotIn('estado', ['cancelada', 'rechazada'])
+            ->get()
+            ->map(function ($appointment) {
+                return $appointment->fecha_propuesta;
+            });
+    }
+
+    private function filterConflicts(Collection $suggestions, SuggestionRequest $request): Collection
+    {
+        $existingAppointments = $this->getExistingAppointments($request);
+        
+        return $suggestions->filter(function ($suggestion) use ($existingAppointments, $request) {
+            foreach ($existingAppointments as $existing) {
+                $existingEnd = $existing->modify("+{$request->durationMinutes} minutes");
+                $suggestionEnd = $suggestion->modify("+{$request->durationMinutes} minutes");
+                
+                if ($this->overlaps($suggestion, $suggestionEnd, $existing, $existingEnd)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    private function overlaps($start1, $end1, $start2, $end2): bool
+    {
+        return $start1 < $end2 && $start2 < $end1;
     }
 
     private function parseSuggestions(string $output, int $max): Collection
@@ -129,23 +223,62 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
         return $dates;
     }
 
-    /*public function suggest2222(SuggestionRequest $request): Collection
+    private function fallbackSuggestions(SuggestionRequest $request): Collection
     {
-        // Simulación inicial: Devuelve 3 fechas aleatorias cerca de la fecha aproximada
+        Log::info('Usando sugerencias de fallback', [
+            'request' => $request
+        ]);
+
+        // Fallback inteligente basado en reglas simples
         $suggestions = collect();
+        $approximateDate = $request->approximateDate instanceof \DateTimeImmutable 
+            ? $request->approximateDate 
+            : \DateTimeImmutable::createFromInterface($request->approximateDate);
 
-        for ($i = 1; $i <= $request->maxSuggestions; $i++) {
-            $daysToAdd = rand(-$request->toleranceDays, $request->toleranceDays);
-            $hour = rand(8, 17); // Horario razonable de clínica
-            $minute = [0, 15, 30, 45][rand(0, 3)]; // Intervalos de 15 mins
-
-            $suggestion = (clone $request->approximateDate)
-                ->modify("+{$daysToAdd} days")
-                ->setTime($hour, $minute);
-
-            $suggestions->push($suggestion);
+        // Generar sugerencias en días laborables
+        $workingDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+        $currentDate = clone $approximateDate;
+        
+        // Retroceder hasta encontrar un día laborable
+        while (!in_array(strtolower($currentDate->format('l')), $workingDays)) {
+            $currentDate = $currentDate->modify('-1 day');
         }
 
+        for ($i = 0; $i < $request->maxSuggestions; $i++) {
+            // Avanzar al siguiente día laborable
+            $suggestionDate = clone $currentDate;
+            $suggestionDate = $suggestionDate->modify("+{$i} days");
+            
+            // Asegurar que sea un día laborable
+            while (!in_array(strtolower($suggestionDate->format('l')), $workingDays)) {
+                $suggestionDate = $suggestionDate->modify('+1 day');
+            }
+
+            // Generar horarios en el rango laboral (9:00 - 17:00)
+            $hour = 9 + ($i % 8); // Distribuir en 8 horas
+            $minute = [0, 15, 30, 45][$i % 4]; // Intervalos de 15 mins
+
+            $suggestion = $suggestionDate->setTime($hour, $minute);
+            
+            // Verificar que no esté en las fechas excluidas
+            $isExcluded = false;
+            foreach ($request->excludedDates as $excludedDate) {
+                if ($suggestion->format('Y-m-d') === $excludedDate) {
+                    $isExcluded = true;
+                    break;
+                }
+            }
+            
+            if (!$isExcluded) {
+                $suggestions->push($suggestion);
+            }
+        }
+
+        Log::info('Sugerencias de fallback generadas', [
+            'count' => $suggestions->count(),
+            'suggestions' => $suggestions->map(fn($s) => $s->format('Y-m-d H:i'))->toArray()
+        ]);
+
         return $suggestions->sort();
-    }*/
+    }
 }

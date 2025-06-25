@@ -91,3 +91,9 @@ Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send', [Notif
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-fcm-v1', [NotificationController::class, 'sendFcmV1']);
 // Ruta para enviar notificaciones WebPush
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-webpush', [App\Http\Controllers\Api\NotificationController::class, 'sendWebPush']);
+
+// Rutas para citas con IA
+Route::middleware('auth:sanctum')->prefix('appointments')->group(function () {
+    Route::post('/suggest', [App\Http\Controllers\AiAppointmentController::class, 'suggest']);
+    Route::post('/', [App\Http\Controllers\AiAppointmentController::class, 'create']);
+});

@@ -1,0 +1,161 @@
+<style>
+    #calendar {
+        margin: 20px 0;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .fc-event {
+        cursor: pointer;
+    }
+    .fc-event-title {
+        font-weight: 500;
+    }
+    .fc-daygrid-event {
+        padding: 2px 4px;
+    }
+    .fc-daygrid-day-number {
+        font-size: 0.9em;
+        padding: 4px;
+    }
+    .fc-toolbar-title {
+        font-size: 1.5em !important;
+        font-weight: 500;
+    }
+    .fc-button-primary {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+    .fc-button-primary:hover {
+        background-color: #0b5ed7 !important;
+        border-color: #0a58ca !important;
+    }
+    .fc-button-primary:not(:disabled):active,
+    .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #0a58ca !important;
+        border-color: #0a53be !important;
+    }
+    /* Estilos para los manejadores de redimensionamiento */
+    .fc-event-resizable {
+        position: relative;
+    }
+    .fc-event-resizer {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background-color: #fff;
+        border: 1px solid #0d6efd;
+        z-index: 4;
+    }
+    .fc-event-resizer-start {
+        top: 50%;
+        left: -4px;
+        margin-top: -4px;
+        cursor: w-resize;
+    }
+    .fc-event-resizer-end {
+        top: 50%;
+        right: -4px;
+        margin-top: -4px;
+        cursor: e-resize;
+    }
+    .fc-event-resizing {
+        opacity: 0.8;
+    }
+    /* Estilos para la vista de agenda */
+    #agendaView .list-group-item.list-group-item-secondary {
+        transition: background-color 0.2s;
+    }
+    #agendaView .list-group-item.list-group-item-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+    #agendaView .events-container {
+        transition: max-height 0.3s ease-in-out;
+        overflow: hidden;
+    }
+    #agendaView .events-container.d-none {
+        max-height: 0;
+    }
+    #agendaView .events-container:not(.d-none) {
+        max-height: 1000px;
+    }
+
+    /* Estilos personalizados para Flatpickr */
+    .flatpickr-input {
+        cursor: pointer;
+    }
+    .flatpickr-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .flatpickr-calendar {
+        font-family: inherit;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .flatpickr-day.selected {
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .flatpickr-day.selected:hover {
+        background: #0b5ed7;
+        border-color: #0b5ed7;
+    }
+    .flatpickr-day.today {
+        border-color: #0d6efd;
+    }
+    .flatpickr-day.today:hover {
+        background: #e7f1ff;
+    }
+
+    /* Estilos para el botón flotante */
+    .floating-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .floating-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .floating-button i {
+        font-size: 24px;
+    }
+
+    /* Estilos para la vista de agenda */
+    #agendaView {
+        margin-bottom: 20px;
+    }
+
+    #agendaList .list-group-item {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    #agendaList .list-group-item:not(.list-group-item-secondary):hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #agendaList .badge {
+        font-weight: normal;
+    }
+</style> 

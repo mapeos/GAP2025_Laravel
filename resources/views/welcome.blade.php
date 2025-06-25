@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>GAP2025</title>
+    <title>Auria Academy</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
@@ -12,26 +12,24 @@
     <!-- Feather icons -->
     <script src="https://unpkg.com/feather-icons"></script>
 </head>
-<body style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;">
-    <h1 style="font-size: 4rem; font-weight: bold;">GAP2025</h1>
-    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-        <a href="{{ route('login') }}" class="btn btn-primary">Iniciar sesión</a>
-        <a href="{{ route('register') }}" class="btn btn-secondary">Registrarse</a>
-    </div>
-    <div style="margin-top: 1rem;">
-        <a href="{{ route('password.request') }}" class="btn btn-link">¿Olvidaste tu contraseña?</a>
-    </div>
-    <div style="margin-top: 1rem;">
-        <button id="google-login" class="btn btn-danger" type="button">
-            Iniciar sesión con Google
-        </button>
-    </div>
-
-    @if (session('error'))
-        <div style="color: red; font-size: 1.2rem; margin-bottom: 1rem;">
-            {{ session('error') }}
+<body style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);">
+    <div style="background: white; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); border-radius: 1.5rem; padding: 3rem 2.5rem; display: flex; flex-direction: column; align-items: center; min-width: 350px; max-width: 90vw;">
+        <h1 style="font-size: 3.5rem; font-weight: bold; color: #6366f1; letter-spacing: 2px; margin-bottom: 1.5rem;">Auria Academy</h1>
+        <p style="font-size: 1.2rem; color: #64748b; margin-bottom: 2.5rem; text-align: center;">Bienvenido a la plataforma de aprendizaje. Accede o regístrate para comenzar tu experiencia educativa.</p>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.2rem;">
+            <a href="{{ route('login') }}" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem; border-radius: 0.75rem;">Iniciar sesión</a>
+            <a href="{{ route('register') }}" class="btn btn-secondary" style="padding: 0.75rem 2rem; font-size: 1.1rem; border-radius: 0.75rem;">Registrarse</a>
         </div>
-    @endif
+        <a href="{{ route('password.request') }}" class="btn btn-link" style="margin-bottom: 1.2rem; color: #6366f1;">¿Olvidaste tu contraseña?</a>
+        <button id="google-login" class="btn btn-danger" type="button" style="padding: 0.7rem 2rem; font-size: 1.1rem; border-radius: 0.75rem; margin-bottom: 1.2rem;">
+            <i data-feather="google" style="margin-right: 0.5rem;"></i> Iniciar sesión con Google
+        </button>
+        @if (session('error'))
+            <div style="color: #ef4444; font-size: 1.1rem; margin-bottom: 1rem; text-align: center;">
+                {{ session('error') }}
+            </div>
+        @endif
+    </div>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>

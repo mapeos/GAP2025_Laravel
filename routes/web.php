@@ -14,16 +14,21 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
-use App\Http\Controllers\GastoController;
-use App\Http\Controllers\PagoController;
-use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\WhatsAppController;
 
 // --------------------------------------------
 // Rutas públicas y generales
 // --------------------------------------------
-Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/', function () {
+    return view('landing.landing');
+})->name('landing');
+// Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 Route::view('astro', 'template.base')->name('astro');
+
+// Ruta temporal para probar modal
+Route::get('/test-modal', function () {
+    return view('events.test-modal');
+})->name('test.modal');
 
 // --------------------------------------------
 // Dashboard y páginas de administración
@@ -42,11 +47,6 @@ Route::middleware(['auth'])->prefix('admin/pagos')->group(function () {
     Route::get('/facturas/create', [FacturaController::class, 'create'])->name('facturas.create');
     Route::post('/facturas', [FacturaController::class, 'store'])->name('facturas.store');
 });
-Route::middleware(['auth'])->group(function () {
-    Route::resource('gastos', GastoController::class);
-    Route::resource('pagos', PagoController::class);
-});
-Route::resource('payment-methods', PaymentMethodController::class);
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -80,6 +80,15 @@ Route::middleware(['auth'])->group(function () {
         ->name('solicitud-cita.actualizar-estado');
     Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
         ->name('solicitud-cita.store');
+    
+    // Rutas para citas con IA
+    Route::middleware(['role:Profesor|Administrador'])->group(function () {
+        Route::post('/ai/appointments/suggest', [\App\Http\Controllers\AiAppointmentController::class, 'suggest'])
+            ->name('ai.appointments.suggest');
+        Route::post('/ai/appointments/create', [\App\Http\Controllers\AiAppointmentController::class, 'create'])
+            ->name('ai.appointments.create');
+    });
+
     // Rutas para tipos de evento (solo administradores)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('tipos-evento', TipoEventoController::class);
@@ -265,36 +274,35 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth']) // make sure auth middleware is correct for your app (web guard)
+    ->middleware(['auth', 'role:Administrador'])
     ->group(function () {
         Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
         Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
         Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
+
+        // WhatsApp
+        Route::get('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'showForm'])->name('whatsapp.form');
+        Route::post('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'send'])->name('whatsapp.send');
     });
 
-//--------------------------------------------
+/--------------------------------------------
 // Rutas para sugerencias de IA
 //--------------------------------------------
 Route::middleware(['auth'])->group(function () {
     Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])
         ->name('ai.appointment-suggestions');
+    
+    // Rutas para el modal del profesor
+    Route::middleware(['role:Profesor'])->group(function () {
+        Route::post('/ai/professor/suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestForProfessor'])
+            ->name('ai.professor.suggestions');
+        Route::post('/ai/professor/create-appointment', [\App\Http\Controllers\AiAppointmentController::class, 'createAppointment'])
+            ->name('ai.professor.create-appointment');
+    });
 });
 
-// Rutas de autenticación con Firebase
-Route::post('/login/firebase', [FirebaseAuthController::class, 'login']);
-
-
-Route::prefix('admin')
-    ->name('admin.')
-    ->middleware(['auth']) // make sure auth middleware is correct for your app (web guard)
-    ->group(function () {
-        Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
-        Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
-        Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
-    });
-
-//--------------------------------------------
-// Rutas para sugerencias de IA
+    //--------------------------------------------
+// Rutas para sugerencias de IA (duplicadas - mantener por compatibilidad)
 //--------------------------------------------
 Route::middleware(['auth'])->group(function () {
     Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])

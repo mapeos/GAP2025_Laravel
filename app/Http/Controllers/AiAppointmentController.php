@@ -7,6 +7,10 @@ use Illuminate\Http\JsonResponse;
 use CleverTIC\AppointmentSuggester\DTO\SuggestionRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\SolicitudCita;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AiAppointmentController extends Controller
 {
@@ -55,10 +59,10 @@ class AiAppointmentController extends Controller
             $fallbackSuggestions = $this->generateFallbackSuggestions($request->motivo);
 
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'data' => [
                     'suggestions' => $fallbackSuggestions,
-                    'message' => 'IA no disponible. Mostrando sugerencias automáticas.',
+                    'message' => 'Sugerencias generadas (modo fallback)',
                     'source' => 'fallback'
                 ]
             ]);
@@ -66,24 +70,206 @@ class AiAppointmentController extends Controller
     }
 
     /**
-     * Construye la solicitud de sugerencias
+     * Genera sugerencias para el modal del profesor
      */
+    public function suggest(Request $request): JsonResponse
+    {
+        Log::info('AiAppointmentController::suggest called', [
+            'request_data' => $request->all(),
+            'user_id' => Auth::id(),
+            'user_roles' => Auth::user()->roles->pluck('name')->toArray()
+        ]);
+
+        $request->validate([
+            'alumno_id' => 'required|integer|exists:users,id',
+            'motivo' => 'required|string|max:500',
+            'tipo_consulta' => 'required|string|max:100',
+            'duracion' => 'nullable|integer|min:15|max:480',
+            'fecha_preferida' => 'nullable|date',
+            'hora_preferida' => 'nullable|string',
+            'prioridad' => 'nullable|string|in:baja,normal,alta,urgente',
+            'preferencias' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            Log::info('Building suggestion request', [
+                'alumno_id' => $request->alumno_id,
+                'motivo' => $request->motivo,
+                'tipo_consulta' => $request->tipo_consulta,
+                'fecha_preferida' => $request->fecha_preferida
+            ]);
+
+            // Verificar si el servicio está disponible
+            if (!app()->bound('appointments.suggester.ai')) {
+                Log::error('Service appointments.suggester.ai not bound');
+                throw new \Exception('Servicio de sugerencias no disponible');
+            }
+
+            // Verificar conectividad con Ollama
+            $ollamaHost = env('OLLAMA_HOST', 'ai');
+            $ollamaPort = env('OLLAMA_PORT', '11434');
+            $ollamaUrl = "http://{$ollamaHost}:{$ollamaPort}/api/tags";
+            
+            try {
+                $response = Http::timeout(5)->get($ollamaUrl);
+                Log::info('Ollama connectivity check', [
+                    'url' => $ollamaUrl,
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Ollama connectivity check failed', [
+                    'url' => $ollamaUrl,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            $suggester = app('appointments.suggester.ai');
+            Log::info('Suggester service obtained', [
+                'suggester_class' => get_class($suggester)
+            ]);
+
+            $suggestionRequest = $this->buildProfessorRequest($request);
+            Log::info('Suggestion request built', [
+                'request_data' => $suggestionRequest
+            ]);
+
+            $suggestions = $suggester->suggest($suggestionRequest);
+
+            Log::info('Suggestions generated', [
+                'count' => $suggestions->count(),
+                'suggestions' => $suggestions->toArray()
+            ]);
+
+            $formattedSuggestions = $this->formatSuggestionsForProfessor($suggestions, $request->motivo);
+
+            Log::info('Suggestions formatted', [
+                'formatted_count' => count($formattedSuggestions)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'suggestions' => $formattedSuggestions,
+                'message' => 'Sugerencias generadas exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en sugerencias para profesor', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'profesor_id' => Auth::id(),
+                'request' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar sugerencias: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Crea la cita desde el modal del profesor
+     */
+    public function create(Request $request): JsonResponse
+    {
+        $request->validate([
+            'alumno_id' => 'required|integer|exists:users,id',
+            'motivo' => 'required|string|max:500',
+            'tipo_consulta' => 'required|string|max:100',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after:fecha_inicio',
+            'duracion' => 'nullable|integer|min:15|max:480',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Crear la solicitud de cita
+            $cita = SolicitudCita::create([
+                'alumno_id' => $request->alumno_id,
+                'profesor_id' => Auth::id(),
+                'motivo' => $request->motivo,
+                'fecha_propuesta' => $request->fecha_inicio,
+                'duracion_minutos' => $request->duracion ?? 60,
+                'observaciones_medicas' => "Cita creada con IA - Tipo: {$request->tipo_consulta}",
+                'estado' => 'confirmada',
+                'tipo_sistema' => 'academico',
+            ]);
+
+            // Obtener o crear el tipo de evento para citas
+            $tipoEvento = \App\Models\TipoEvento::where('nombre', 'Cita')->first();
+            if (!$tipoEvento) {
+                $tipoEvento = \App\Models\TipoEvento::create([
+                    'nombre' => 'Cita',
+                    'color' => '#28a745', // Color verde para citas confirmadas
+                    'descripcion' => 'Citas confirmadas entre profesores y alumnos'
+                ]);
+            }
+
+            // Obtener el nombre del alumno
+            $alumno = \App\Models\User::find($request->alumno_id);
+            $alumnoName = $alumno ? $alumno->name : 'Alumno';
+
+            // Crear el evento en el calendario
+            $evento = \App\Models\Evento::create([
+                'titulo' => "Cita con {$alumnoName} - {$request->tipo_consulta}",
+                'descripcion' => $request->motivo,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
+                'tipo_evento_id' => $tipoEvento->id,
+                'creado_por' => Auth::id()
+            ]);
+
+            // Agregar participantes (profesor y alumno)
+            $evento->participantes()->attach([
+                Auth::id() => ['rol' => 'profesor'],
+                $request->alumno_id => ['rol' => 'alumno']
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cita creada exitosamente y agregada al calendario',
+                'data' => [
+                    'cita_id' => $cita->id,
+                    'evento_id' => $evento->id,
+                    'fecha' => $cita->fecha_propuesta->format('d/m/Y H:i'),
+                    'alumno' => $alumnoName,
+                    'tipo_consulta' => $request->tipo_consulta
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creando cita con IA', [
+                'error' => $e->getMessage(),
+                'profesor_id' => Auth::id(),
+                'request' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear la cita: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function buildSuggestionRequest(Request $request): SuggestionRequest
     {
-        // Configuración por defecto para horarios académicos más variados
+        // Configuración por defecto para horarios de profesor
         $workingDays = [
             'monday' => ['08:00', '18:00'],
-            'tuesday' => ['09:00', '17:00'],
-            'wednesday' => ['08:30', '17:30'],
-            'thursday' => ['09:00', '18:00'],
-            'friday' => ['08:00', '16:00']
+            'tuesday' => ['08:00', '18:00'],
+            'wednesday' => ['08:00', '18:00'],
+            'thursday' => ['08:00', '18:00'],
+            'friday' => ['08:00', '18:00'],
         ];
 
-        // Preferencias más variadas
         $preferences = [
-            'times_of_day' => 'flexible', // Cambiado de 'morning' a 'flexible'
-            'preferred_days' => ['tuesday', 'thursday', 'wednesday'], // Agregado miércoles
-            'hour_range' => ['08:00', '17:00'] // Rango más amplio
+            'times_of_day' => 'morning', // Por defecto mañana
+            'preferred_days' => ['tuesday', 'thursday'], // Por defecto martes y jueves
         ];
 
         // Simplificado: solo necesitamos alumno y profesor
@@ -98,6 +284,58 @@ class AiAppointmentController extends Controller
             excludedDates: [],
             patientPreferences: $preferences, // preferencias del alumno
             durationMinutes: 60,
+            toleranceDays: 7,
+            maxSuggestions: 5
+        );
+    }
+
+    private function buildProfessorRequest(Request $request): SuggestionRequest
+    {
+        // Configurar días laborables por defecto
+        $workingDays = [
+            'monday' => ['08:00', '18:00'],
+            'tuesday' => ['08:00', '18:00'],
+            'wednesday' => ['08:00', '18:00'],
+            'thursday' => ['08:00', '18:00'],
+            'friday' => ['08:00', '18:00'],
+        ];
+
+        // Configurar preferencias basadas en los parámetros del modal
+        $preferences = [
+            'times_of_day' => 'morning', // Por defecto mañana
+            'preferred_days' => ['tuesday', 'thursday'], // Por defecto martes y jueves
+        ];
+
+        // Si hay hora preferida, ajustar las preferencias
+        if ($request->hora_preferida) {
+            $hour = (int) substr($request->hora_preferida, 0, 2);
+            if ($hour < 12) {
+                $preferences['times_of_day'] = 'morning';
+            } elseif ($hour < 17) {
+                $preferences['times_of_day'] = 'afternoon';
+            } else {
+                $preferences['times_of_day'] = 'evening';
+            }
+        }
+
+        // Fecha aproximada
+        $approximateDate = $request->fecha_preferida 
+            ? new \DateTime($request->fecha_preferida)
+            : new \DateTime('+1 day');
+
+        // Duración basada en el tipo de consulta o duración manual
+        $duration = $request->duracion ?? 60;
+
+        return new SuggestionRequest(
+            patientId: (int) $request->alumno_id,
+            treatmentId: 1, // Genérico
+            workerId: Auth::id(), // ID del profesor actual
+            approximateDate: $approximateDate,
+            doctorId: Auth::id(),
+            workingDays: $workingDays,
+            excludedDates: [],
+            patientPreferences: $preferences,
+            durationMinutes: $duration,
             toleranceDays: 7,
             maxSuggestions: 5
         );
@@ -123,6 +361,49 @@ class AiAppointmentController extends Controller
     }
 
     /**
+     * Formatea las sugerencias para el modal del profesor
+     */
+    private function formatSuggestionsForProfessor($suggestions, string $motivo): array
+    {
+        $formatted = [];
+        
+        foreach ($suggestions as $index => $suggestion) {
+            // Calcular fecha de fin basada en la duración (usar 60 minutos por defecto)
+            $duration = 60; // Por defecto 60 minutos
+            $endTime = (clone $suggestion)->modify("+{$duration} minutes");
+            
+            $formatted[] = [
+                'id' => $index + 1,
+                'fecha_inicio' => $suggestion->format('Y-m-d H:i:s'),
+                'fecha_fin' => $endTime->format('Y-m-d H:i:s'),
+                'fecha' => $suggestion->format('d/m/Y'),
+                'hora' => $suggestion->format('H:i'),
+                'duracion' => $duration,
+                'confianza' => 85 - ($index * 10), // Confianza decreciente
+                'motivo' => $motivo,
+                'prioridad' => $this->determinePriority($index)
+            ];
+        }
+
+        return $formatted;
+    }
+
+    private function getDayName(string $englishDay): string
+    {
+        $days = [
+            'Monday' => 'Lunes',
+            'Tuesday' => 'Martes',
+            'Wednesday' => 'Miércoles',
+            'Thursday' => 'Jueves',
+            'Friday' => 'Viernes',
+            'Saturday' => 'Sábado',
+            'Sunday' => 'Domingo'
+        ];
+
+        return $days[$englishDay] ?? $englishDay;
+    }
+
+    /**
      * Determina la prioridad basada en la posición
      */
     private function determinePriority(int $index): string
@@ -133,32 +414,20 @@ class AiAppointmentController extends Controller
     }
 
     /**
-     * Genera sugerencias automáticas como fallback
+     * Genera sugerencias de fallback
      */
     private function generateFallbackSuggestions(string $motivo): array
     {
         $suggestions = [];
         $baseDate = new \DateTime('+1 day');
-        
-        // Horarios variados para evitar duplicados
-        $horarios = ['09:00', '10:30', '14:00', '15:30', '16:00'];
-        
-        // Generar 5 sugerencias automáticas con horarios diferentes
-        for ($i = 0; $i < 5; $i++) {
-            $date = clone $baseDate;
-            $date->modify("+{$i} days");
-            
-            // Solo días laborables (lunes a viernes)
-            while ($date->format('N') > 5) {
-                $date->modify('+1 day');
-            }
-            
-            // Usar horario diferente para cada sugerencia
-            $horario = $horarios[$i % count($horarios)];
-            
+
+        for ($i = 0; $i < 3; $i++) {
+            $date = (clone $baseDate)->modify("+{$i} days");
+            $hour = 9 + ($i * 2); // 9:00, 11:00, 13:00
+
             $suggestions[] = [
                 'fecha' => $date->format('d-m-Y'),
-                'hora_inicio' => $horario,
+                'hora_inicio' => sprintf('%02d:00', $hour),
                 'razon' => "Consulta: {$motivo}",
                 'prioridad' => $this->determinePriority($i)
             ];
