@@ -23,6 +23,21 @@
         @endif
         <form action="{{ route('pagos.store') }}" method="POST" id="form-metodo-pago">
             @csrf
+            <fieldset style="margin-bottom: 2rem; border: 1px solid #ccc; padding: 1rem; border-radius: 6px;">
+                <legend>Datos del usuario y curso</legend>
+                <div style="margin-bottom: 1rem;">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" name="nombre" id="nombre" required>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" id="email" required>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label for="curso">Tipo de curso:</label>
+                    <input type="text" name="curso" id="curso" required placeholder="Ej: Curso de inglés, Excel, etc.">
+                </div>
+            </fieldset>
             <div style="margin-bottom: 1.5rem;">
                 <label><strong>Tipo de pago:</strong></label>
                 <label style="margin-left: 1rem;">

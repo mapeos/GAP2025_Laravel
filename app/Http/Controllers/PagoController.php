@@ -28,6 +28,9 @@ class PagoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'nombre' => 'required|string|max:255',
+            'email' => 'required|email',
+            'curso' => 'required|string|max:255',
             'metodo_pago' => 'required',
             'tipo_pago' => 'required',
             'meses' => 'nullable|integer|min:1',
@@ -35,6 +38,9 @@ class PagoController extends Controller
 
         try {
             $pago = new \App\Models\Pago();
+            $pago->nombre = $request->nombre;
+            $pago->email = $request->email;
+            $pago->curso = $request->curso;
             $pago->concepto = $request->metodo_pago;
             $pago->tipo_pago = $request->tipo_pago;
             $pago->meses = $request->tipo_pago === 'mensual' ? ($request->meses ?? 1) : null;
@@ -43,7 +49,19 @@ class PagoController extends Controller
             $pago->pendiente = true;
             $pago->id_gasto = null; // Para que no falle si no hay gasto
             $pago->save();
-            return redirect()->back()->with('success', 'Pago registrado correctamente.');
+            $pago->refresh(); // Asegura que $pago->id_pago esté disponible
+
+            // Crear la factura automáticamente
+            $factura = new \App\Models\Factura();
+            $factura->user_id = \Auth::id();
+            $factura->pago_id = $pago->id_pago;
+            $factura->producto = $pago->curso;
+            $factura->importe = $pago->importe;
+            $factura->fecha = $pago->fecha;
+            $factura->estado = 'pagada';
+            $factura->save();
+
+            return redirect()->route('facturas.index')->with('success', 'Pago y factura registrados correctamente.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Error al registrar el pago: ' . $e->getMessage()]);
         }

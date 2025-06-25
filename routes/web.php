@@ -39,6 +39,8 @@ Route::middleware(['auth'])->prefix('admin/pagos')->group(function () {
     Route::view('/estado', 'admin.dashboard.pagos.estado')->name('admin.pagos.estado');
     Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('admin.pagos.facturas');
     Route::get('/facturas/list', [FacturaController::class, 'index'])->name('facturas.index');
+    Route::get('/facturas/create', [FacturaController::class, 'create'])->name('facturas.create');
+    Route::post('/facturas', [FacturaController::class, 'store'])->name('facturas.store');
 });
 Route::middleware(['auth'])->group(function () {
     Route::resource('gastos', GastoController::class);

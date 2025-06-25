@@ -11,6 +11,8 @@ class Pago extends Model
 
     protected $table = 'pagos';  // nombre de la tabla
 
+    protected $primaryKey = 'id_pago';
+
     protected $fillable = [
         'id_gasto',
         'importe',
@@ -19,5 +21,8 @@ class Pago extends Model
         'pendiente',
         'tipo_pago', // unico o mensual
         'meses',     // número de meses si es mensual
+        'nombre',
+        'email',
+        'curso',
     ];
 }
