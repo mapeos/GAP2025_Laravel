@@ -5,6 +5,7 @@ namespace App\Providers;
 use CleverTIC\AppointmentSuggester\AiAppointmentSuggestionService;
 use CleverTIC\AppointmentSuggester\AppointmentSuggesterFacade;
 use CleverTIC\AppointmentSuggester\AppointmentSuggestionService;
+use CleverTIC\AppointmentSuggester\AppointmentServiceProvider as AppointmentSuggesterServiceProvider;
 use CleverTIC\AppointmentSuggester\Contracts\AppointmentSuggesterInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Registrar servicios de sugerencias de citas
         $this->app->singleton(AppointmentSuggesterInterface::class, function ($app) {
             return new AppointmentSuggesterFacade(
                 new AppointmentSuggestionService(),

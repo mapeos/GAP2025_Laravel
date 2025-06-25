@@ -33,6 +33,9 @@ class DatabaseSeeder extends Seeder
             // Seeders de contenido
             CategoriaSeeder::class,
             NewsSeeder::class,
+            
+            // Seeders de citas
+            MotivoCitaSeeder::class,
         ]);
     }
 }

@@ -47,6 +47,9 @@ class DashboardController extends Controller
             ];
         });
 
-        return view('admin.dashboard.index', compact('stats', 'leadSources', 'eventos'));
+        // Obtener alumnos para el modal del profesor
+        $alumnos = User::role('alumno')->where('status', 'activo')->get();
+
+        return view('admin.dashboard.index', compact('stats', 'leadSources', 'eventos', 'alumnos'));
     }
 }
