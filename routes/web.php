@@ -12,6 +12,7 @@ use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
@@ -132,7 +133,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{curso}', [CursoController::class, 'show'])->name('show');
         Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit');
         Route::put('/{curso}', [CursoController::class, 'update'])->name('update');
-        Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy');
         Route::post('/{curso}/upload', [CursoController::class, 'uploadTemario'])->name('upload');
         Route::post('/{id}/toggle-status', [CursoController::class, 'toggleStatus'])->name('toggle-status');
         Route::post('/{id}/toggle-estado', [CursoController::class, 'toggleEstado'])->name('toggle-estado');
@@ -140,7 +140,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/restore', [CursoController::class, 'restore'])->name('restore');
     });
     
-    // Rutas públicas de cursos (para ver detalles) -
+    // Rutas públicas de cursos (para ver detalles)
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
 });
 
@@ -161,7 +161,9 @@ Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.particip
 
 // Rutas de INSCRIPCIONES a Cursos
 Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->group(function () {
-    Route::get('/cursos-activos', [CursoController::class, 'listarCursosActivos'])->name('cursos.activos'); // Listar cursos activos
+    Route::get('/cursos', function() {
+        return redirect()->route('admin.cursos.index');
+    })->name('cursos.activos'); // Redirige a la lista de cursos
     Route::get('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir.form'); // Formulario de inscripción
     Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir'); // Inscribir personas
     Route::get('/cursos/{curso}/inscritos', [InscripcionController::class, 'verInscritos'])->name('cursos.inscritos'); // Ver inscritos

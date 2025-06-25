@@ -36,22 +36,45 @@ class CursoController extends Controller
 
     /**
      * Actualizar un curso existente en la base de datos
-    */
+     */
     public function update(Request $request, $id)
     {
-        $curso = Curso::findOrFail($id);
-        $curso->update($request->all());
-        return redirect()->route('admin.cursos.index')->with('success', 'Curso actualizado correctamente.');
-    }
+        // Validaciones mejoradas para actualización
+        $request->validate([
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'fechaInicio' => 'required|date',
+            'fechaFin' => 'required|date|after_or_equal:fechaInicio',
+            'plazas' => 'required|integer|min:1',
+            'estado' => 'required|string|in:activo,inactivo',
+            'precio' => 'nullable|numeric|min:0',
+            'temario' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+            'portada' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
 
-    /**
-     * Eliminar un curso de la base de datos (soft delete)
-     */
-    public function destroy($id)
-    {
-        $curso = Curso::withTrashed()->findOrFail($id);
-        $curso->delete();
-        return redirect()->route('admin.cursos.index')->with('success', 'Curso eliminado correctamente.');
+        $curso = Curso::findOrFail($id);
+        $data = $request->except(['temario', 'portada']);
+
+        // Procesar archivo de temario si se proporciona
+        if ($request->hasFile('temario')) {
+            // Eliminar temario anterior si existe
+            if ($curso->temario_path && Storage::disk('public')->exists($curso->temario_path)) {
+                Storage::disk('public')->delete($curso->temario_path);
+            }
+            $data['temario_path'] = $request->file('temario')->store('temarios', 'public');
+        }
+
+        // Procesar imagen de portada si se proporciona
+        if ($request->hasFile('portada')) {
+            // Eliminar portada anterior si existe
+            if ($curso->portada_path && Storage::disk('public')->exists($curso->portada_path)) {
+                Storage::disk('public')->delete($curso->portada_path);
+            }
+            $data['portada_path'] = $request->file('portada')->store('portadas', 'public');
+        }
+
+        $curso->update($data);
+        return redirect()->route('admin.cursos.index')->with('success', 'Curso actualizado correctamente.');
     }
 
     /**
@@ -61,42 +84,6 @@ class CursoController extends Controller
     {
         $curso = Curso::withTrashed()->findOrFail($id);
         return view('admin.cursos.show', compact('curso'));
-    }
-
-    /**
-     * Listar solo los cursos activos para inscripciones
-     */
-    public function listarCursosActivos()
-    {
-        $cursos = Curso::where('estado', 'activo')->get();
-        return view('admin.inscripciones.cursos_activos', compact('cursos'));
-    }
-
-    /**
-     * Subir archivo de temario para un curso específico
-     */
-    public function uploadTemario(Request $request, $id)
-    {
-        //dd($request->all()); 
-        // Encuentra el curso por ID
-        $curso = Curso::findOrFail($id);
-
-        $request->validate([
-            'temario' => 'required|file|mimes:pdf,doc,docx|max:5120',
-        ]);
-
-        if ($request->hasFile('temario')) {
-            $archivo = $request->file('temario');
-            $nombreArchivo = $curso->id . '_' . time() . '.' . $archivo->getClientOriginalExtension();
-            $ruta = $archivo->storeAs('temarios', $nombreArchivo, 'public');
-            // dd($ruta);
-
-            // Guardar la ruta en la BD en el campo correcto (temario_path)
-            $curso->update(['temario_path' => $ruta]);
-            return redirect()->back()->with('success', 'Temario subido correctamente.');
-        }
-
-        return redirect()->back()->with('error', 'Error al subir el temario.');
     }
 
     /**
@@ -112,22 +99,20 @@ class CursoController extends Controller
             'plazas' => 'required|integer|min:1',
             'estado' => 'required|string|in:activo,inactivo',
             'precio' => 'nullable|numeric|min:0',
-            'temario' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'temario' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'portada' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $data = $request->all();
+        $data = $request->except(['temario', 'portada']);
 
         // Procesar archivo de temario si se proporciona
         if ($request->hasFile('temario')) {
-            $path = $request->file('temario')->store('temarios', 'public');
-            $data['temario_path'] = $path;
+            $data['temario_path'] = $request->file('temario')->store('temarios', 'public');
         }
 
         // Procesar imagen de portada si se proporciona
         if ($request->hasFile('portada')) {
-            $portadaPath = $request->file('portada')->store('portadas', 'public');
-            $data['portada_path'] = $portadaPath;
+            $data['portada_path'] = $request->file('portada')->store('portadas', 'public');
         }
 
         $curso = Curso::create($data);
@@ -135,31 +120,40 @@ class CursoController extends Controller
     }
 
     /**
-     * Toggle del estado de eliminación del curso (soft delete/restore)
+     * Subir archivo de temario para un curso específico
      */
-    public function toggleStatus($id)
+    public function uploadTemario(Request $request, $id)
     {
-        $curso = Curso::withTrashed()->findOrFail($id);
+        $curso = Curso::findOrFail($id);
 
-        if ($curso->trashed()) {
-            // Restaurar curso eliminado
-            $curso->restore();
-            return response()->json(['status' => 'activo']);
-        } else {
-            // Eliminar curso (soft delete)
-            $curso->delete();
-            return response()->json(['status' => 'eliminado']);
+        $request->validate([
+            'temario' => 'required|file|mimes:pdf,doc,docx|max:5120',
+        ]);
+
+        if ($request->hasFile('temario')) {
+            // Eliminar temario anterior si existe
+            if ($curso->temario_path && Storage::disk('public')->exists($curso->temario_path)) {
+                Storage::disk('public')->delete($curso->temario_path);
+            }
+
+            $archivo = $request->file('temario');
+            $nombreArchivo = $curso->id . '_' . time() . '.' . $archivo->getClientOriginalExtension();
+            $ruta = $archivo->storeAs('temarios', $nombreArchivo, 'public');
+
+            $curso->update(['temario_path' => $ruta]);
+            return redirect()->back()->with('success', 'Temario subido correctamente.');
         }
+
+        return redirect()->back()->with('error', 'Error al subir el temario.');
     }
 
     /**
-     * Toggle del estado del curso (activo/inactivo) - independiente de eliminación
+     * Toggle del estado del curso (activo/inactivo)
      */
     public function toggleEstado($id)
     {
         $curso = Curso::withTrashed()->findOrFail($id);
         
-        // Cambiar estado
         $nuevoEstado = $curso->estado === 'activo' ? 'inactivo' : 'activo';
         $curso->update(['estado' => $nuevoEstado]);
         
@@ -175,7 +169,7 @@ class CursoController extends Controller
     }
 
     /**
-     * Eliminar curso (soft delete) - independiente del estado
+     * Eliminar curso (soft delete)
      */
     public function delete($id)
     {
@@ -197,7 +191,7 @@ class CursoController extends Controller
     }
 
     /**
-     * Restaurar curso eliminado (soft delete) - independiente del estado
+     * Restaurar curso eliminado (soft delete)
      */
     public function restore($id)
     {
@@ -214,7 +208,24 @@ class CursoController extends Controller
         
         return response()->json([
             'success' => true,
-            'message' => 'Curso activado correctamente'
+            'message' => 'Curso restaurado correctamente'
         ]);
+    }
+
+    /**
+     * Toggle del estado de eliminación del curso (soft delete/restore)
+     * Método alternativo para manejar ambos casos desde una sola ruta
+     */
+    public function toggleStatus($id)
+    {
+        $curso = Curso::withTrashed()->findOrFail($id);
+
+        if ($curso->trashed()) {
+            $curso->restore();
+            return response()->json(['status' => 'activo']);
+        } else {
+            $curso->delete();
+            return response()->json(['status' => 'eliminado']);
+        }
     }
 }
