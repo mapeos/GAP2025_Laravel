@@ -97,3 +97,21 @@ Route::middleware('auth:sanctum')->prefix('appointments')->group(function () {
     Route::post('/suggest', [App\Http\Controllers\AiAppointmentController::class, 'suggest']);
     Route::post('/', [App\Http\Controllers\AiAppointmentController::class, 'create']);
 });
+
+// Ruta para obtener eventos para el calendario del dashboard
+Route::get('/events', function () {
+    $eventos = \App\Models\Evento::select('id', 'titulo', 'fecha_inicio', 'fecha_fin')
+        ->orderBy('fecha_inicio', 'asc')
+        ->get()
+        ->map(function ($evento) {
+            return [
+                'id' => $evento->id,
+                'titulo' => $evento->titulo,
+                'fecha' => $evento->fecha_inicio->format('Y-m-d'),
+                'hora_inicio' => $evento->fecha_inicio->format('H:i'),
+                'hora_fin' => $evento->fecha_fin->format('H:i')
+            ];
+        });
+    
+    return response()->json($eventos);
+});

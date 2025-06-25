@@ -16,6 +16,11 @@ use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
 
+// Ruta de prueba temporal
+Route::get('/test', function () {
+    return view('test');
+});
+
 // --------------------------------------------
 // Rutas públicas y generales
 // --------------------------------------------
@@ -285,7 +290,7 @@ Route::prefix('admin')
         Route::post('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'send'])->name('whatsapp.send');
     });
 
-/--------------------------------------------
+//--------------------------------------------
 // Rutas para sugerencias de IA
 //--------------------------------------------
 Route::middleware(['auth'])->group(function () {
@@ -301,7 +306,7 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-    //--------------------------------------------
+//--------------------------------------------
 // Rutas para sugerencias de IA (duplicadas - mantener por compatibilidad)
 //--------------------------------------------
 Route::middleware(['auth'])->group(function () {
