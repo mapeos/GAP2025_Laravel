@@ -50,7 +50,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                           <div><h5 class="card-title mb-0">Calendario de eventos</h5></div>
                         </div>
-                        @include('admin.events.calendar-dashboard')
+                        @include('admin.events.calendar-dashboard', ['eventos' => $eventos ?? []])
                       </div>
                     </div>
                   </div>

@@ -45,6 +45,20 @@ function initializeCalendar() {
             hour: '2-digit',
             minute: '2-digit',
             meridiem: false
+        },
+        dateClick: handleDateClick,
+        eventDisplay: 'block',
+        eventDidMount: function(info) {
+            const event = info.event;
+            const tooltip = `${event.title}\n${event.extendedProps.descripcion || ''}\n${new Date(event.start).toLocaleString('es-ES')}`;
+            info.el.title = tooltip;
+        },
+        viewDidMount: function(info) {
+            if (info.view.type === 'timeGridDay') {
+                addBackToMonthButton();
+            } else {
+                removeBackToMonthButton();
+            }
         }
     });
 
@@ -88,22 +102,35 @@ function loadEventosAjax() {
         .catch(error => console.error('Error cargando eventos:', error));
 }
 
+// Manejar clic en fecha (día)
+function handleDateClick(info) {
+    // Cambiar a vista de día cuando se hace clic en una fecha
+    calendar.changeView('timeGridDay', info.dateStr);
+}
+
 // Manejar clic en evento
 function handleEventClick(info) {
     const event = info.event;
-    const modal = document.getElementById('editarEventoModal');
     
-    if (modal) {
-        // Llenar el modal con los datos del evento
-        document.getElementById('editEventoId').value = event.id;
-        document.getElementById('editTitulo').value = event.title;
-        document.getElementById('editDescripcion').value = event.extendedProps.descripcion || '';
-        document.getElementById('editFechaInicio').value = event.start.toISOString().slice(0, 16);
-        document.getElementById('editFechaFin').value = event.end ? event.end.toISOString().slice(0, 16) : '';
-        document.getElementById('editUbicacion').value = event.extendedProps.ubicacion || '';
-        document.getElementById('editUrlVirtual').value = event.extendedProps.url_virtual || '';
+    // Solo abrir modal si estamos en vista de día
+    if (calendar.view.type === 'timeGridDay') {
+        const modal = document.getElementById('editarEventoModal');
         
-        new bootstrap.Modal(modal).show();
+        if (modal) {
+            // Llenar el modal con los datos del evento
+            document.getElementById('editEventoId').value = event.id;
+            document.getElementById('editTitulo').value = event.title;
+            document.getElementById('editDescripcion').value = event.extendedProps.descripcion || '';
+            document.getElementById('editFechaInicio').value = event.start.toISOString().slice(0, 16);
+            document.getElementById('editFechaFin').value = event.end ? event.end.toISOString().slice(0, 16) : '';
+            document.getElementById('editUbicacion').value = event.extendedProps.ubicacion || '';
+            document.getElementById('editUrlVirtual').value = event.extendedProps.url_virtual || '';
+            
+            new bootstrap.Modal(modal).show();
+        }
+    } else {
+        // Si estamos en vista de mes, cambiar a vista de día
+        calendar.changeView('timeGridDay', event.start);
     }
 }
 
@@ -385,4 +412,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Agregar botón para volver a vista de mes
+function addBackToMonthButton() {
+    // Remover botón existente si hay
+    removeBackToMonthButton();
+    
+    const toolbar = document.querySelector('.fc-toolbar');
+    if (toolbar) {
+        const backButton = document.createElement('button');
+        backButton.className = 'btn btn-secondary btn-sm ms-2';
+        backButton.innerHTML = '<i class="ri-calendar-line"></i> Ver mes';
+        backButton.onclick = function() {
+            calendar.changeView('dayGridMonth');
+        };
+        
+        const rightSection = toolbar.querySelector('.fc-toolbar-chunk:last-child');
+        if (rightSection) {
+            rightSection.appendChild(backButton);
+        }
+    }
+}
+
+// Remover botón de volver a mes
+function removeBackToMonthButton() {
+    const backButton = document.querySelector('.fc-toolbar .btn-secondary');
+    if (backButton && backButton.innerHTML.includes('Ver mes')) {
+        backButton.remove();
+    }
+}
 </script> 

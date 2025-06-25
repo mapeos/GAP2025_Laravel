@@ -57,6 +57,12 @@
     border-right: 1px solid #dee2e6;
     border-bottom: 1px solid #dee2e6;
     position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.calendar-day:hover {
+    background: #f8f9fa;
 }
 
 .calendar-day.other-month {
@@ -67,6 +73,52 @@
 .calendar-day.today {
     background: #e3f2fd;
     font-weight: bold;
+}
+
+.calendar-day.has-events {
+    background: #fff3cd;
+}
+
+.calendar-day.has-events:hover {
+    background: #ffeaa7;
+}
+
+.event-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #007bff;
+    border-radius: 50%;
+}
+
+.event-indicator.multiple {
+    width: 8px;
+    height: 8px;
+    background: #dc3545;
+}
+
+.event-tooltip {
+    position: absolute;
+    background: #333;
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-day:hover .event-tooltip {
+    opacity: 1;
 }
 </style>
 
@@ -87,10 +139,35 @@
 
 <script>
 let currentDate = new Date();
+let eventos = @json($eventos ?? []);
+
+// Función para cargar eventos vía AJAX
+function loadEventos() {
+    fetch('/events/json')
+        .then(response => response.json())
+        .then(data => {
+            eventos = data;
+            renderCalendar();
+        })
+        .catch(error => {
+            console.error('Error cargando eventos:', error);
+            renderCalendar(); // Renderizar sin eventos si hay error
+        });
+}
+
+// Función para obtener eventos de una fecha específica
+function getEventosForDate(date) {
+    return eventos.filter(evento => {
+        const eventoDate = new Date(evento.start);
+        return eventoDate.toDateString() === date.toDateString();
+    });
+}
 
 function renderCalendar() {
     const grid = document.getElementById('calendar-grid');
     const currentMonth = document.getElementById('current-month');
+    
+    if (!grid || !currentMonth) return;
     
     // Limpiar grid
     grid.innerHTML = '';
@@ -134,11 +211,88 @@ function renderCalendar() {
             dayElement.classList.add('today');
         }
         
+        // Obtener eventos para este día
+        const eventosDelDia = getEventosForDate(date);
+        if (eventosDelDia.length > 0) {
+            dayElement.classList.add('has-events');
+            
+            // Crear indicador de eventos
+            const eventIndicator = document.createElement('div');
+            eventIndicator.className = eventosDelDia.length > 1 ? 'event-indicator multiple' : 'event-indicator';
+            dayElement.appendChild(eventIndicator);
+            
+            // Crear tooltip con información de eventos
+            const tooltip = document.createElement('div');
+            tooltip.className = 'event-tooltip';
+            tooltip.textContent = eventosDelDia.map(e => e.title).join(', ');
+            dayElement.appendChild(tooltip);
+            
+            // Agregar evento de clic para mostrar modal
+            dayElement.addEventListener('click', () => {
+                showEventosModal(date, eventosDelDia);
+            });
+        }
+        
         // Agregar número del día
-        dayElement.innerHTML = `<div style="font-weight: bold; margin-bottom: 5px;">${date.getDate()}</div>`;
+        dayElement.innerHTML = `<div style="font-weight: bold; margin-bottom: 5px;">${date.getDate()}</div>` + dayElement.innerHTML;
         
         grid.appendChild(dayElement);
     }
+}
+
+function showEventosModal(date, eventos) {
+    // Crear modal dinámicamente
+    const modalId = 'eventosModal';
+    let modal = document.getElementById(modalId);
+    
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Eventos del ${date.toLocaleDateString('es-ES', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="eventosList"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Llenar lista de eventos
+    const eventosList = modal.querySelector('#eventosList');
+    eventosList.innerHTML = '';
+    
+    if (eventos.length === 0) {
+        eventosList.innerHTML = '<p class="text-muted">No hay eventos para este día.</p>';
+    } else {
+        eventos.forEach(evento => {
+            const eventoDiv = document.createElement('div');
+            eventoDiv.className = 'card mb-2';
+            eventoDiv.innerHTML = `
+                <div class="card-body">
+                    <h6 class="card-title">${evento.title}</h6>
+                    <p class="card-text">${evento.extendedProps.descripcion || 'Sin descripción'}</p>
+                    <small class="text-muted">
+                        ${new Date(evento.start).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
+                        ${evento.end ? ` - ${new Date(evento.end).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}` : ''}
+                    </small>
+                </div>
+            `;
+            eventosList.appendChild(eventoDiv);
+        });
+    }
+    
+    // Mostrar modal
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
 }
 
 function previousMonth() {
@@ -158,6 +312,13 @@ function today() {
 
 // Inicializar calendario cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
-    renderCalendar();
+    loadEventos();
+});
+
+// Recargar eventos cuando se hace navigate (para Livewire)
+document.addEventListener('navigate', function() {
+    setTimeout(function() {
+        loadEventos();
+    }, 100);
 });
 </script> 

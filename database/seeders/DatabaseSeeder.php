@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             
             // Seeders de eventos
             TipoEventoSeeder::class,
+            EventoSeeder::class,
             
             // Seeders relacionados con cursos
             RolesParticipacionSeeder::class,

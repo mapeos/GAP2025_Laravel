@@ -16,7 +16,6 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
-use App\Http\Controllers\FacturaController;
 
 // Ruta de prueba temporal
 Route::get('/test', function () {
@@ -46,11 +45,11 @@ Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class,
 Route::get('/admin/pagina-test', function () {
     return view('admin.dashboard.test');
 });
-Route::middleware(['auth'])->prefix('admin/pagos')->group(function () {
-    Route::view('/', 'admin.dashboard.pagos.pagos')->name('admin.pagos.index');
-    Route::view('/estado', 'admin.dashboard.pagos.estado')->name('admin.pagos.estado');
-    Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('admin.pagos.facturas');
-    Route::get('/facturas/list', [FacturaController::class, 'index'])->name('facturas.index');
+Route::middleware(['auth', 'role:Administrador'])->prefix('admin/pagos')->name('admin.pagos.')->group(function () {
+    Route::view('/', 'admin.dashboard.pagos.pagos')->name('index');
+    Route::view('/estado', 'admin.dashboard.pagos.estado')->name('estado');
+    Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('facturas');
+    Route::get('/facturas/list', [FacturaController::class, 'index'])->name('facturas.list');
     Route::get('/facturas/create', [FacturaController::class, 'create'])->name('facturas.create');
     Route::post('/facturas', [FacturaController::class, 'store'])->name('facturas.store');
 });

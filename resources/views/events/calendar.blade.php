@@ -32,7 +32,7 @@
 </div>
 
 <!-- Calendar JavaScript -->
-<script src="{{ asset('js/calendar.min.js') }}"></script>
+@include('events.partials.calendar-scripts')
 
 @endsection
 

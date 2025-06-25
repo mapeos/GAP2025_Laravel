@@ -21,7 +21,7 @@
                         <h6 class="fw-semibold mb-3">Quick Links</h6>
                         <div class="row g-3">
                             <div class="col-sm-6">
-                                <a href="/pages/dashboard" class="quick-link-card">
+                                <a href="{{ route('admin.dashboard') }}" class="quick-link-card">
                                     <i class="ri-dashboard-line"></i>
                                     <div>
                                         <h6 class="mb-0">Dashboard</h6>

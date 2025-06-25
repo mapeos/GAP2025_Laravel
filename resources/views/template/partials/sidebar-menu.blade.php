@@ -4,7 +4,7 @@
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Main</span></li>
         <!-- Dashboard -->
         <li class="nav-item active">
-            <a class="nav-link" href="/pages/dashboard">
+            <a class="nav-link" href="{{ route('admin.dashboard') }}">
                 <i class="ri-dashboard-line"></i> <span>Dashboard</span>
             </a>
         </li>

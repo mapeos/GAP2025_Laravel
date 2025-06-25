@@ -139,6 +139,52 @@
         font-size: 24px;
     }
 
+    /* Estilos para el botón de volver a mes */
+    .fc-toolbar .btn-secondary {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        color: white !important;
+        transition: all 0.2s ease;
+    }
+
+    .fc-toolbar .btn-secondary:hover {
+        background-color: #5a6268 !important;
+        border-color: #545b62 !important;
+        transform: translateY(-1px);
+    }
+
+    /* Mejorar la navegación del calendario */
+    .fc-toolbar-chunk {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Estilos para eventos en vista de día */
+    .fc-timegrid-event {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .fc-timegrid-event:hover {
+        transform: scale(1.02);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Estilos para días en vista de mes */
+    .fc-daygrid-day {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .fc-daygrid-day:hover {
+        background-color: #f8f9fa;
+    }
+
+    .fc-daygrid-day.fc-day-today {
+        background-color: #e3f2fd !important;
+    }
+
     /* Estilos para la vista de agenda */
     #agendaView {
         margin-bottom: 20px;
