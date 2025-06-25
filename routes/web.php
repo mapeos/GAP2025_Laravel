@@ -16,6 +16,7 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
+use App\Http\Controllers\FacturaController;
 
 // Ruta de prueba temporal
 Route::get('/test', function () {

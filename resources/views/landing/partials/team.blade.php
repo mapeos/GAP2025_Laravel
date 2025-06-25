@@ -79,6 +79,97 @@
           </div>
           <p>El mago de las ramas: si existe un conflicto en Git, Victor ya lo resolvió antes de que apareciera. Puede crear más ramas que un árbol y nunca se pierde en el bosque del código. ¡Mergear con él es deporte de riesgo!</p>
         </div>
+        <!-- Manuel (con chascarrillo) -->
+        <div class="team-member">
+          <div class="d-flex mb-4">
+            <div class="mr-3">
+              <img class="rounded-circle img-fluid" src="/assets/landing/images/team/team-3.jpg" alt="Manuel">
+            </div>
+            <div class="align-self-center">
+              <h4>Manuel</h4>
+              <h6 class="text-color">Backend - Gestión de cursos</h6>
+            </div>
+          </div>
+          <p>El guardián de los cursos: si un curso desaparece, seguro que está en su base de datos. Dice que puede crear un curso en menos tiempo del que tarda en prepararse un café... ¡y eso que toma mucho café!</p>
+        </div>
+        <!-- Jorge (con chascarrillo) -->
+        <div class="team-member">
+          <div class="d-flex mb-4">
+            <div class="mr-3">
+              <img class="rounded-circle img-fluid" src="/assets/landing/images/team/team-2.jpg" alt="Jorge">
+            </div>
+            <div class="align-self-center">
+              <h4>Jorge</h4>
+              <h6 class="text-color">Backend - Gestión de noticias</h6>
+            </div>
+          </div>
+          <p>El reportero backend: si hay una noticia, Jorge ya la ha publicado... ¡y con un chiste en el commit! Su lema: “No hay bug que no merezca portada”.</p>
+        </div>
+        <!-- Arnaldo (con chascarrillo) -->
+        <div class="team-member">
+          <div class="d-flex mb-4">
+            <div class="mr-3">
+              <img class="rounded-circle img-fluid" src="/assets/landing/images/team/team-1.jpg" alt="Arnaldo">
+            </div>
+            <div class="align-self-center">
+              <h4>Arnaldo</h4>
+              <h6 class="text-color">Backend - Calendarios y citas</h6>
+            </div>
+          </div>
+          <p>El señor del tiempo (y de los calendarios): si tienes una cita, Arnaldo ya la ha agendado. Dicen que puede programar un recordatorio hasta para el cumpleaños de tu pez. ¡Nunca más olvidarás una reunión!</p>
+        </div>
+        <!-- Juanjo (con chascarrillo y referencia a Argentina) -->
+        <div class="team-member">
+          <div class="d-flex mb-4">
+            <div class="mr-3">
+              <img class="rounded-circle img-fluid" src="/assets/landing/images/team/team-3.jpg" alt="Juanjo">
+            </div>
+            <div class="align-self-center">
+              <h4>Juanjo</h4>
+              <h6 class="text-color">Backend - API RESTful (Argentino)</h6>
+            </div>
+          </div>
+          <p>El arquitecto de las APIs: si hay un endpoint, Juanjo lo ha documentado. Argentino de pura cepa, su API es tan RESTful que hasta duerme en formato JSON y toma mate mientras serializa. ¡Cuidado, puede serializar hasta tus chistes y contarlos con acento porteño!</p>
+        </div>
+        <!-- Juan (con chascarrillo) -->
+        <div class="team-member">
+          <div class="d-flex mb-4">
+            <div class="mr-3">
+              <img class="rounded-circle img-fluid" src="/assets/landing/images/team/team-2.jpg" alt="Juan">
+            </div>
+            <div class="align-self-center">
+              <h4>Juan</h4>
+              <h6 class="text-color">Físico teórico - Materia oscura, palíndromos y teorema de las cuerdas</h6>
+            </div>
+          </div>
+          <p>El único capaz de encontrar materia oscura en el código... y palíndromos en los logs. Si algo no tiene sentido, Juan le encuentra simetría. Su teoría: todo bug es reversible... ¡y si no, lo convierte en palíndromo!</p>
+        </div>
+        <!-- Miguel (con chascarrillo) -->
+        <div class="team-member">
+          <div class="d-flex mb-4">
+            <div class="mr-3">
+              <img class="rounded-circle img-fluid" src="/assets/landing/images/team/team-1.jpg" alt="Miguel">
+            </div>
+            <div class="align-self-center">
+              <h4>Miguel</h4>
+              <h6 class="text-color">Backend - Gestión de usuarios y autenticaciones</h6>
+            </div>
+          </div>
+          <p>El maestro de las contraseñas: si olvidas tu clave, Miguel ya la ha reseteado antes de que lo pidas. Calvo por elección y por seguridad, porque así no se le escapa ni un pelo... ¡ni un usuario sin autenticar!</p>
+        </div>
+        <!-- Oscar (versión con énfasis en los peruanos) -->
+        <div class="team-member">
+          <div class="d-flex mb-4">
+            <div class="mr-3">
+              <img class="rounded-circle img-fluid" src="/assets/landing/images/team/team-2.jpg" alt="Oscar">
+            </div>
+            <div class="align-self-center">
+              <h4>Oscar</h4>
+              <h6 class="text-color">Líder supremo - Steve Jobs de Academia Postal</h6>
+            </div>
+          </div>
+          <p>Dueño y señor de Clevertic, nuestro líder visionario. Experto en encontrar callejones donde nadie más los ve y capaz de motivar al equipo hasta en lunes lluviosos. Dicen que es el Steve Jobs de la academia... pero si le mencionas un peruano, cambia de acera más rápido que su sombra. ¡Eso sí, ni los peruanos ni las palomas logran despistarlo de su misión de liderazgo!</p>
+        </div>
       </div>
     </div>
   </div>
