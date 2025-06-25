@@ -6,7 +6,7 @@
 <section class="fixed-top navigation">
   <div class="container">
     <nav class="navbar navbar-expand-lg navbar-light justify-content-center">
-      <a class="navbar-brand d-flex align-items-center mx-auto" href="/" style="font-weight: bold; font-size: 1.5rem; color: #6366f1;">
+      <a class="navbar-brand d-flex align-items-center mx-auto" href="/" style="font-weight: bold; font-size: 1.1rem; color: #6366f1; letter-spacing: -1px; margin-right: 4rem !important;">
         Auria Academy
       </a>
       <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar"
@@ -32,9 +32,9 @@
             <a class="nav-link" href="/contacto">Contacto</a>
           </li>
         </ul>
-        <div class="d-flex align-items-center justify-content-center flex-nowrap w-100" style="gap:0.7rem; white-space:nowrap;">
-          <a href="{{ route('login') }}" class="btn btn-primary btn-sm primary-shadow" style="min-width:110px;">Iniciar sesión</a>
-          <a href="{{ route('password.request') }}" class="btn btn-primary btn-sm primary-shadow" style="min-width:170px;">¿Olvidaste tu contraseña?</a>
+        <div class="d-flex align-items-center justify-content-center flex-nowrap w-100" style="gap:0.4rem; white-space:nowrap; justify-content: center !important;">
+          <a href="{{ route('login') }}" class="btn btn-primary btn-sm primary-shadow" style="min-width:80px; font-size:0.95rem; padding:0.3rem 0.7rem;">Entrar</a>
+          <a href="{{ route('password.request') }}" class="btn btn-primary btn-sm primary-shadow" style="min-width:120px; font-size:0.90rem; padding:0.3rem 0.7rem;">¿Olvidaste?</a>
         </div>
       </div>
     </nav>
