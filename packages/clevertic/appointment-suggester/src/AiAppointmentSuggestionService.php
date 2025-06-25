@@ -47,10 +47,10 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
                 $headers['Authorization'] = 'Bearer ' . $this->apiKey;
             }
 
-            // Intentar con timeout más corto primero
+            // Intentar con timeout más corto para evitar HTTP 504
             try {
                 $response = Http::withHeaders($headers)
-                    ->timeout(60) // 1 minuto para la primera prueba
+                    ->timeout(30) // 30 segundos máximo para evitar timeout del frontend
                     ->post("{$this->ollamaUrl}/api/generate", [
                         'model' => $this->model,
                         'prompt' => $prompt,
@@ -63,33 +63,14 @@ class AiAppointmentSuggestionService implements AppointmentSuggesterInterface
                     return $this->filterConflicts($suggestions, $request);
                 }
             } catch (\Exception $e) {
-                Log::warning('Primera prueba de IA falló, intentando con timeout más largo', [
+                Log::warning('IA timeout, usando fallback', [
                     'error' => $e->getMessage()
                 ]);
             }
 
-            // Si la primera prueba falló, intentar con timeout más largo
-            $response = Http::withHeaders($headers)
-                ->timeout(300) // 5 minutos para la segunda prueba
-                ->post("{$this->ollamaUrl}/api/generate", [
-                    'model' => $this->model,
-                    'prompt' => $prompt,
-                    'stream' => false
-                ]);
-
-            if (!$response->ok()) {
-                Log::warning('Error comunicándose con Ollama, usando fallback', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
-                ]);
-                return $this->fallbackSuggestions($request);
-            }
-
-            $output = $response->json('response');
-            $suggestions = $this->parseSuggestions($output, $request->maxSuggestions);
-
-            // Filtrar conflictos con citas existentes
-            return $this->filterConflicts($suggestions, $request);
+            // Si la IA falla o tarda demasiado, usar fallback inmediatamente
+            Log::info('Usando sugerencias de fallback debido a timeout de IA');
+            return $this->fallbackSuggestions($request);
 
         } catch (\Exception $e) {
             Log::error('Error en AiAppointmentSuggestionService', [

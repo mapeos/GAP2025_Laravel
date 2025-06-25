@@ -354,7 +354,7 @@ async function generateSuggestions() {
     };
     
     try {
-        const response = await fetch('/api/appointments/suggest', {
+        const response = await fetch('/ai/appointments/suggest', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -362,6 +362,14 @@ async function generateSuggestions() {
             },
             body: JSON.stringify(data)
         });
+        
+        // Check if response is ok
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('HTTP Error:', response.status, response.statusText);
+            console.error('Response body:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const result = await response.json();
         
@@ -376,8 +384,9 @@ async function generateSuggestions() {
         }
     } catch (error) {
         console.error('Error generando sugerencias:', error);
+        console.error('Request data:', data);
         loadingDiv.style.display = 'none';
-        alert('Error al generar sugerencias. Por favor intenta de nuevo.');
+        alert('Error al generar sugerencias: ' + error.message + '. Por favor intenta de nuevo.');
     }
 }
 
@@ -468,7 +477,7 @@ async function confirmAppointment() {
     };
     
     try {
-        const response = await fetch('/api/appointments', {
+        const response = await fetch('/ai/appointments/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
