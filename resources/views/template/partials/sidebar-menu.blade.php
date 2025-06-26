@@ -29,6 +29,13 @@
 
             </ul>
         </li>
+                <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
+        <!-- CURSOS Section -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
+                <i class="ri-file-list-3-line"></i> <span>Cursos</span>
+                    </a>
+        </li>
 
         <!-- Seccion de Calendario -->
         <li class="nav-item has-submenu parent">
@@ -87,14 +94,14 @@
                 <i class="ri-whatsapp-line"></i> <span>WhatsApp Notificación</span>
             </a>
         </li>
-        
-        <!-- Cursos -->
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('admin.cursos.index') }}">
-                <i class="ri-book-open-line"></i> <span>Cursos</span>
-            </a>
+        <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
+        <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
+        <!-- CURSOS Section -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
+                <i class="ri-file-list-3-line"></i> <span>Cursos</span>
+                    </a>
         </li>
-        
         <!-- PARTICIPANTES Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
@@ -123,7 +130,6 @@
                 </li> -->
             </ul>
         </li>
-        
         <!-- Pages Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Pages</span></li>
         

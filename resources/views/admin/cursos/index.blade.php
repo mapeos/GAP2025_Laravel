@@ -135,97 +135,92 @@
         </div>
     </div>
 
-    {{-- Tabla de cursos --}}
-    <table class="table align-middle table-responsive">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Título</th>
-                <th>Descripción</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Fin</th>
-                <th>Plazas</th>
-                <th>Estado</th>
-                <th>Eliminado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($cursos as $curso)
-                <tr @if ($curso->trashed()) class="table-danger" @endif>
-                    <td>{{ $curso->id }}</td>
-                    <td>
+  {{-- Tabla de cursos --}}
+<table class="table align-middle table-responsive">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
+            <th>Plazas</th>
+            <th>Estado</th>
+            <th>Eliminado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($cursos as $curso)
+            <tr @if ($curso->trashed()) class="table-danger" @endif>
+                <td>{{ $curso->id }}</td>
+                <td>
+                    <a href="{{ route('admin.cursos.show', $curso->id) }}" class="fw-bold text-decoration-none {{ $curso->trashed() ? 'text-danger' : '' }}">
                         {{ $curso->titulo }}
-                        @if ($curso->trashed())
-                            <i class="ri-alert-line text-danger" title="Curso eliminado"></i>
-                        @endif
-                    </td>
-                    <td>{{ $curso->descripcion }}</td>
-                    <td>{{ $curso->fechaInicio }}</td>
-                    <td>{{ $curso->fechaFin }}</td>
-                    <td>
-                        <div class="{{ $curso->getPlazasColorClass() }}">
-                            <strong>{{ $curso->getPlazasDisponibles() }}</strong> / {{ $curso->plazas }}
+                    </a>
+                    @if ($curso->trashed())
+                        <i class="ri-alert-line text-danger" title="Curso eliminado"></i>
+                    @endif
+                </td>
+                <td>{{ $curso->fechaInicio }}</td>
+                <td>{{ $curso->fechaFin }}</td>
+                <td>
+                    <div class="{{ $curso->getPlazasColorClass() }}">
+                        <strong>{{ $curso->getPlazasDisponibles() }}</strong> / {{ $curso->plazas }}
+                    </div>
+                    <small class="text-muted">
+                        {{ number_format($curso->getPorcentajeOcupacion(), 1) }}% ocupado
+                    </small>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check form-switch me-2">
+                            <input class="form-check-input toggle-estado" type="checkbox" 
+                                   data-curso-id="{{ $curso->id }}" 
+                                   {{ $curso->estado === 'activo' ? 'checked' : '' }}
+                                   style="cursor: pointer; width: 2.5rem; height: 1.25rem;">
                         </div>
-                        <small class="text-muted">
-                            {{ number_format($curso->getPorcentajeOcupacion(), 1) }}% ocupado
-                        </small>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="form-check form-switch me-2">
-                                <input class="form-check-input toggle-estado" type="checkbox" 
-                                       data-curso-id="{{ $curso->id }}" 
-                                       {{ $curso->estado === 'activo' ? 'checked' : '' }}
-                                       style="cursor: pointer; width: 2.5rem; height: 1.25rem;">
-                            </div>
-                            <span class="estado-texto fw-medium">
-                                {{ $curso->estado === 'activo' ? 'Publicado' : 'Dado de baja' }}
-                            </span>
-                        </div>
-                    </td>
-                    <td>
-                        @if ($curso->trashed())
-                            {{ $curso->deleted_at->format('d/m/Y H:i') }}
+                        <span class="estado-texto fw-medium">
+                            {{ $curso->estado === 'activo' ? 'Publicado' : 'Dado de baja' }}
+                        </span>
+                    </div>
+                </td>
+                <td>
+                    @if ($curso->trashed())
+                        {{ $curso->deleted_at->format('d/m/Y H:i') }}
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.3rem; flex-wrap: nowrap; white-space: nowrap;">
+                        <a href="{{ route('admin.cursos.edit', $curso->id) }}" 
+                           class="btn btn-sm btn-warning" 
+                           title="Editar curso">
+                            <i class="ri-edit-line"></i>
+                        </a>
+                        @if($curso->trashed())
+                            <button class="btn btn-sm btn-success toggle-delete" 
+                                    data-curso-id="{{ $curso->id }}" 
+                                    title="Activar curso">
+                                <i class="ri-upload-2-line"></i>
+                            </button>
                         @else
-                            <span class="text-muted">-</span>
+                            <button class="btn btn-sm btn-danger toggle-delete" 
+                                    data-curso-id="{{ $curso->id }}" 
+                                    title="Eliminar curso">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
                         @endif
-                    </td>
-                    <td>
-                        <div style="display: flex; gap: 0.3rem; flex-wrap: nowrap; white-space: nowrap;">
-                            <a href="{{ route('admin.cursos.show', $curso->id) }}" 
-                               class="btn btn-sm btn-info" 
-                               title="Ver curso">
-                                <i class="ri-eye-line"></i>
-                            </a>
-                            <a href="{{ route('admin.cursos.edit', $curso->id) }}" 
-                               class="btn btn-sm btn-warning" 
-                               title="Editar curso">
-                                <i class="ri-edit-line"></i>
-                            </a>
-                            @if($curso->trashed())
-                                <button class="btn btn-sm btn-success toggle-delete" 
-                                        data-curso-id="{{ $curso->id }}" 
-                                        title="Activar curso">
-                                    <i class="ri-upload-2-line"></i>
-                                </button>
-                            @else
-                                <button class="btn btn-sm btn-danger toggle-delete" 
-                                        data-curso-id="{{ $curso->id }}" 
-                                        title="Eliminar curso">
-                                    <i class="ri-delete-bin-line"></i>
-                                </button>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="9" class="text-center">No hay cursos disponibles.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="8" class="text-center">No hay cursos disponibles.</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
 
     <!-- Paginación -->
     <div class="d-flex justify-content-center">
