@@ -61,8 +61,10 @@ class InscripcionController extends Controller
      * @param int $curso - El ID del curso donde inscribir
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function agregarInscripcion(Request $request, Curso $curso)
+    public function agregarInscripcion(Request $request, $curso)
     {
+        $curso = Curso::findOrFail($curso);
+
         Log::info('[INSCRIPCION] Intentando inscribir persona', [
             'curso_id' => $curso->id,
             'persona_id' => $request->persona_id,
