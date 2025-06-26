@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Models\Persona;
+use Illuminate\Support\Facades\Log;
 
 
 class UserController extends Controller
@@ -58,6 +59,20 @@ class UserController extends Controller
 
         // No asignar rol por defecto, el admin lo hará manualmente
         // $user->syncRoles($validated['roles']); // El admin asignará el rol después
+
+        // Crear persona asociada automáticamente al crear usuario
+        if (!$user->persona) {
+            $persona = Persona::create([
+                'nombre' => $user->name,
+                'apellido1' => '',
+                'apellido2' => '',
+                'dni' => null,
+                'tfno' => '',
+                'direccion_id' => null,
+                'user_id' => $user->id,
+            ]);
+            Log::info('[CREACION USUARIO] Persona creada automáticamente', ['persona_id' => $persona->id, 'user_id' => $user->id]);
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'Usuario creado correctamente.');
     }
@@ -155,8 +170,9 @@ class UserController extends Controller
                 $user->syncRoles([$role]);
 
                 // Crear una entrada en la tabla personas si no existe
+                Log::info('[VALIDACION] Intentando crear persona para usuario', ['user_id' => $user->id]);
                 if (!$user->persona) {
-                    Persona::create([
+                    $persona = Persona::create([
                         'nombre' => $user->name, // Usa el nombre del usuario
                         'apellido1' => '', // Ajusta según tus necesidades
                         'apellido2' => '',
@@ -165,6 +181,9 @@ class UserController extends Controller
                         'direccion_id' => null,
                         'user_id' => $user->id,
                     ]);
+                    Log::info('[VALIDACION] Persona creada', ['persona_id' => $persona->id, 'user_id' => $user->id]);
+                } else {
+                    Log::info('[VALIDACION] El usuario ya tiene persona', ['user_id' => $user->id]);
                 }
             }
         }

@@ -165,7 +165,7 @@ Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->group(functi
         return redirect()->route('admin.cursos.index');
     })->name('cursos.activos'); // Redirige a la lista de cursos
     Route::get('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir.form'); // Formulario de inscripción
-    Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir'); // Inscribir personas
+    Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'agregarInscripcion'])->name('cursos.inscribir'); // Inscribir personas
     Route::get('/cursos/{curso}/inscritos', [InscripcionController::class, 'verInscritos'])->name('cursos.inscritos'); // Ver inscritos
     Route::delete('/cursos/{curso}/baja/{persona}', [InscripcionController::class, 'darBaja'])->name('cursos.baja'); // Dar de baja a un alumno
 });

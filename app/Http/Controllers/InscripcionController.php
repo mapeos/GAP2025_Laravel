@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Curso;
 use App\Models\Persona;
+use Illuminate\Support\Facades\Log;
 
 class InscripcionController extends Controller
 {
@@ -24,27 +25,33 @@ class InscripcionController extends Controller
      * Inscribe una persona en un curso.
      */
     public function agregarInscripcion(Request $request, Curso $curso)
-{
-    $request->validate([
-        'persona_id' => 'required|exists:personas,id',
-        'rol_participacion_id' => 'required|exists:roles_participacion,id',
-    ]);
+    {
+        Log::info('[INSCRIPCION] Intentando inscribir persona', [
+            'curso_id' => $curso->id,
+            'persona_id' => $request->persona_id,
+            'rol_participacion_id' => $request->rol_participacion_id
+        ]);
+        $request->validate([
+            'persona_id' => 'required|exists:personas,id',
+            'rol_participacion_id' => 'required|exists:roles_participacion,id',
+        ]);
 
-    // Verificar si la persona ya está inscrita en el curso
-    $yaInscrito = $curso->personas()->where('persona_id', $request->persona_id)->exists();
+        $yaInscrito = $curso->personas()->where('persona_id', $request->persona_id)->exists();
+        Log::info('[INSCRIPCION] ¿Ya inscrito?', ['yaInscrito' => $yaInscrito]);
 
-    if ($yaInscrito) {
-        return redirect()->back()->with('error', 'La persona ya está inscrita en este curso.');
+        if ($yaInscrito) {
+            Log::warning('[INSCRIPCION] Persona ya inscrita', ['curso_id' => $curso->id, 'persona_id' => $request->persona_id]);
+            return redirect()->back()->with('error', 'La persona ya está inscrita en este curso.');
+        }
+
+        $curso->personas()->attach($request->persona_id, [
+            'rol_participacion_id' => $request->rol_participacion_id,
+            'estado' => 'pendiente',
+        ]);
+        Log::info('[INSCRIPCION] Persona inscrita correctamente', ['curso_id' => $curso->id, 'persona_id' => $request->persona_id]);
+
+        return redirect()->back()->with('success', 'Persona inscrita correctamente.');
     }
-
-    // Si no está inscrita, la inscribimos
-    $curso->personas()->attach($request->persona_id, [
-        'rol_participacion_id' => $request->rol_participacion_id,
-        'estado' => 'pendiente',
-    ]);
-
-    return redirect()->back()->with('success', 'Persona inscrita correctamente.');
-}
 
     /**
      * Muestra el listado de personas inscritas en un curso.
