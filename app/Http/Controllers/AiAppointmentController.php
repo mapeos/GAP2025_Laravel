@@ -213,7 +213,10 @@ class AiAppointmentController extends Controller
             ]);
 
             DB::commit();
-
+            
+            // Limpiar caché de eventos
+            $this->clearEventosCache();
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Cita creada exitosamente y agregada al calendario',
@@ -225,7 +228,7 @@ class AiAppointmentController extends Controller
                     'tipo_consulta' => $request->tipo_consulta
                 ]
             ]);
-
+            
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creando cita con IA', [
@@ -420,4 +423,15 @@ class AiAppointmentController extends Controller
 
         return $suggestions;
     }
-} 
+
+    /**
+     * Limpia el cache de eventos
+     */
+    private function clearEventosCache()
+    {
+        \Illuminate\Support\Facades\Cache::forget('eventos.index');
+        \Illuminate\Support\Facades\Cache::forget('eventos.user.' . \Illuminate\Support\Facades\Auth::id());
+        \Illuminate\Support\Facades\Cache::forget('profesores.calendar');
+        \Illuminate\Support\Facades\Cache::forget('alumnos.calendar');
+    }
+}

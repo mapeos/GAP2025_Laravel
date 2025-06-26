@@ -395,6 +395,24 @@ function displaySuggestions(suggestions) {
     const container = document.getElementById('suggestionsList');
     container.innerHTML = '';
 
+    // Añadir recordatorio de fecha y hora original
+    const fechaOriginal = document.getElementById('ai_fecha_preferida').value;
+    const horaOriginal = document.getElementById('ai_hora_preferida').value;
+
+    if (fechaOriginal || horaOriginal) {
+        const recordatorio = document.createElement('div');
+        recordatorio.className = 'col-12 mb-3';
+        recordatorio.innerHTML = `
+            <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                <strong>Recordatorio:</strong> Solicitaste originalmente
+                ${fechaOriginal ? `<strong>fecha: ${fechaOriginal}</strong>` : 'sin fecha específica'}
+                ${horaOriginal ? `<strong>hora: ${horaOriginal}</strong>` : 'sin hora específica'}
+            </div>
+        `;
+        container.appendChild(recordatorio);
+    }
+
     suggestions.forEach((suggestion, index) => {
         const card = document.createElement('div');
         card.className = 'col-md-6 mb-3';
@@ -499,10 +517,74 @@ async function confirmAppointment() {
 
         if (result.success) {
             alert('¡Cita creada exitosamente!');
-            // Cerrar modal y recargar calendario
-            const modal = bootstrap.Modal.getInstance(document.getElementById('solicitudCitaModal2'));
-            modal.hide();
-            location.reload();
+            // Cerrar modal y actualizar calendario sin recargar la página
+            try {
+                const modalElement = document.getElementById('solicitudCitaModal2');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                    // Asegurar que se elimine el backdrop y se restaure el scroll
+                    setTimeout(() => {
+                        // Eliminar el backdrop si existe
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) backdrop.remove();
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                        // Forzar el reflow del DOM para que los cambios se apliquen
+                        document.body.offsetHeight;
+                        // Establecer explícitamente el overflow después del reflow
+                        document.body.style.overflow = 'visible';
+                        // Asegurar que la barra de scroll sea visible
+                        document.documentElement.style.overflow = 'auto';
+                        document.documentElement.style.overflowY = 'scroll';
+                    }, 300); // Esperar a que termine la animación de cierre
+                } else {
+                    // Si no hay instancia, intentar cerrar de otra manera
+                    $(modalElement).modal('hide'); // Alternativa con jQuery si está disponible
+                    // Asegurar limpieza después de jQuery
+                    setTimeout(() => {
+                        // Y eliminar el backdrop si existe
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) backdrop.remove();
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                        // Forzar el reflow del DOM para que los cambios se apliquen
+                        document.body.offsetHeight;
+                        // Establecer explícitamente el overflow después del reflow
+                        document.body.style.overflow = 'visible';
+                        // Asegurar que la barra de scroll sea visible
+                        document.documentElement.style.overflow = 'auto';
+                        document.documentElement.style.overflowY = 'scroll';
+                    }, 300);
+                }
+            } catch (error) {
+                console.error('Error al cerrar el modal:', error);
+                // Intentar cerrar el modal de otra manera
+                const modalElement = document.getElementById('solicitudCitaModal2');
+                modalElement.classList.remove('show');
+                modalElement.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                // Forzar el reflow del DOM para que los cambios se apliquen
+                document.body.offsetHeight;
+                // Establecer explícitamente el overflow después del reflow
+                document.body.style.overflow = 'visible';
+                // Asegurar que la barra de scroll sea visible
+                document.documentElement.style.overflow = 'auto';
+                document.documentElement.style.overflowY = 'scroll';
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }
+
+            // Llamar a loadEventosAjax en lugar de recargar la página
+            if (typeof loadEventosAjax === 'function') {
+                loadEventosAjax();
+            } else {
+                location.reload(); // Fallback si la función no está disponible
+            }
         } else {
             alert('Error al crear la cita: ' + (result.message || 'Error desconocido'));
         }
