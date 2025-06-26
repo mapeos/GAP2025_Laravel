@@ -17,11 +17,6 @@ use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
 
-// Ruta de prueba temporal
-Route::get('/test', function () {
-    return view('test');
-});
-
 // --------------------------------------------
 // Rutas públicas y generales
 // --------------------------------------------
@@ -160,14 +155,13 @@ Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.particip
 });
 
 // Rutas de INSCRIPCIONES a Cursos
-Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->group(function () {
-    Route::get('/cursos', function() {
-        return redirect()->route('admin.cursos.index');
-    })->name('cursos.activos'); // Redirige a la lista de cursos
+Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->middleware(['auth'])->group(function () {
+    Route::get('/cursos', [InscripcionController::class, 'cursosActivos'])->name('cursos.activos'); // Lista de cursos activos para inscribir
     Route::get('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir.form'); // Formulario de inscripción
-    Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir'); // Inscribir personas
+    Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'agregarInscripcion'])->name('cursos.inscribir'); // Inscribir personas
     Route::get('/cursos/{curso}/inscritos', [InscripcionController::class, 'verInscritos'])->name('cursos.inscritos'); // Ver inscritos
     Route::delete('/cursos/{curso}/baja/{persona}', [InscripcionController::class, 'darBaja'])->name('cursos.baja'); // Dar de baja a un alumno
+    Route::put('/cursos/{curso}/estado/{persona}', [InscripcionController::class, 'actualizarEstado'])->name('cursos.estado'); // Actualizar estado de inscripción
 });
 
 // --------------------------------------------
