@@ -318,3 +318,6 @@ Route::middleware(['auth'])->group(function () {
 
 // Rutas de autenticación con Firebase
 Route::post('/login/firebase', [FirebaseAuthController::class, 'login']);
+
+
+Route::get('/admin/sincronizar-usuarios-personas', [\App\Http\Controllers\UserController::class, 'sincronizarUsuariosPersonas']);

@@ -160,7 +160,7 @@ class UserController extends Controller
                         'nombre' => $user->name, // Usa el nombre del usuario
                         'apellido1' => '', // Ajusta según tus necesidades
                         'apellido2' => '',
-                        'dni' => '', // Ajusta según tus necesidades
+                        'dni' => null, // Ajusta según tus necesidades
                         'tfno' => '',
                         'direccion_id' => null,
                         'user_id' => $user->id,
@@ -214,23 +214,23 @@ class UserController extends Controller
     }
 
     public function sincronizarUsuariosPersonas()
-{
-    $usuarios = \App\Models\User::all();
+    {
+        $usuarios = \App\Models\User::all();
 
-    foreach ($usuarios as $usuario) {
-        if (!$usuario->persona) {
-            \App\Models\Persona::create([
-                'nombre' => $usuario->name,
-                'apellido1' => '',
-                'apellido2' => '',
-                'dni' => '',
-                'tfno' => '',
-                'direccion_id' => null,
-                'user_id' => $usuario->id,
-            ]);
+        foreach ($usuarios as $usuario) {
+            if (!$usuario->persona) {
+                \App\Models\Persona::create([
+                    'nombre' => $usuario->name,
+                    'apellido1' => '',
+                    'apellido2' => '',
+                    'dni' => 'user_' . $usuario->id, // Valor único y no nulo
+                    'tfno' => '',
+                    'direccion_id' => null,
+                    'user_id' => $usuario->id,
+                ]);
+            }
         }
-    }
 
-    return 'Sincronización completada';
-}
+        return 'Sincronización completada';
+    }
 }
