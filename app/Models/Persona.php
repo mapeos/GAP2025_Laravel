@@ -15,7 +15,7 @@ class Persona extends Model
         'nombre',
         'apellido1',
         'apellido2',
-        'dni',
+        'dni', // ahora puede ser null
         'tfno',
         'direccion_id',
         'user_id',
@@ -24,6 +24,7 @@ class Persona extends Model
     protected $casts = [
         'direccion_id' => 'integer',
         'user_id' => 'integer',
+        'dni' => 'string', // asegurar tipo string aunque sea null
     ];
 
 

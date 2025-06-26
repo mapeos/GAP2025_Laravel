@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('apellido1');
             $table->string('apellido2')->nullable();
-            $table->string('dni')->unique();
+            $table->string('dni')->unique()->nullable();
             $table->string('tfno')->nullable();
             $table->unsignedBigInteger('direccion_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
