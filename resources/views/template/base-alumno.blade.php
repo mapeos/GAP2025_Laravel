@@ -158,11 +158,7 @@
                 </div>
               </div>
               <!-- Second Row: Breadcrumbs -->
-               <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                  <li class="breadcrumb-item "> <a href="/dashboard" class="text-decoration-none"> Dashboard </a> </li>
-                  @yield('breadcrumb')
-                </ol> </nav>
+               @yield('breadcrumbs')
             </div>
             <div class="row">
               @yield('content')

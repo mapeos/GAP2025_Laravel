@@ -3,6 +3,7 @@
 @section('title', 'Detalles de Participante')
 
 @section('content')
+    <a href="{{ url()->previous() }}" class="btn btn-secondary mb-3"><i class="ri-arrow-left-line"></i> Volver</a>
     <h1>Detalles de {{ $persona->nombre }} {{ $persona->apellido1 }} {{ $persona->apellido2 }}</h1>
     <div class="card">
         <div class="card-body">
