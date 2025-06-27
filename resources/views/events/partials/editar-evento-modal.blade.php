@@ -82,9 +82,14 @@
                     @endif
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger me-auto" onclick="deleteEvento()">
-                        <i class="ri-delete-bin-line"></i> Eliminar
-                    </button>
+                    <div class="me-auto">
+                        <button type="button" class="btn btn-danger" onclick="deleteEvento(event)">
+                            <i class="ri-delete-bin-line"></i> Eliminar
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="verDetallesEvento()">
+                            <i class="ri-eye-line"></i> Ver Detalles
+                        </button>
+                    </div>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Actualizar Evento</button>
                 </div>
@@ -94,7 +99,12 @@
 </div>
 
 <script>
-function deleteEvento() {
+function deleteEvento(event) {
+    // Si se proporciona un evento, prevenir el comportamiento predeterminado
+    if (event) {
+        event.preventDefault();
+    }
+
     const eventoId = document.getElementById('editEventoId').value;
     if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
         // Añadir parámetro json=true a la URL para forzar respuesta JSON
@@ -104,14 +114,30 @@ function deleteEvento() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            },
-            // No seguir redirecciones automáticamente
-            redirect: 'manual'
+            }
         })
         .then(response => {
-            // Verificar si la respuesta es exitosa o una redirección
-            if (response.ok || (response.status >= 300 && response.status < 400)) {
-                // Operación exitosa
+            // Primero verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json().then(data => {
+                    if (data.success) {
+                        // Operación exitosa
+                        showNotification('Evento eliminado exitosamente', 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
+
+                        // Cambiar a vista mensual después de eliminar
+                        calendar.changeView('dayGridMonth');
+
+                        // Recargar eventos
+                        loadEventosAjax();
+                    } else {
+                        showNotification(data.message || 'Error al eliminar evento', 'error');
+                    }
+                    return data;
+                });
+            } else {
+                // Si no es JSON, manejar como éxito de todas formas
                 showNotification('Evento eliminado exitosamente', 'success');
                 bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
 
@@ -120,24 +146,25 @@ function deleteEvento() {
 
                 // Recargar eventos
                 loadEventosAjax();
-                return { success: true };
-            }
 
-            // Intentar parsear la respuesta como JSON
-            return response.json().catch(() => {
-                // Si no se puede parsear como JSON, devolver un objeto de error
-                return { success: false, message: 'Error al eliminar evento' };
-            });
-        })
-        .then(result => {
-            if (!result.success) {
-                showNotification(result.message || 'Error al eliminar evento', 'error');
+                return { success: true };
             }
         })
         .catch(error => {
             console.error('Error:', error);
             showNotification('Error al eliminar evento', 'error');
         });
+
+        // Importante: devolver false para evitar comportamiento predeterminado
+        return false;
     }
+}
+
+function verDetallesEvento() {
+    const eventoId = document.getElementById('editEventoId').value;
+    // Cerrar el modal antes de navegar
+    bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
+    // Navegar a la página de detalles
+    window.location.href = `/events/${eventoId}`;
 }
 </script>
