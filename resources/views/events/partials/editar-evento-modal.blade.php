@@ -32,7 +32,7 @@
                         </div>
                         @endif
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -47,13 +47,13 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="editDescripcion" class="form-label">Descripción</label>
                         <textarea class="form-control" id="editDescripcion" name="descripcion" rows="3"
                                   placeholder="Descripción del evento..."></textarea>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -70,7 +70,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
                     <div class="mb-3">
                         <label for="editStatus" class="form-label">Estado</label>
@@ -82,9 +82,14 @@
                     @endif
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger me-auto" onclick="deleteEvento()">
-                        <i class="ri-delete-bin-line"></i> Eliminar
-                    </button>
+                    <div class="me-auto">
+                        <button type="button" class="btn btn-danger" onclick="deleteEvento(event)">
+                            <i class="ri-delete-bin-line"></i> Eliminar
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="verDetallesEvento()">
+                            <i class="ri-eye-line"></i> Ver Detalles
+                        </button>
+                    </div>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Actualizar Evento</button>
                 </div>
@@ -94,29 +99,72 @@
 </div>
 
 <script>
-function deleteEvento() {
+function deleteEvento(event) {
+    // Si se proporciona un evento, prevenir el comportamiento predeterminado
+    if (event) {
+        event.preventDefault();
+    }
+
     const eventoId = document.getElementById('editEventoId').value;
     if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-        fetch(`/admin/events/${eventoId}`, {
+        // Añadir parámetro json=true a la URL para forzar respuesta JSON
+        fetch(`/admin/events/${eventoId}?json=true`, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
+        .then(response => {
+            // Primero verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json().then(data => {
+                    if (data.success) {
+                        // Operación exitosa
+                        showNotification('Evento eliminado exitosamente', 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
+
+                        // Cambiar a vista mensual después de eliminar
+                        calendar.changeView('dayGridMonth');
+
+                        // Recargar eventos
+                        loadEventosAjax();
+                    } else {
+                        showNotification(data.message || 'Error al eliminar evento', 'error');
+                    }
+                    return data;
+                });
+            } else {
+                // Si no es JSON, manejar como éxito de todas formas
                 showNotification('Evento eliminado exitosamente', 'success');
                 bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
+
+                // Cambiar a vista mensual después de eliminar
+                calendar.changeView('dayGridMonth');
+
+                // Recargar eventos
                 loadEventosAjax();
-            } else {
-                showNotification('Error al eliminar evento', 'error');
+
+                return { success: true };
             }
         })
         .catch(error => {
             console.error('Error:', error);
             showNotification('Error al eliminar evento', 'error');
         });
+
+        // Importante: devolver false para evitar comportamiento predeterminado
+        return false;
     }
 }
-</script> 
+
+function verDetallesEvento() {
+    const eventoId = document.getElementById('editEventoId').value;
+    // Cerrar el modal antes de navegar
+    bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
+    // Navegar a la página de detalles
+    window.location.href = `/events/${eventoId}`;
+}
+</script>

@@ -1303,3 +1303,37 @@ curl -i -X POST \
 - El token de acceso puede expirar; si ocurre un error 401, genera uno nuevo en Meta for Developers.
 - Puedes modificar los números destinatarios en el servicio `WhatsAppService`.
 - El sistema registra en el log de Laravel la respuesta de la API para cada envío.
+
+---
+
+## 📄 Acceso y descarga de archivos en Laravel (storage) con Docker
+
+Para que la descarga de archivos (como temarios PDF) funcione correctamente en todos los entornos Docker:
+
+1. **El enlace simbólico `public/storage` debe crearse dentro del contenedor app** (no solo en tu máquina):
+   
+   Reemplaza `<nombre-contenedor-app>` por el nombre de tu contenedor (por ejemplo, `LaravelGAP2025-app`):
+   ```bash
+   docker exec -it <nombre-contenedor-app> php artisan storage:link
+   ```
+   Si ya existe y apunta mal, elimínalo y vuelve a crearlo:
+   ```bash
+   docker exec -it <nombre-contenedor-app> rm /var/www/public/storage
+   docker exec -it <nombre-contenedor-app> php artisan storage:link
+   ```
+
+2. **Verifica que los archivos subidos estén en `/var/www/storage/app/public/temarios` dentro del contenedor.**
+
+3. **Asegúrate de que los permisos de las carpetas y archivos permitan la lectura:**
+   ```bash
+   docker exec -it <nombre-contenedor-app> chmod -R 755 /var/www/storage/app/public
+   ```
+
+4. **La ruta de descarga en las vistas debe ser:**
+   ```blade
+   href="{{ asset('storage/' . $curso->temario_path) }}"
+   ```
+
+5. **Si usas volúmenes en Docker, asegúrate de que `./www` esté correctamente montado en `/var/www` en todos los servicios necesarios (app, nginx).**
+
+> Si tienes problemas de acceso (error 403 o 404), revisa los pasos anteriores y consulta con el equipo.

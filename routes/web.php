@@ -17,11 +17,7 @@ use App\Http\Controllers\FacultativoController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
-
-// Ruta de prueba temporal
-Route::get('/test', function () {
-    return view('test');
-});
+use Illuminate\Support\Facades\Auth;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -54,9 +50,10 @@ Route::middleware(['auth', 'role:Administrador'])->prefix('admin/pagos')->name('
     Route::get('/facturas/create', [FacturaController::class, 'create'])->name('facturas.create');
     Route::post('/facturas', [FacturaController::class, 'store'])->name('facturas.store');
 });
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// Eliminar o comentar la ruta antigua del dashboard genérico
+// Route::view('dashboard', 'dashboard')
+//     ->middleware(['auth', 'verified'])
+//     ->name('dashboard');
 
 // --------------------------------------------
 // Perfil de usuario
@@ -161,14 +158,13 @@ Route::middleware(['auth'])->prefix('admin/participantes')->name('admin.particip
 });
 
 // Rutas de INSCRIPCIONES a Cursos
-Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->group(function () {
-    Route::get('/cursos', function() {
-        return redirect()->route('admin.cursos.index');
-    })->name('cursos.activos'); // Redirige a la lista de cursos
+Route::prefix('admin/inscripciones')->name('admin.inscripciones.')->middleware(['auth'])->group(function () {
+    Route::get('/cursos', [InscripcionController::class, 'cursosActivos'])->name('cursos.activos'); // Lista de cursos activos para inscribir
     Route::get('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir.form'); // Formulario de inscripción
-    Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'inscribir'])->name('cursos.inscribir'); // Inscribir personas
+    Route::post('/cursos/{curso}/inscribir', [InscripcionController::class, 'agregarInscripcion'])->name('cursos.inscribir'); // Inscribir personas
     Route::get('/cursos/{curso}/inscritos', [InscripcionController::class, 'verInscritos'])->name('cursos.inscritos'); // Ver inscritos
     Route::delete('/cursos/{curso}/baja/{persona}', [InscripcionController::class, 'darBaja'])->name('cursos.baja'); // Dar de baja a un alumno
+    Route::put('/cursos/{curso}/estado/{persona}', [InscripcionController::class, 'actualizarEstado'])->name('cursos.estado'); // Actualizar estado de inscripción
 });
 
 // --------------------------------------------
@@ -280,6 +276,32 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
     });
 });
 
+// Rutas de detalle de curso para alumnos
+Route::middleware(['auth', 'role:Alumno'])->group(function () {
+    Route::get('/alumno/cursos/{id}', function($id) {
+        $curso = \App\Models\Curso::findOrFail($id);
+        return view('alumno.cursos.show', compact('curso'));
+    })->name('alumno.cursos.show');
+    Route::get('/alumno/cursos/{id}/inscribir', function($id) {
+        $curso = \App\Models\Curso::findOrFail($id);
+        return view('alumno.cursos.inscribir', compact('curso'));
+    })->name('alumno.cursos.inscribir');
+    Route::post('/alumno/cursos/{id}/inscribir', function($id) {
+        $curso = \App\Models\Curso::findOrFail($id);
+        $user = Auth::user();
+        $persona = $user->persona;
+        // Validar que no esté ya inscrito
+        if ($persona && !$persona->cursos()->where('cursos.id', $curso->id)->exists()) {
+            $persona->cursos()->attach($curso->id, [
+                'rol_participacion_id' => 1, // 1 = alumno
+                'estado' => 'pendiente',
+            ]);
+            return redirect()->route('alumno.cursos.show', $curso->id)->with('success', 'Solicitud de inscripción enviada.');
+        }
+        return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'Ya tienes una inscripción pendiente o activa en este curso.');
+    })->name('alumno.cursos.inscribir.solicitar');
+});
+
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'role:Administrador'])
@@ -320,6 +342,34 @@ Route::middleware(['auth'])->group(function () {
 // Rutas de autenticación con Firebase
 Route::post('/login/firebase', [FirebaseAuthController::class, 'login']);
 
+
+Route::get('/admin/sincronizar-usuarios-personas', [\App\Http\Controllers\UserController::class, 'sincronizarUsuariosPersonas']);
+
+// Rutas para la gestión de solicitudes de inscripción para el administrador
+Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->name('admin.solicitudes.')->group(function () {
+    Route::get('/', function() {
+        // Obtener todas las solicitudes de inscripción (pivot estado = pendiente, espera, activo, rechazado)
+        $solicitudes = \App\Models\Persona::whereHas('cursos', function($q) {
+            $q->whereIn('participacion.estado', ['pendiente', 'espera', 'activo', 'rechazado']);
+        })->with(['cursos' => function($q) {
+            $q->withPivot('estado');
+        }])->get()->flatMap(function($persona) {
+            return $persona->cursos->map(function($curso) use ($persona) {
+                $curso->pivot->persona = $persona;
+                $curso->curso = $curso; // Asignar el curso a sí mismo para la vista
+                return $curso;
+            });
+        });
+        return view('admin.solicitudes.index', ['solicitudes' => $solicitudes]);
+    })->name('index');
+    Route::put('/{curso}/{persona}', function($cursoId, $personaId) {
+        $persona = \App\Models\Persona::findOrFail($personaId);
+        $curso = \App\Models\Curso::findOrFail($cursoId);
+        $estado = request('estado');
+        $persona->cursos()->updateExistingPivot($curso->id, ['estado' => $estado]);
+        return redirect()->back()->with('success', 'Estado actualizado correctamente.');
+    })->name('update');
+});
 
 //clinica (temporal)
 Route::get('/facultativo', [FacultativoController::class, 'index']);

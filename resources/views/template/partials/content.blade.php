@@ -24,11 +24,11 @@
                   <div class="col-xl-3 col-md-6">
                     <div class="small-box text-bg-info">
                       <div class="inner">
-                        <h3>{{ $stats['totalNews'] }}</h3>
-                        <p>Noticias Totales</p>
+                        <h3>{{ $stats['totalSolicitudes'] ?? (\App\Models\Persona::whereHas('cursos', function($q){ $q->where('participacion.estado', 'pendiente'); })->count()) }}</h3>
+                        <p>Solicitudes de Inscripción</p>
                       </div>
-                      <div class="small-box-icon"><i class="ri-newspaper-fill"></i></div>
-                      <a href="{{ route('admin.news.index') }}" class="small-box-footer">Ver Noticias <i class="ri-arrow-right-line"></i></a>
+                      <div class="small-box-icon"><i class="ri-user-add-line"></i></div>
+                      <a href="{{ route('admin.solicitudes.index') }}" class="small-box-footer">Gestionar Solicitudes <i class="ri-arrow-right-line"></i></a>
                     </div>
                   </div>
                   <div class="col-xl-3 col-md-6">
