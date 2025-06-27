@@ -137,6 +137,9 @@ function handleDateClick(info) {
 
 // Manejar clic en evento
 function handleEventClick(info) {
+    // Prevenir la navegación predeterminada
+    info.jsEvent.preventDefault();
+    
     const event = info.event;
 
     // Solo abrir modal si estamos en vista de día
@@ -159,6 +162,9 @@ function handleEventClick(info) {
         // Si estamos en vista de mes, cambiar a vista de día
         calendar.changeView('timeGridDay', event.start);
     }
+    
+    // Importante: devolver false para evitar comportamiento predeterminado
+    return false;
 }
 
 // Manejar arrastre de evento
