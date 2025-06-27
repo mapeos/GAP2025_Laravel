@@ -267,14 +267,70 @@ function updateButtons() {
         confirmBtn.style.display = 'none';
     }
 
-    // Cambiar texto del botón siguiente en el paso 2
+    // Cambiar texto del botón siguiente según el paso
     if (currentStep === 2) {
         nextBtn.innerHTML = '<i class="ri-robot-line me-1"></i>Generar Sugerencias';
     } else if (currentStep === 3) {
-        nextBtn.innerHTML = 'Siguiente<i class="ri-arrow-right-line ms-1"></i>';
+        nextBtn.innerHTML = '<i class="ri-skip-forward-line me-1"></i>Saltar sugerencias';
     } else {
         nextBtn.innerHTML = 'Siguiente<i class="ri-arrow-right-line ms-1"></i>';
     }
+}
+
+// Función para saltar sugerencias y usar la fecha original
+function skipSuggestions() {
+    // Obtener la fecha y hora originales seleccionadas por el usuario
+    const fechaOriginal = document.getElementById('ai_fecha_preferida').value;
+    const horaOriginal = document.getElementById('ai_hora_preferida').value;
+
+    if (!fechaOriginal) {
+        alert('Por favor selecciona una fecha preferida antes de saltar las sugerencias.');
+        return false;
+    }
+
+    if (!horaOriginal) {
+        alert('Por favor selecciona una hora preferida antes de saltar las sugerencias.');
+        return false;
+    }
+
+    // Crear un objeto de sugerencia con la fecha original
+    const fechaHoraInicio = `${fechaOriginal}T${horaOriginal}:00`;
+    const fechaInicio = new Date(fechaHoraInicio);
+
+    // Calcular fecha fin basada en la duración
+    const fechaFin = new Date(fechaInicio);
+    fechaFin.setMinutes(fechaFin.getMinutes() + currentDuracion);
+
+    // Formatear para mostrar
+    const fechaFormateada = fechaOriginal.split('-').reverse().join('/');
+
+    // Formatear fechas en el formato que espera el servidor: YYYY-MM-DD HH:MM:SS
+    const formatearFechaParaServidor = (fecha) => {
+        const pad = (num) => String(num).padStart(2, '0');
+        return `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())} ${pad(fecha.getHours())}:${pad(fecha.getMinutes())}:${pad(fecha.getSeconds())}`;
+    };
+
+    // Crear objeto de sugerencia
+    selectedSuggestion = {
+        fecha: fechaFormateada,
+        hora: horaOriginal,
+        duracion: currentDuracion,
+        confianza: 100, // Confianza máxima ya que es la selección del usuario
+        fecha_inicio: formatearFechaParaServidor(fechaInicio),
+        fecha_fin: formatearFechaParaServidor(fechaFin)
+    };
+
+    // Actualizar información de confirmación
+    document.getElementById('confirmAlumno').textContent = document.getElementById('ai_alumno_id').options[document.getElementById('ai_alumno_id').selectedIndex].text;
+    document.getElementById('confirmTipo').textContent = document.getElementById('ai_tipo_consulta').options[document.getElementById('ai_tipo_consulta').selectedIndex].text;
+    document.getElementById('confirmFecha').textContent = fechaFormateada;
+    document.getElementById('confirmHora').textContent = horaOriginal;
+    document.getElementById('confirmDuracion').textContent = currentDuracion + ' minutos';
+    document.getElementById('confirmMotivo').textContent = document.getElementById('ai_motivo').value;
+    document.getElementById('confirmPrioridad').textContent = document.getElementById('ai_prioridad').value;
+    document.getElementById('confirmFlexibilidad').textContent = document.getElementById('flexibilidadHora').checked ? 'Sí' : 'No';
+
+    return true;
 }
 
 // Función para validar el paso actual
@@ -641,6 +697,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 2) {
             // Generar sugerencias
             generateSuggestions();
+        } else if (currentStep === 3) {
+            // Saltar sugerencias y usar fecha original
+            if (!skipSuggestions()) {
+                return; // Si skipSuggestions devuelve false, no avanzamos
+            }
         }
 
         currentStep++;

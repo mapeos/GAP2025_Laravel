@@ -32,7 +32,7 @@
                         </div>
                         @endif
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -47,13 +47,13 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="editDescripcion" class="form-label">Descripción</label>
                         <textarea class="form-control" id="editDescripcion" name="descripcion" rows="3"
                                   placeholder="Descripción del evento..."></textarea>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -70,7 +70,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
                     <div class="mb-3">
                         <label for="editStatus" class="form-label">Estado</label>
@@ -97,20 +97,41 @@
 function deleteEvento() {
     const eventoId = document.getElementById('editEventoId').value;
     if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-        fetch(`/admin/events/${eventoId}`, {
+        // Añadir parámetro json=true a la URL para forzar respuesta JSON
+        fetch(`/admin/events/${eventoId}?json=true`, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            // No seguir redirecciones automáticamente
+            redirect: 'manual'
         })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
+        .then(response => {
+            // Verificar si la respuesta es exitosa o una redirección
+            if (response.ok || (response.status >= 300 && response.status < 400)) {
+                // Operación exitosa
                 showNotification('Evento eliminado exitosamente', 'success');
                 bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
+
+                // Cambiar a vista mensual después de eliminar
+                calendar.changeView('dayGridMonth');
+
+                // Recargar eventos
                 loadEventosAjax();
-            } else {
-                showNotification('Error al eliminar evento', 'error');
+                return { success: true };
+            }
+
+            // Intentar parsear la respuesta como JSON
+            return response.json().catch(() => {
+                // Si no se puede parsear como JSON, devolver un objeto de error
+                return { success: false, message: 'Error al eliminar evento' };
+            });
+        })
+        .then(result => {
+            if (!result.success) {
+                showNotification(result.message || 'Error al eliminar evento', 'error');
             }
         })
         .catch(error => {
@@ -119,4 +140,4 @@ function deleteEvento() {
         });
     }
 }
-</script> 
+</script>
