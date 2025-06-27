@@ -128,7 +128,7 @@
                                 <li class="mb-2">
                                     <i class="ri-file-list-3-line text-info me-1"></i>
                                     <strong>{{ $curso->titulo }}</strong>
-                                    <a href="{{ asset($curso->temario_path) }}" class="btn btn-outline-info btn-sm ms-2" download>
+                                    <a href="{{ asset('storage/' . $curso->temario_path) }}" class="btn btn-outline-info btn-sm ms-2" download>
                                         <i class="ri-download-2-line"></i> Descargar temario
                                     </a>
                                 </li>
