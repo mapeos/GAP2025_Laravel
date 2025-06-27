@@ -69,6 +69,17 @@ class AuthController extends Controller
             'status'   => 'pendiente',
         ]);
 
+        // Crear la persona asociada al usuario
+        $persona = \App\Models\Persona::create([
+            'nombre' => $request->name,
+            'apellido1' => '', // Puedes ajustar si recibes más datos
+            'apellido2' => '',
+            'dni' => null,
+            'tfno' => '',
+            'direccion_id' => null,
+            'user_id' => $user->id,
+        ]);
+
         $token = $user->createToken('mobile')->plainTextToken;
 
         if ($request->has('device_id')) {
