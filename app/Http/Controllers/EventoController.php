@@ -72,7 +72,7 @@ class EventoController extends Controller
         });
 
         // Optimizar consulta con eager loading y select específico
-        $query = Evento::with(['tipoEvento:id,nombre,color'])
+        $query = Evento::with(['tipoEvento:id,nombre,color', 'participantes:id,name,email'])
             ->select(['id', 'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'tipo_evento_id', 'creado_por', 'ubicacion', 'url_virtual'])
             ->where('status', true);
 
@@ -104,6 +104,7 @@ class EventoController extends Controller
                         'creado_por' => $evento->creado_por,
                         'ubicacion' => $evento->ubicacion,
                         'url_virtual' => $evento->url_virtual,
+                        'participantes' => $evento->participantes,
                         'url' => route('events.show', $evento->id)
                     ];
                 });
@@ -326,15 +327,21 @@ class EventoController extends Controller
                     'status'
                 ]));
 
+                // Sincronizar participantes si se proporcionan
+                if ($request->has('participantes')) {
+                    $evento->participantes()->sync($request->participantes);
+                }
+
                 // Limpiar cache
                 $this->clearEventosCache();
 
                 DB::commit();
 
+                // En el método update, cuando devuelves JSON
                 return response()->json([
                     'success' => true,
                     'message' => 'Evento actualizado exitosamente',
-                    'evento' => $evento->load('tipoEvento:id,nombre,color')
+                    'data' => $evento->load(['tipoEvento:id,nombre,color', 'participantes:id,name,email'])
                 ]);
             }
 
@@ -678,8 +685,23 @@ class EventoController extends Controller
     private function clearEventosCache()
     {
         Cache::forget('eventos.index');
-        Cache::forget('eventos.user.' . Auth::id());
-        Cache::forget('profesores.calendar');
-        Cache::forget('alumnos.calendar');
+
+        // Optimización: Limpiar solo la caché del usuario actual en lugar de todos los usuarios
+        $userId = Auth::id();
+        if ($userId) {
+            Cache::forget("eventos.user.{$userId}");
+            Cache::forget("eventos.api.user.{$userId}");
+            Cache::forget('profesores.calendar');
+            Cache::forget('alumnos.calendar');
+        } else {
+            // Fallback: limpiar cache de eventos por usuario solo si es necesario
+            $users = DB::table('users')->pluck('id');
+            foreach ($users as $userId) {
+                Cache::forget("eventos.user.{$userId}");
+                Cache::forget("eventos.api.user.{$userId}");
+            }
+            Cache::forget('profesores.calendar');
+            Cache::forget('alumnos.calendar');
+        }
     }
 }
