@@ -177,6 +177,10 @@ class AuthController extends Controller
             ]);
         }
 
+        Log::info('[Device][LOGIN][DEBUG] Enviando device_id a la app móvil', [
+            'user_id' => $user->id,
+            'device_id' => $deviceId
+        ]);
         return response()->json([
             'ok' => true,
             'device_id' => $deviceId,
@@ -189,6 +193,7 @@ class AuthController extends Controller
      */
     public function storeDevice(Request $request)
     {
+        Log::info('[Device][DEBUG][storeDevice] Request recibido', $request->all());
         $request->validate([
             'device_id' => 'required|string|max:255',
             'fcm_token' => 'required|string|max:1024',

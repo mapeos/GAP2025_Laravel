@@ -82,4 +82,13 @@ class User extends Authenticatable
         return $this->hasOne(Persona::class);
     }
 
+    public function mensajesEnviados()
+    {
+        return $this->hasMany(\App\Models\Message::class, 'user_id_origen');
+    }
+
+    public function mensajesRecibidos()
+    {
+        return $this->hasMany(\App\Models\Message::class, 'user_id_destino');
+    }
 }

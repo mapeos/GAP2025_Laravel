@@ -369,3 +369,10 @@ Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->
         return redirect()->back()->with('success', 'Estado actualizado correctamente.');
     })->name('update');
 });
+
+// Chat entre usuarios (alumnos y profesores)
+Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
+    Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
+    Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
+});

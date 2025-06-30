@@ -94,10 +94,10 @@
                 </div>
               </li>
 
-              <!-- Nuevo elemento para Calendario -->
+              <!-- Nuevo elemento para Chat -->
               <li class="nav-item">
-                <a class="nav-link d-flex align-items-center {{ request()->routeIs('calendario') ? 'active' : '' }}" href="{{ route('calendario') }}">
-                  <span><i class="ri-calendar-line nav-icon me-2"></i>Calendario</span>
+                <a class="nav-link d-flex align-items-center {{ request()->routeIs('chat.index') ? 'active' : '' }}" href="{{ route('chat.index') }}">
+                  <span><i class="ri-chat-3-line nav-icon me-2"></i>Chat</span>
                 </a>
               </li>
             </ul>
