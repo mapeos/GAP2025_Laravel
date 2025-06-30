@@ -36,14 +36,20 @@ class DashboardController extends Controller
             'Otro' => $otro
         ];
 
-        // Obtener eventos para el calendario
-        $eventos = \App\Models\Evento::all()->map(function($evento) {
+        // Obtener eventos para el calendario, incluyendo el color del tipo de evento
+        $eventos = \App\Models\Evento::with('tipoEvento')->get()->map(function($evento) {
             return [
                 'id' => $evento->id,
                 'title' => $evento->titulo,
                 'start' => $evento->fecha_inicio,
                 'end' => $evento->fecha_fin,
                 'descripcion' => $evento->descripcion,
+                'color' => $evento->tipoEvento ? $evento->tipoEvento->color : null,
+                'tipoEvento' => $evento->tipoEvento ? [
+                    'id' => $evento->tipoEvento->id,
+                    'nombre' => $evento->tipoEvento->nombre,
+                    'color' => $evento->tipoEvento->color,
+                ] : null,
             ];
         });
 
