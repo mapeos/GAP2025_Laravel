@@ -13,6 +13,7 @@ use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\FacultativoController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
@@ -376,3 +377,16 @@ Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
     Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
     Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
 });
+
+//clinica (temporal)
+Route::get('/facultativo', [FacultativoController::class, 'index']);
+Route::get('/facultativo/citas', [FacultativoController::class, 'citas']);
+Route::get('/facultativo/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas']);
+Route::get('/facultativo/citas/pendientes', [FacultativoController::class, 'citasPendientes']);
+Route::get('/facultativo/cita', [FacultativoController::class, 'cita']);
+Route::get('/facultativo/cita/new', [FacultativoController::class, 'newCita']);
+Route::get('/facultativo/pacientes', [FacultativoController::class, 'pacientes']);
+Route::get('/facultativo/paciente', [FacultativoController::class, 'paciente']);
+Route::get('/facultativo/tratamientos', [FacultativoController::class, 'tratamientos']);
+Route::get('/facultativo/tratamiento', [FacultativoController::class, 'tratamiento']);
+Route::get('/facultativo/tratamiento/new', [FacultativoController::class, 'newTratamiento']);

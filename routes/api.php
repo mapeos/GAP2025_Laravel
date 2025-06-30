@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\CursoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
-use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,10 +35,6 @@ Route::get('/categorias', [CategoriasController::class, 'index']); // Listar cat
 // Endpoints de autenticación (públicos)
 Route::post('auth/register', [AuthController::class, 'register']); // Registro de usuario móvil
 Route::post('auth/login', [AuthController::class, 'login']);       // Login de usuario móvil
-
-// Endpoints de recuperación de contraseña para la app móvil
-Route::post('auth/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-Route::post('auth/reset-password', [ForgotPasswordController::class, 'reset']);
 
 // Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
@@ -91,27 +86,3 @@ Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send', [Notif
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-fcm-v1', [NotificationController::class, 'sendFcmV1']);
 // Ruta para enviar notificaciones WebPush
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-webpush', [App\Http\Controllers\Api\NotificationController::class, 'sendWebPush']);
-
-// Rutas para citas con IA
-Route::middleware('auth:sanctum')->prefix('appointments')->group(function () {
-    Route::post('/suggest', [App\Http\Controllers\AiAppointmentController::class, 'suggest']);
-    Route::post('/', [App\Http\Controllers\AiAppointmentController::class, 'create']);
-});
-
-// Ruta para obtener eventos para el calendario del dashboard
-Route::get('/events', function () {
-    $eventos = \App\Models\Evento::select('id', 'titulo', 'fecha_inicio', 'fecha_fin')
-        ->orderBy('fecha_inicio', 'asc')
-        ->get()
-        ->map(function ($evento) {
-            return [
-                'id' => $evento->id,
-                'titulo' => $evento->titulo,
-                'fecha' => $evento->fecha_inicio->format('Y-m-d'),
-                'hora_inicio' => $evento->fecha_inicio->format('H:i'),
-                'hora_fin' => $evento->fecha_fin->format('H:i')
-            ];
-        });
-    
-    return response()->json($eventos);
-});
