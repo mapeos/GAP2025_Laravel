@@ -17,7 +17,12 @@ class ChatController extends Controller
     // Mostrar lista de usuarios para chatear
     public function index(GetLastChatsForUser $getLastChats, GetUnreadCountForUser $getUnreadCount)
     {
-        $usuarios = User::where('id', '!=', Auth::id())->get();
+        $profesores = User::role('Profesor')->where('id', '!=', Auth::id())->select('id', 'name')->paginate(10, ['*'], 'profesores');
+        $alumnos = User::role('Alumno')->where('id', '!=', Auth::id())->select('id', 'name')->paginate(10, ['*'], 'alumnos');
+        $usuarios = [
+            'profesor' => $profesores,
+            'alumno' => $alumnos,
+        ];
         $mensajesRecibidos = $getLastChats->execute(Auth::id(), 10);
         $unreadCounts = $getUnreadCount->execute(Auth::id());
         return view('chat.index', compact('usuarios', 'mensajesRecibidos', 'unreadCounts'));
@@ -41,5 +46,20 @@ class ChatController extends Controller
         ]);
         $sendMessage->execute(Auth::id(), $id, $request->mensaje);
         return redirect()->route('chat.show', $id);
+    }
+
+    // Búsqueda AJAX de usuarios por rol y nombre
+    public function searchUsers(Request $request, GetUnreadCountForUser $getUnreadCount)
+    {
+        $rol = $request->input('rol');
+        $search = $request->input('search');
+        $query = User::role(ucfirst($rol))
+            ->where('id', '!=', Auth::id());
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+        $usuarios = $query->select('id', 'name')->paginate(10, ['*'], $rol);
+        $unreadCounts = $getUnreadCount->execute(Auth::id());
+        return view('chat._user_list', compact('usuarios', 'unreadCounts'))->render();
     }
 }

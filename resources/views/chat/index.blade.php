@@ -10,7 +10,7 @@
                 <strong>
                     @php
                         $otro = $mensaje->senderId == auth()->id() ? $mensaje->receiverId : $mensaje->senderId;
-                        $usuario = $usuarios->firstWhere('id', $otro);
+                        $usuario = collect($usuarios)->flatten(1)->firstWhere('id', $otro);
                         $unread = $unreadCounts[$otro] ?? 0;
                     @endphp
                     {{ $usuario ? $usuario->name : 'Usuario #' . $otro }}:
@@ -33,30 +33,46 @@
         @endforelse
     </ul>
     <h4>Usuarios disponibles para chatear</h4>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
-        @foreach($usuarios as $usuario)
-            @php
-                $unread = $unreadCounts[$usuario->id] ?? 0;
-            @endphp
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div>
-                            <h5 class="card-title mb-1">{{ $usuario->name }}</h5>
-                            <p class="card-text text-muted small mb-2">{{ $usuario->email }}</p>
+    <div class="row g-4 mb-4">
+        @foreach(['profesor' => 'Profesores', 'alumno' => 'Alumnos'] as $rol => $titulo)
+            @if(isset($usuarios[$rol]) && $usuarios[$rol]->count())
+                <div class="col-12 col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-light fw-bold">{{ $titulo }}</div>
+                        <div class="p-2">
+                            <input type="text" class="form-control user-search-input" data-rol="{{ $rol }}" placeholder="Buscar por nombre...">
                         </div>
-                        <div class="mt-auto d-flex align-items-center justify-content-between">
-                            <a href="{{ route('chat.show', $usuario->id) }}" class="btn btn-primary btn-sm">
-                                Chatear
-                                @if($unread > 0)
-                                    <span class="badge bg-danger ms-1">{{ $unread }}</span>
-                                @endif
-                            </a>
+                        <div class="chat-pagination" id="chat-{{ $rol }}">
+                            <div class="user-list-ajax" id="user-list-{{ $rol }}">
+                                <ul class="list-group list-group-flush">
+                                    @foreach($usuarios[$rol] as $usuario)
+                                        @php $unread = $unreadCounts[$usuario->id] ?? 0; @endphp
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>{{ $usuario->name }}</span>
+                                            <a href="{{ route('chat.show', $usuario->id) }}" class="btn btn-primary btn-sm">
+                                                Chatear
+                                                @if($unread > 0)
+                                                    <span class="badge bg-danger ms-1">{{ $unread }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                <div class="card-footer bg-white border-0">
+                                    {{ $usuarios[$rol]->links() }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         @endforeach
     </div>
 </div>
 @endsection
+@push('js')
+<script src="{{ asset('js/chat-pagination.js') }}"></script>
+@endpush
+@push('scripts')
+<script src="/js/chat-user-search.js"></script>
+@endpush

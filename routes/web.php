@@ -376,6 +376,7 @@ Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
     Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
     Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
     Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
+    Route::get('/search/users', [\App\Http\Controllers\ChatController::class, 'searchUsers'])->name('searchUsers');
 });
 
 //clinica (temporal)

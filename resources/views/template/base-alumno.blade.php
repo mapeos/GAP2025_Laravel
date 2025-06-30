@@ -212,7 +212,7 @@
     <script src="{{ asset('admin/js/main.js') }}" type="module"></script>
 
     @stack('js')
-
+    @stack('scripts')
 
     <!-- Component JS -->
   </body>
