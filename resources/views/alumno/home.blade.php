@@ -220,5 +220,42 @@
             </div>
         </div>
     </div>
+    <div class="col-md-4">
+        <div class="card card-hover h-100 border-warning">
+            <div class="card-header bg-warning text-dark d-flex align-items-center">
+                <i class="ri-calendar-check-line me-2"></i>
+                <h5 class="card-title mb-0">Mis próximas citas</h5>
+            </div>
+            <div class="card-body text-start">
+                @php
+                    $proximasCitas = \App\Models\EventoParticipante::with('evento')
+                        ->where('user_id', Auth::id())
+                        ->whereHas('evento', function($q) { $q->where('fecha_inicio', '>=', now()); })
+                        ->orderByDesc('id')
+                        ->take(3)
+                        ->get();
+                @endphp
+                <i class="ri-calendar-event-line display-4 mb-3 text-warning"></i>
+                @if($proximasCitas->count())
+                    <ul class="list-unstyled mb-0">
+                        @foreach($proximasCitas as $cita)
+                            <li class="mb-3">
+                                <strong>{{ $cita->evento->titulo ?? 'Evento eliminado' }}</strong><br>
+                                <small class="text-muted">
+                                    {{ $cita->evento && $cita->evento->fecha_inicio ? $cita->evento->fecha_inicio->format('d/m/Y H:i') : '' }}
+                            </small><br>
+                            <span class="badge bg-secondary">{{ $cita->rol }}</span>
+                            @if($cita->evento && $cita->evento->ubicacion)
+                                <span class="badge bg-light text-dark">{{ $cita->evento->ubicacion }}</span>
+                            @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="mb-0">No tienes citas agendadas próximamente.</p>
+                @endif
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
