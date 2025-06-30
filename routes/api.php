@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriasController;
 use App\Http\Controllers\Api\NewsController;
-use App\Http\Controllers\EventoController;
+use App\Http\Controllers\Api\EventoApiController; // Agregado el nuevo controlador
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
@@ -41,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']); // Logout y revocación de token
     Route::get('auth/me', [AuthController::class, 'me']);          // Info del usuario autenticado
     Route::post('auth/device', [AuthController::class, 'storeDevice']); // Guardar/actualizar info del dispositivo móvil
-    Route::apiResource('eventos', EventoController::class);
+    Route::apiResource('eventos', EventoApiController::class); // Rutas para la API de eventos
     Route::apiResource('tipos-evento', TipoEventoController::class);
     Route::apiResource('evento-participante', EventoParticipanteController::class);
 });

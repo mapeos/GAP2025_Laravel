@@ -84,7 +84,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('solicitud-cita.actualizar-estado');
     Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
         ->name('solicitud-cita.store');
-    
+
     // Rutas para citas con IA
     Route::middleware(['role:Profesor|Administrador'])->group(function () {
         Route::post('/ai/appointments/suggest', [\App\Http\Controllers\AiAppointmentController::class, 'suggest'])
@@ -100,10 +100,10 @@ Route::middleware(['auth'])->group(function () {
     // Rutas para eventos
     Route::get('calendario', [EventoController::class, 'calendario'])->name('calendario');
     Route::get('eventos/json', [EventoController::class, 'getEventos'])->name('eventos.json');
-    
+
     // Ruta para que los estudiantes puedan crear recordatorios personales
     Route::post('eventos', [EventoController::class, 'store'])->name('eventos.store');
-    
+
     // Rutas CRUD de eventos (solo administradores y profesores, excepto store que ya está definido arriba)
     Route::middleware(['role:Administrador|Profesor'])->group(function () {
         Route::resource('eventos', EventoController::class)->except(['store']);
@@ -137,7 +137,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/delete', [CursoController::class, 'delete'])->name('delete');
         Route::post('/{id}/restore', [CursoController::class, 'restore'])->name('restore');
     });
-    
+
     // Rutas públicas de cursos (para ver detalles)
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
 });
@@ -321,7 +321,7 @@ Route::prefix('admin')
 Route::middleware(['auth'])->group(function () {
     Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])
         ->name('ai.appointment-suggestions');
-    
+
     // Rutas para el modal del profesor
     Route::middleware(['role:Profesor'])->group(function () {
         Route::post('/ai/professor/suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestForProfessor'])
