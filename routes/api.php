@@ -53,19 +53,14 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 });
 
 // Rutas para cursos
-Route::middleware('auth:sanctum')->prefix('cursos')->name('api.cursos.')->group(function () {
-    Route::post('/', [CursoController::class, 'store'])->name('store'); // Crear un curso
-    Route::get('/', [CursoController::class, 'index'])->name('index'); // Listar cursos
-    Route::get('/create', [CursoController::class, 'create'])->name('create'); // Formulario de creación de curso
-    Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit'); // Formulario de edición de curso
-    Route::delete('/{curso}', [CursoController::class, 'destroy'])->name('destroy'); // Eliminar un curso
-    Route::get('/activos', [CursoController::class, 'activos']); // Cursos activos
-    Route::get('/inactivos', [CursoController::class, 'inactivos']); // Cursos inactivos
-    Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Cursos ordenados por fecha
-    Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']); // Últimos cursos
-    Route::get('/{id}', [CursoController::class, 'show'])->name('show'); // Ver detalles de un curso
-    Route::put('/{curso}', [CursoController::class, 'update'])->name('update'); // Actualizar un curso
-    Route::get('/buscar', [CursoController::class, 'buscarFiltrar']); // Buscar cursos: /api/cursos/buscar?search=foo&estado=activo&orden=desc
+
+Route::prefix('cursos')->group(function () {
+    Route::get('/', [CursoController::class, 'index']);
+    Route::get('/{id}', [CursoController::class, 'show']);
+    Route::get('/activos', [CursoController::class, 'activos']);
+    Route::get('/inactivos', [CursoController::class, 'inactivos']);
+    Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']);
+    Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']);
 });
 
 // Registro de dispositivo SIN autenticación (primer contacto, sin usuario)

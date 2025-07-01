@@ -38,10 +38,10 @@
                         <td class="text-center align-middle">555-1234</td>
                         <td class="text-center align-middle">juan.perez@email.com</td>
                         <td class="text-center align-middle">
-                            <a href="/facultativo/paciente/1" class="btn btn-primary btn-sm mr-2">
+                            <a href="/facultativo/paciente" class="btn btn-primary btn-sm mr-2">
                                 <i class="ri-search-line"></i> Ver
                             </a>
-                            <a href="/facultativo/paciente/1/editar" class="btn btn-warning btn-sm mr-2">
+                            <a href="/facultativo/paciente" class="btn btn-warning btn-sm mr-2">
                                 <i class="ri-edit-line"></i> Editar
                             </a>
                         </td>
@@ -54,10 +54,10 @@
                         <td class="text-center align-middle">555-5678</td>
                         <td class="text-center align-middle">maria.lopez@email.com</td>
                         <td class="text-center align-middle">
-                            <a href="/facultativo/paciente/2" class="btn btn-primary btn-sm mr-2">
+                            <a href="/facultativo/paciente" class="btn btn-primary btn-sm mr-2">
                                 <i class="ri-search-line"></i> Ver
                             </a>
-                            <a href="/facultativo/paciente/2/editar" class="btn btn-warning btn-sm mr-2">
+                            <a href="/facultativo/paciente" class="btn btn-warning btn-sm mr-2">
                                 <i class="ri-edit-line"></i> Editar
                             </a>
                         </td>
@@ -70,10 +70,10 @@
                         <td class="text-center align-middle">555-9012</td>
                         <td class="text-center align-middle">carlos.ruiz@email.com</td>
                         <td class="text-center align-middle">
-                            <a href="/facultativo/paciente/3" class="btn btn-primary btn-sm mr-2">
+                            <a href="/facultativo/paciente" class="btn btn-primary btn-sm mr-2">
                                 <i class="ri-search-line"></i> Ver
                             </a>
-                            <a href="/facultativo/paciente/3/editar" class="btn btn-warning btn-sm mr-2">
+                            <a href="/facultativo/paciente" class="btn btn-warning btn-sm mr-2">
                                 <i class="ri-edit-line"></i> Editar
                             </a>
                         </td>
