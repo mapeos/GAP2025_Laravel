@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PagoController extends Controller
 {
@@ -53,7 +54,7 @@ class PagoController extends Controller
 
             // Crear la factura automáticamente
             $factura = new \App\Models\Factura();
-            $factura->user_id = \Auth::id();
+            $factura->user_id = Auth::id();
             $factura->pago_id = $pago->id_pago;
             $factura->producto = $pago->curso;
             $factura->importe = $pago->importe;
@@ -61,7 +62,7 @@ class PagoController extends Controller
             $factura->estado = 'pagada';
             $factura->save();
 
-            return redirect()->route('facturas.index')->with('success', 'Pago y factura registrados correctamente.');
+            return redirect()->route('admin.pagos.facturas.index')->with('success', 'Pago y factura registrados correctamente.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Error al registrar el pago: ' . $e->getMessage()]);
         }
@@ -97,6 +98,14 @@ class PagoController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Display the payment methods view.
+     */
+    public function metodos()
+    {
+        return view('payment_methods.index');
     }
 }
 

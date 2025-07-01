@@ -126,26 +126,21 @@
         <!-- Pages Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Pages</span></li>
         
-        <!-- Gestión de pagos -->
+        <!-- Gestión de Pagos -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
                 <i class="ri-lock-line"></i> <span>Gestión de Pagos</span> <i class="ri-arrow-right-s-line"></i>
             </a>
             <ul class="submenu">
-                <li class="nav-item has-submenu">
-                    <a class="nav-link" href="#"> <span>Pagos</span> <i class="ri-arrow-right-s-line"></i> </a>
-                    <ul class="submenu">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/admin/pagos') }}">
-                                <span>Gestión</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/authentication/basic/register" target="_blank">
-                                <span>Lista</span>
-                            </a>
-                        </li>
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.pagos.metodos') }}">
+                        <span>Métodos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.pagos.facturas.index') }}">
+                        <span>Facturas</span>
+                    </a>
                 </li>
             </ul>
         </li>
