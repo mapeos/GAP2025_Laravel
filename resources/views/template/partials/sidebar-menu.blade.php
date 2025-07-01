@@ -97,10 +97,10 @@
         <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Admin CURSOS</span></li>
         <!-- CURSOS Section -->
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.cursos.index') }}">
                 <i class="ri-file-list-3-line"></i> <span>Cursos</span>
-                    </a>
+            </a>
         </li>
         <!-- PARTICIPANTES Section -->
         <li class="nav-item has-submenu parent">
@@ -130,29 +130,74 @@
                 </li> -->
             </ul>
         </li>
+
+        <!-- Facultativo Section -->
+        <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Facultativo</span></li>
+        <!-- citas Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="/facultativo">
+                <i class="ri-home-line"></i> <span>Home</span>
+            </a>
+        </li>
+        <!-- citas Section -->
+        <li class="nav-item has-submenu parent">
+            <a class="nav-link">
+                <i class="ri-calendar-line"></i> <span>Citas</span> <i class="ri-arrow-right-s-line"></i>
+            </a>
+            <ul class="submenu">
+                <li class="nav-item">
+                    <a class="nav-link" href="/facultativo/citas">
+                        <i class="ri-calendar-todo-fill"></i><span>Lista de citas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/facultativo/cita/new">
+                        <i class="ri-sticky-note-add-line"></i></i><span>Nueva citas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/facultativo/citas/confirmadas">
+                        <i class="ri-calendar-check-line"></i> <span>Citas Confirmadas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/facultativo/citas/pendientes" target="_blank">
+                        <i class="ri-calendar-schedule-line"></i> <span>Citas Pendientes</span>
+                    </a>
+            </ul>
+        </li>
+        <!-- PACIENTE Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="/facultativo/pacientes">
+                <i class="ri-team-line"></i> <span>Pacientes</span>
+            </a>
+        </li>
+        <!-- Tratamientos Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="/facultativo/tratamientos">
+                <i class="ri-capsule-line"></i> <span>Tratamientos</span>
+            </a>
+        </li>
+        <!-- Facultativo Section end -->
+
         <!-- Pages Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Pages</span></li>
         
-        <!-- Gestión de pagos -->
+        <!-- Gestión de Pagos -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
                 <i class="ri-lock-line"></i> <span>Gestión de Pagos</span> <i class="ri-arrow-right-s-line"></i>
             </a>
             <ul class="submenu">
-                <li class="nav-item has-submenu">
-                    <a class="nav-link" href="#"> <span>Pagos</span> <i class="ri-arrow-right-s-line"></i> </a>
-                    <ul class="submenu">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/admin/pagos') }}">
-                                <span>Gestión</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pages/authentication/basic/register" target="_blank">
-                                <span>Lista</span>
-                            </a>
-                        </li>
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.pagos.metodos') }}">
+                        <span>Métodos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.pagos.facturas.index') }}">
+                        <span>Facturas</span>
+                    </a>
                 </li>
             </ul>
         </li>

@@ -13,9 +13,11 @@ use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\FacultativoController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
+use App\Http\Controllers\PagoController;
 use Illuminate\Support\Facades\Auth;
 
 // --------------------------------------------
@@ -44,10 +46,13 @@ Route::get('/admin/pagina-test', function () {
 Route::middleware(['auth', 'role:Administrador'])->prefix('admin/pagos')->name('admin.pagos.')->group(function () {
     Route::view('/', 'admin.dashboard.pagos.pagos')->name('index');
     Route::view('/estado', 'admin.dashboard.pagos.estado')->name('estado');
-    Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('facturas');
+    // Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('facturas'); // Eliminada para evitar conflicto 404
     Route::get('/facturas/list', [FacturaController::class, 'index'])->name('facturas.list');
     Route::get('/facturas/create', [FacturaController::class, 'create'])->name('facturas.create');
     Route::post('/facturas', [FacturaController::class, 'store'])->name('facturas.store');
+    Route::get('/facturas', [FacturaController::class, 'index'])->name('facturas.index');
+    Route::get('/metodos', [PagoController::class, 'metodos'])->name('metodos');
+    Route::post('/metodos', [PagoController::class, 'store'])->name('metodos.store');
 });
 // Eliminar o comentar la ruta antigua del dashboard genérico
 // Route::view('dashboard', 'dashboard')
@@ -83,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('solicitud-cita.actualizar-estado');
     Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
         ->name('solicitud-cita.store');
-    
+
     // Rutas para citas con IA
     Route::middleware(['role:Profesor|Administrador'])->group(function () {
         Route::post('/ai/appointments/suggest', [\App\Http\Controllers\AiAppointmentController::class, 'suggest'])
@@ -99,10 +104,10 @@ Route::middleware(['auth'])->group(function () {
     // Rutas para eventos
     Route::get('calendario', [EventoController::class, 'calendario'])->name('calendario');
     Route::get('eventos/json', [EventoController::class, 'getEventos'])->name('eventos.json');
-    
+
     // Ruta para que los estudiantes puedan crear recordatorios personales
     Route::post('eventos', [EventoController::class, 'store'])->name('eventos.store');
-    
+
     // Rutas CRUD de eventos (solo administradores y profesores, excepto store que ya está definido arriba)
     Route::middleware(['role:Administrador|Profesor'])->group(function () {
         Route::resource('eventos', EventoController::class)->except(['store']);
@@ -136,7 +141,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/delete', [CursoController::class, 'delete'])->name('delete');
         Route::post('/{id}/restore', [CursoController::class, 'restore'])->name('restore');
     });
-    
+
     // Rutas públicas de cursos (para ver detalles)
     Route::get('/cursos/{id}', [CursoController::class, 'show'])->name('cursos.show');
 });
@@ -320,7 +325,7 @@ Route::prefix('admin')
 Route::middleware(['auth'])->group(function () {
     Route::post('/ai/appointment-suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointments'])
         ->name('ai.appointment-suggestions');
-    
+
     // Rutas para el modal del profesor
     Route::middleware(['role:Profesor'])->group(function () {
         Route::post('/ai/professor/suggestions', [\App\Http\Controllers\AiAppointmentController::class, 'suggestForProfessor'])
@@ -369,3 +374,24 @@ Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->
         return redirect()->back()->with('success', 'Estado actualizado correctamente.');
     })->name('update');
 });
+
+// Chat entre usuarios (alumnos y profesores)
+Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
+    Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
+    Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
+    Route::get('/search/users', [\App\Http\Controllers\ChatController::class, 'searchUsers'])->name('searchUsers');
+});
+
+//clinica (temporal)
+Route::get('/facultativo', [FacultativoController::class, 'index']);
+Route::get('/facultativo/citas', [FacultativoController::class, 'citas']);
+Route::get('/facultativo/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas']);
+Route::get('/facultativo/citas/pendientes', [FacultativoController::class, 'citasPendientes']);
+Route::get('/facultativo/cita', [FacultativoController::class, 'cita']);
+Route::get('/facultativo/cita/new', [FacultativoController::class, 'newCita']);
+Route::get('/facultativo/pacientes', [FacultativoController::class, 'pacientes']);
+Route::get('/facultativo/paciente', [FacultativoController::class, 'paciente']);
+Route::get('/facultativo/tratamientos', [FacultativoController::class, 'tratamientos']);
+Route::get('/facultativo/tratamiento', [FacultativoController::class, 'tratamiento']);
+Route::get('/facultativo/tratamiento/new', [FacultativoController::class, 'newTratamiento']);

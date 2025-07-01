@@ -79,6 +79,16 @@
                             <option value="0">Inactivo</option>
                         </select>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="editParticipantes" class="form-label">Participantes</label>
+                        <select class="form-select" id="editParticipantes" name="participantes[]" multiple>
+                            @foreach(\App\Models\User::where('status', 'activo')->get() as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples participantes</small>
+                    </div>
                     @endif
                 </div>
                 <div class="modal-footer">
@@ -107,6 +117,39 @@ function deleteEvento(event) {
 
     const eventoId = document.getElementById('editEventoId').value;
     if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
+        const modal = document.getElementById('editarEventoModal');
+
+        // Desactivar todos los elementos del modal
+        const allInputs = modal.querySelectorAll('input, select, textarea, button');
+        allInputs.forEach(el => el.disabled = true);
+
+        // Desactivar el botón de cierre del modal
+        const closeButton = modal.querySelector('.btn-close');
+        if (closeButton) closeButton.disabled = true;
+
+        // Obtener el botón de eliminar y añadir spinner
+        const deleteButton = document.querySelector('.btn-danger[onclick="deleteEvento(event)"]');
+        let spinner = null;
+        let btnText = null;
+
+        if (deleteButton) {
+            btnText = deleteButton.querySelector('.btn-text') || deleteButton;
+            const originalText = btnText.textContent;
+            btnText.textContent = 'Eliminando...';
+
+            // Crear y añadir spinner si no existe
+            spinner = deleteButton.querySelector('.spinner-border');
+            if (!spinner) {
+                spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                deleteButton.appendChild(spinner);
+            } else {
+                spinner.classList.remove('d-none');
+            }
+        }
+
         // Añadir parámetro json=true a la URL para forzar respuesta JSON
         fetch(`/admin/events/${eventoId}?json=true`, {
             method: 'DELETE',
@@ -153,10 +196,18 @@ function deleteEvento(event) {
         .catch(error => {
             console.error('Error:', error);
             showNotification('Error al eliminar evento', 'error');
-        });
+        })
+        .finally(() => {
+            // Re-habilitar todos los elementos del modal
+            allInputs.forEach(el => el.disabled = false);
+            if (closeButton) closeButton.disabled = false;
 
-        // Importante: devolver false para evitar comportamiento predeterminado
-        return false;
+            // Re-habilitar el botón y ocultar spinner
+            if (deleteButton) {
+                if (spinner) spinner.classList.add('d-none');
+                if (btnText) btnText.textContent = 'Eliminar';
+            }
+        });
     }
 }
 

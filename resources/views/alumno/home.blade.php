@@ -96,11 +96,7 @@
                                         <br>
                                         <small class="text-muted">{{ $curso->descripcion }}</small>
                                     </div>
-                                    <div>
-                                        <a href="{{ url('/admin/inscripciones/cursos/' . $curso->id . '/inscribir') }}" class="btn btn-outline-success btn-sm">
-                                            <i class="ri-user-add-line me-1"></i> Inscribirme
-                                        </a>
-                                    </div>
+                                    {{-- Botón Inscribirme eliminado, ya que aparece en la vista del curso --}}
                                 </div>
                             </li>
                         @endforeach
@@ -146,8 +142,47 @@
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-6 mb-4">
+<div class="row g-4 mt-4">
+    <div class="col-md-4">
+        <div class="card card-hover h-100 border-info">
+            <div class="card-header bg-info text-white d-flex align-items-center">
+                <i class="ri-chat-3-line me-2"></i>
+                <h5 class="card-title mb-0">Chat</h5>
+            </div>
+            <div class="card-body text-center">
+                <h6 class="mb-2">Chats recientes</h6>
+                @php
+                    // Obtener los últimos chats usando el mismo método que en el index
+                    $chatService = app(\App\Application\Chat\GetLastChatsForUser::class);
+                    $mensajesRecientes = $chatService->execute(Auth::id(), 5);
+                    $usuarios = \App\Models\User::whereIn('id', collect($mensajesRecientes)->map(fn($m) => $m->senderId == Auth::id() ? $m->receiverId : $m->senderId))->get();
+                @endphp
+                <ul class="list-group list-group-flush">
+                    @forelse($mensajesRecientes as $mensaje)
+                        @php
+                            $otro = $mensaje->senderId == Auth::id() ? $mensaje->receiverId : $mensaje->senderId;
+                            $usuario = $usuarios->firstWhere('id', $otro);
+                        @endphp
+                        <li class="list-group-item px-0 py-1">
+                            <a href="{{ route('chat.show', $otro) }}" class="text-decoration-none">
+                                <strong>{{ $usuario ? $usuario->name : 'Usuario #' . $otro }}</strong>:
+                                {{ \Illuminate\Support\Str::limit($mensaje->content, 30) }}
+                                <br>
+                                <small class="text-muted">
+                                    @if($mensaje->createdAt)
+                                        {{ \Carbon\Carbon::parse($mensaje->createdAt)->format('d/m/Y H:i') }}
+                                    @endif
+                                </small>
+                            </a>
+                        </li>
+                    @empty
+                        <li class="list-group-item text-muted px-0 py-1">No tienes chats recientes.</li>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
         <div class="card card-hover h-100">
             <div class="card-header border-0 bg-primary text-white py-3">
                 <div class="d-flex align-items-center">
@@ -182,6 +217,43 @@
                         <i class="ri-user-settings-line me-1"></i> Editar Perfil
                     </a>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-hover h-100 border-warning">
+            <div class="card-header bg-warning text-dark d-flex align-items-center">
+                <i class="ri-calendar-check-line me-2"></i>
+                <h5 class="card-title mb-0">Mis próximas citas</h5>
+            </div>
+            <div class="card-body text-start">
+                @php
+                    $proximasCitas = \App\Models\EventoParticipante::with('evento')
+                        ->where('user_id', Auth::id())
+                        ->whereHas('evento', function($q) { $q->where('fecha_inicio', '>=', now()); })
+                        ->orderByDesc('id')
+                        ->take(3)
+                        ->get();
+                @endphp
+                <i class="ri-calendar-event-line display-4 mb-3 text-warning"></i>
+                @if($proximasCitas->count())
+                    <ul class="list-unstyled mb-0">
+                        @foreach($proximasCitas as $cita)
+                            <li class="mb-3">
+                                <strong>{{ $cita->evento->titulo ?? 'Evento eliminado' }}</strong><br>
+                                <small class="text-muted">
+                                    {{ $cita->evento && $cita->evento->fecha_inicio ? $cita->evento->fecha_inicio->format('d/m/Y H:i') : '' }}
+                            </small><br>
+                            <span class="badge bg-secondary">{{ $cita->rol }}</span>
+                            @if($cita->evento && $cita->evento->ubicacion)
+                                <span class="badge bg-light text-dark">{{ $cita->evento->ubicacion }}</span>
+                            @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="mb-0">No tienes citas agendadas próximamente.</p>
+                @endif
             </div>
         </div>
     </div>

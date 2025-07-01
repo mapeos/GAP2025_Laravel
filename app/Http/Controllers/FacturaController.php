@@ -10,12 +10,15 @@ class FacturaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = \App\Models\Factura::where('user_id', \Auth::id());
+        // Si el usuario es administrador, mostrar todas las facturas
+        // Si el usuario tiene un campo 'role' y es 'Administrador', mostrar todas las facturas
+        if (Auth::check() && Auth::user()->role === 'Administrador') {
+            $query = Factura::query();
+        } else {
+            $query = Factura::where('user_id', Auth::id());
+        }
         if ($request->filled('buscar')) {
-            $query->where(function($q) use ($request) {
-                $q->where('producto', 'like', '%'.$request->buscar.'%')
-                  ->orWhere('estado', 'like', '%'.$request->buscar.'%');
-            });
+            $query->where('producto', $request->buscar);
         }
         if ($request->filled('fecha_inicio')) {
             $query->where('fecha', '>=', $request->fecha_inicio);
@@ -24,7 +27,7 @@ class FacturaController extends Controller
             $query->where('fecha', '<=', $request->fecha_fin);
         }
         $facturas = $query->orderByDesc('fecha')->get();
-        return view('facturas.index', compact('facturas'));
+        return view('admin.dashboard.pagos.facturas', compact('facturas'));
     }
 
     public function create(Request $request)

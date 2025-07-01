@@ -3,14 +3,13 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriasController;
 use App\Http\Controllers\Api\NewsController;
-use App\Http\Controllers\EventoController;
+use App\Http\Controllers\Api\EventoApiController; // Agregado el nuevo controlador
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
-use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,16 +36,12 @@ Route::get('/categorias', [CategoriasController::class, 'index']); // Listar cat
 Route::post('auth/register', [AuthController::class, 'register']); // Registro de usuario móvil
 Route::post('auth/login', [AuthController::class, 'login']);       // Login de usuario móvil
 
-// Endpoints de recuperación de contraseña para la app móvil
-Route::post('auth/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-Route::post('auth/reset-password', [ForgotPasswordController::class, 'reset']);
-
 // Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']); // Logout y revocación de token
     Route::get('auth/me', [AuthController::class, 'me']);          // Info del usuario autenticado
     Route::post('auth/device', [AuthController::class, 'storeDevice']); // Guardar/actualizar info del dispositivo móvil
-    Route::apiResource('eventos', EventoController::class);
+    Route::apiResource('eventos', EventoApiController::class); // Rutas para la API de eventos
     Route::apiResource('tipos-evento', TipoEventoController::class);
     Route::apiResource('evento-participante', EventoParticipanteController::class);
 });
@@ -86,27 +81,3 @@ Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send', [Notif
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-fcm-v1', [NotificationController::class, 'sendFcmV1']);
 // Ruta para enviar notificaciones WebPush
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-webpush', [App\Http\Controllers\Api\NotificationController::class, 'sendWebPush']);
-
-// Rutas para citas con IA
-Route::middleware('auth:sanctum')->prefix('appointments')->group(function () {
-    Route::post('/suggest', [App\Http\Controllers\AiAppointmentController::class, 'suggest']);
-    Route::post('/', [App\Http\Controllers\AiAppointmentController::class, 'create']);
-});
-
-// Ruta para obtener eventos para el calendario del dashboard
-Route::get('/events', function () {
-    $eventos = \App\Models\Evento::select('id', 'titulo', 'fecha_inicio', 'fecha_fin')
-        ->orderBy('fecha_inicio', 'asc')
-        ->get()
-        ->map(function ($evento) {
-            return [
-                'id' => $evento->id,
-                'titulo' => $evento->titulo,
-                'fecha' => $evento->fecha_inicio->format('Y-m-d'),
-                'hora_inicio' => $evento->fecha_inicio->format('H:i'),
-                'hora_fin' => $evento->fecha_fin->format('H:i')
-            ];
-        });
-    
-    return response()->json($eventos);
-});

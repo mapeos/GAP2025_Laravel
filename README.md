@@ -1337,3 +1337,45 @@ Para que la descarga de archivos (como temarios PDF) funcione correctamente en t
 5. **Si usas volúmenes en Docker, asegúrate de que `./www` esté correctamente montado en `/var/www` en todos los servicios necesarios (app, nginx).**
 
 > Si tienes problemas de acceso (error 403 o 404), revisa los pasos anteriores y consulta con el equipo.
+
+---
+
+## 💬 Implementación del Chat entre Usuarios (Arquitectura Hexagonal)
+
+El sistema de chat permite la comunicación entre usuarios (alumnos y profesores) y está implementado siguiendo una arquitectura hexagonal (Ports & Adapters) para facilitar el mantenimiento y la escalabilidad.
+
+### Estructura principal
+- **Dominio:**
+  - `app/Domain/Chat/Message.php`: Entidad de mensaje.
+  - `app/Domain/Chat/ChatRepositoryInterface.php`: Interfaz del repositorio de chat.
+- **Aplicación (Casos de uso):**
+  - `app/Application/Chat/SendMessage.php`: Enviar mensajes.
+  - `app/Application/Chat/GetMessagesBetweenUsers.php`: Obtener mensajes entre dos usuarios.
+  - `app/Application/Chat/GetLastChatsForUser.php`: Obtener últimos chats recientes.
+  - `app/Application/Chat/GetUnreadCountForUser.php`: Contar mensajes no leídos.
+  - `app/Application/Chat/MarkMessagesAsRead.php`: Marcar mensajes como leídos.
+- **Infraestructura:**
+  - `app/Infrastructure/Chat/EloquentChatRepository.php`: Implementación con Eloquent.
+  - `app/Models/ChatMessage.php`: Modelo Eloquent para la tabla `chat_messages`.
+- **Controlador:**
+  - `app/Http/Controllers/ChatController.php`: Orquesta los casos de uso y la vista.
+
+### Migraciones
+- `database/migrations/2025_06_30_000000_create_chat_messages_table.php`: Crea la tabla principal del chat.
+- `database/migrations/2025_06_30_120000_add_read_at_to_chat_messages_table.php`: Añade la columna `read_at` para mensajes leídos.
+
+### Vistas
+- `resources/views/chat/index.blade.php`: Lista de usuarios y chats recientes.
+- `resources/views/chat/show.blade.php`: Conversación entre dos usuarios.
+- En el home del alumno (`resources/views/alumno/home.blade.php`), la tarjeta de chat muestra los chats recientes.
+
+### Características
+- Notificación de mensajes nuevos no leídos.
+- Marcar mensajes como leídos al abrir el chat.
+- Arquitectura desacoplada y fácil de extender.
+
+### Notas
+- El modelo y la tabla antigua `messages` han sido eliminados para evitar confusiones.
+- Si necesitas migrar datos antiguos, realiza un script de migración manual.
+
+---

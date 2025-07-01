@@ -139,7 +139,7 @@ function handleDateClick(info) {
 function handleEventClick(info) {
     // Prevenir la navegación predeterminada
     info.jsEvent.preventDefault();
-    
+
     const event = info.event;
 
     // Solo abrir modal si estamos en vista de día
@@ -155,6 +155,29 @@ function handleEventClick(info) {
             document.getElementById('editFechaFin').value = event.end ? event.end.toISOString().slice(0, 16) : '';
             document.getElementById('editUbicacion').value = event.extendedProps.ubicacion || '';
             document.getElementById('editUrlVirtual').value = event.extendedProps.url_virtual || '';
+            
+            // Seleccionar el tipo de evento correcto
+            if (event.extendedProps.tipo_evento_id && document.getElementById('editTipoEventoId')) {
+                document.getElementById('editTipoEventoId').value = event.extendedProps.tipo_evento_id;
+            }
+            
+            // Establecer el estado correcto si existe
+            if (event.extendedProps.status !== undefined && document.getElementById('editStatus')) {
+                document.getElementById('editStatus').value = event.extendedProps.status ? '1' : '0';
+            }
+            
+            // Cargar participantes si existen
+            if (event.extendedProps.participantes && document.getElementById('editParticipantes')) {
+                const participantesSelect = document.getElementById('editParticipantes');
+                // Deseleccionar todos los participantes primero
+                Array.from(participantesSelect.options).forEach(option => option.selected = false);
+                
+                // Seleccionar los participantes del evento
+                event.extendedProps.participantes.forEach(participante => {
+                    const option = Array.from(participantesSelect.options).find(opt => opt.value == participante.id);
+                    if (option) option.selected = true;
+                });
+            }
 
             new bootstrap.Modal(modal).show();
         }
@@ -162,7 +185,7 @@ function handleEventClick(info) {
         // Si estamos en vista de mes, cambiar a vista de día
         calendar.changeView('timeGridDay', event.start);
     }
-    
+
     // Importante: devolver false para evitar comportamiento predeterminado
     return false;
 }
@@ -264,12 +287,16 @@ function renderAgendaView() {
         eventosPorFecha[fecha].forEach(evento => {
             const eventoDiv = document.createElement('div');
             eventoDiv.className = 'list-group-item d-flex justify-content-between align-items-start';
+
+            // Verificar si extendedProps existe antes de acceder a descripcion
+            const descripcion = evento.extendedProps && evento.extendedProps.descripcion ? evento.extendedProps.descripcion : '';
+
             eventoDiv.innerHTML = `
                 <div class="ms-2 me-auto">
                     <div class="fw-bold">${evento.title}</div>
-                    <small class="text-muted">${evento.extendedProps.descripcion || ''}</small>
+                    <small class="text-muted">${descripcion}</small>
                 </div>
-                <span class="badge bg-primary rounded-pill" style="background-color: ${evento.color} !important;">
+                <span class="badge bg-primary rounded-pill" style="background-color: ${evento.color || '#007bff'} !important;">
                     ${new Date(evento.start).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
                 </span>
             `;
@@ -432,15 +459,60 @@ function handleEditarEvento(e) {
     e.preventDefault();
     const eventoId = document.getElementById('editEventoId').value;
     const formData = new FormData(e.target);
+    const modal = document.getElementById('editarEventoModal');
+
+    // Obtener el botón de envío y añadir spinner
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    let spinner = null;
+    let btnText = null;
+
+    // Desactivar todos los elementos del modal
+    const allInputs = modal.querySelectorAll('input, select, textarea, button');
+    allInputs.forEach(el => el.disabled = true);
+    
+    // Desactivar el botón de cierre del modal
+    const closeButton = modal.querySelector('.btn-close');
+    if (closeButton) closeButton.disabled = true;
+
+    if (submitButton) {
+        btnText = submitButton.querySelector('.btn-text') || submitButton;
+        const originalText = btnText.textContent;
+        btnText.textContent = 'Actualizando...';
+
+        // Crear y añadir spinner si no existe
+        spinner = submitButton.querySelector('.spinner-border');
+        if (!spinner) {
+            spinner = document.createElement('span');
+            spinner.className = 'spinner-border spinner-border-sm ms-2';
+            spinner.setAttribute('role', 'status');
+            spinner.setAttribute('aria-hidden', 'true');
+            submitButton.appendChild(spinner);
+        } else {
+            spinner.classList.remove('d-none');
+        }
+    }
 
     fetch(`/admin/events/${eventoId}`, {
         method: 'PUT',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
         },
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        // Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // Si no es JSON, convertir a un objeto JSON simulado
+            return {
+                success: response.ok,
+                message: response.ok ? 'Evento actualizado exitosamente' : 'Error al actualizar evento'
+            };
+        }
+    })
     .then(result => {
         if (result.success) {
             showNotification('Evento actualizado exitosamente', 'success');
@@ -453,6 +525,17 @@ function handleEditarEvento(e) {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error al actualizar evento', 'error');
+    })
+    .finally(() => {
+        // Re-habilitar todos los elementos del modal
+        allInputs.forEach(el => el.disabled = false);
+        if (closeButton) closeButton.disabled = false;
+        
+        // Re-habilitar el botón de envío y ocultar spinner
+        if (submitButton) {
+            if (spinner) spinner.classList.add('d-none');
+            if (btnText) btnText.textContent = 'Guardar Cambios';
+        }
     });
 }
 
@@ -512,15 +595,32 @@ function handleSolicitudCitaAi(e) {
 }
 
 // Mostrar notificación
-function showNotification(message, type = 'info') {
+function showNotification(message, type = 'info', autoClose = true) {
     // Implementar sistema de notificaciones (Toastr, SweetAlert, etc.)
     console.log(`${type.toUpperCase()}: ${message}`);
 
-    // Ejemplo básico con alert
-    if (type === 'error') {
-        alert(`Error: ${message}`);
+    // Ejemplo con SweetAlert2 (si está disponible)
+    if (typeof Swal !== 'undefined') {
+        const options = {
+            title: '',
+            text: message,
+            icon: type,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: autoClose ? 3000 : null,
+            timerProgressBar: autoClose,
+        };
+
+        return Swal.fire(options);
     } else {
-        alert(message);
+        // Fallback a alert básico
+        if (type === 'error') {
+            alert(`Error: ${message}`);
+        } else {
+            alert(message);
+        }
+        return null;
     }
 }
 

@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
                 new AiAppointmentSuggestionService()
             );
         });
+        $this->app->bind(
+            \App\Domain\Chat\ChatRepositoryInterface::class,
+            \App\Infrastructure\Chat\EloquentChatRepository::class
+        );
     }
 
     /**
