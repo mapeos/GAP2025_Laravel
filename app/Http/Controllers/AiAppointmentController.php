@@ -74,49 +74,30 @@ class AiAppointmentController extends Controller
      */
     public function suggest(Request $request): JsonResponse
     {
-        Log::info('AiAppointmentController::suggest called', [
-            'request_data' => $request->all(),
-            'user_id' => Auth::id(),
-            'user_roles' => Auth::user()->roles->pluck('name')->toArray()
-        ]);
-
-        $request->validate([
-            'alumno_id' => 'required|integer|exists:users,id',
-            'motivo' => 'required|string|max:500',
-            'tipo_consulta' => 'required|string|max:100',
-            'duracion' => 'nullable|integer|min:15|max:480',
-            'fecha_preferida' => 'nullable|date',
-            'hora_preferida' => 'nullable|string',
-            'prioridad' => 'nullable|string|in:baja,normal,alta,urgente',
-            'preferencias' => 'nullable|string|max:500',
-        ]);
-
         try {
-            Log::info('Building suggestion request', [
-                'alumno_id' => $request->alumno_id,
-                'motivo' => $request->motivo,
-                'tipo_consulta' => $request->tipo_consulta,
-                'fecha_preferida' => $request->fecha_preferida
+            Log::info('Iniciando generación de sugerencias para profesor', [
+                'profesor_id' => Auth::id(),
+                'request_data' => $request->all()
             ]);
 
-            // Verificar si el servicio está disponible
-            if (!app()->bound('appointments.suggester.ai')) {
-                Log::error('Service appointments.suggester.ai not bound');
-                throw new \Exception('Servicio de sugerencias no disponible');
-            }
+            $request->validate([
+                'alumno_id' => 'required|integer|exists:users,id',
+                'motivo' => 'required|string|max:500',
+                'tipo_consulta' => 'required|string|max:100',
+                'duracion' => 'nullable|integer|min:15|max:480',
+                'fecha_preferida' => 'nullable|date',
+                'hora_preferida' => 'nullable|string',
+                'prioridad' => 'nullable|string|in:baja,normal,alta,urgente',
+                'preferencias' => 'nullable|string|max:500',
+            ]);
 
             // Verificar conectividad con Ollama
-            $ollamaHost = env('OLLAMA_HOST', 'ai');
-            $ollamaPort = env('OLLAMA_PORT', '11434');
-            $ollamaUrl = "http://{$ollamaHost}:{$ollamaPort}/api/tags";
-            
+            $ollamaUrl = config('app.ollama_host', 'ai') . ':' . config('app.ollama_port', '11434');
+            Log::info('Verificando conectividad con Ollama', ['url' => $ollamaUrl]);
+
             try {
-                $response = Http::timeout(5)->get($ollamaUrl);
-                Log::info('Ollama connectivity check', [
-                    'url' => $ollamaUrl,
-                    'status' => $response->status(),
-                    'response' => $response->body()
-                ]);
+                $response = Http::timeout(5)->get("http://{$ollamaUrl}/api/tags");
+                Log::info('Ollama connectivity check successful', ['response_status' => $response->status()]);
             } catch (\Exception $e) {
                 Log::warning('Ollama connectivity check failed', [
                     'url' => $ollamaUrl,
@@ -124,16 +105,19 @@ class AiAppointmentController extends Controller
                 ]);
             }
 
+            Log::info('Obteniendo servicio de sugerencias');
             $suggester = app('appointments.suggester.ai');
             Log::info('Suggester service obtained', [
                 'suggester_class' => get_class($suggester)
             ]);
 
+            Log::info('Construyendo request de sugerencias');
             $suggestionRequest = $this->buildProfessorRequest($request);
             Log::info('Suggestion request built', [
                 'request_data' => $suggestionRequest
             ]);
 
+            Log::info('Generando sugerencias con el servicio');
             $suggestions = $suggester->suggest($suggestionRequest);
 
             Log::info('Suggestions generated', [
@@ -141,6 +125,7 @@ class AiAppointmentController extends Controller
                 'suggestions' => $suggestions->toArray()
             ]);
 
+            Log::info('Formateando sugerencias');
             $formattedSuggestions = $this->formatSuggestionsForProfessor($suggestions, $request->motivo);
 
             Log::info('Suggestions formatted', [
@@ -228,7 +213,10 @@ class AiAppointmentController extends Controller
             ]);
 
             DB::commit();
-
+            
+            // Limpiar caché de eventos
+            $this->clearEventosCache();
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Cita creada exitosamente y agregada al calendario',
@@ -240,7 +228,7 @@ class AiAppointmentController extends Controller
                     'tipo_consulta' => $request->tipo_consulta
                 ]
             ]);
-
+            
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creando cita con IA', [
@@ -435,4 +423,15 @@ class AiAppointmentController extends Controller
 
         return $suggestions;
     }
-} 
+
+    /**
+     * Limpia el cache de eventos
+     */
+    private function clearEventosCache()
+    {
+        \Illuminate\Support\Facades\Cache::forget('eventos.index');
+        \Illuminate\Support\Facades\Cache::forget('eventos.user.' . \Illuminate\Support\Facades\Auth::id());
+        \Illuminate\Support\Facades\Cache::forget('profesores.calendar');
+        \Illuminate\Support\Facades\Cache::forget('alumnos.calendar');
+    }
+}

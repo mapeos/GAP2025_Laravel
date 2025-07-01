@@ -89,7 +89,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Crear Evento</button>
+                    <button type="submit" class="btn btn-primary" id="crearEventoBtn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="crearEventoSpinner"></span>
+                        <span id="crearEventoBtnText">Crear Evento</span>
+                    </button>
                 </div>
             </form>
         </div>

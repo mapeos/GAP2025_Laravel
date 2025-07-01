@@ -82,7 +82,11 @@ class CursoController extends Controller
      */
     public function show($id)
     {
-        $curso = Curso::withTrashed()->findOrFail($id);
+        // Cargar el curso con todas las relaciones necesarias para los partials
+        $curso = Curso::withTrashed()
+            ->with(['personas.user', 'personas.participaciones.rol'])
+            ->findOrFail($id);
+            
         return view('admin.cursos.show', compact('curso'));
     }
 

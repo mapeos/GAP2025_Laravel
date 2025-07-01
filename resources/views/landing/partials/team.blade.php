@@ -103,7 +103,7 @@
               <h6 class="text-color">Backend - Gestión de noticias</h6>
             </div>
           </div>
-          <p>El reportero backend: si hay una noticia, Jorge ya la ha publicado... ¡y con un chiste en el commit! Su lema: “No hay bug que no merezca portada”.</p>
+          <p>El reportero backend: si hay una noticia, Jorge ya la ha publicado... ¡y con un chiste en el commit! Desertor de React reconvertido a Angular, ahora sus bugs tienen tipado fuerte y sentido del humor. Su lema: “No hay bug que no merezca portada”.</p>
         </div>
         <!-- Arnaldo (con chascarrillo) -->
         <div class="team-member">

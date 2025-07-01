@@ -61,6 +61,27 @@
         margin-top: -4px;
         cursor: e-resize;
     }
+
+    /* Estilos para el indicador de carga */
+    #calendar.loading {
+        opacity: 0.7;
+        position: relative;
+    }
+
+    #calendar.loading::after {
+        content: "Cargando eventos...";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 10px 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        font-weight: bold;
+        color: #0d6efd;
+    }
     .fc-event-resizing {
         opacity: 0.8;
     }
@@ -204,4 +225,25 @@
     #agendaList .badge {
         font-weight: normal;
     }
-</style> 
+
+    /* Estilos para el indicador de carga */
+    #calendar.loading {
+        opacity: 0.7;
+        position: relative;
+    }
+
+    #calendar.loading::after {
+        content: "Cargando eventos...";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 10px 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+</style>

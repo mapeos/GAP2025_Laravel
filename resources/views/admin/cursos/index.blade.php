@@ -1,13 +1,5 @@
 @extends('template.base')
 
-@section('title', 'Listado de Cursos')
-@section('title-sidebar', 'Cursos')
-@section('title-page', 'Listado de Cursos')
-
-@section('breadcrumb')
-<li class="breadcrumb-item"><a href="#">Cursos</a></li>
-<li class="breadcrumb-item active">Index Cursos</li>
-@endsection
 
 @section('content')
 <div class="container">

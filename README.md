@@ -1303,3 +1303,79 @@ curl -i -X POST \
 - El token de acceso puede expirar; si ocurre un error 401, genera uno nuevo en Meta for Developers.
 - Puedes modificar los números destinatarios en el servicio `WhatsAppService`.
 - El sistema registra en el log de Laravel la respuesta de la API para cada envío.
+
+---
+
+## 📄 Acceso y descarga de archivos en Laravel (storage) con Docker
+
+Para que la descarga de archivos (como temarios PDF) funcione correctamente en todos los entornos Docker:
+
+1. **El enlace simbólico `public/storage` debe crearse dentro del contenedor app** (no solo en tu máquina):
+   
+   Reemplaza `<nombre-contenedor-app>` por el nombre de tu contenedor (por ejemplo, `LaravelGAP2025-app`):
+   ```bash
+   docker exec -it <nombre-contenedor-app> php artisan storage:link
+   ```
+   Si ya existe y apunta mal, elimínalo y vuelve a crearlo:
+   ```bash
+   docker exec -it <nombre-contenedor-app> rm /var/www/public/storage
+   docker exec -it <nombre-contenedor-app> php artisan storage:link
+   ```
+
+2. **Verifica que los archivos subidos estén en `/var/www/storage/app/public/temarios` dentro del contenedor.**
+
+3. **Asegúrate de que los permisos de las carpetas y archivos permitan la lectura:**
+   ```bash
+   docker exec -it <nombre-contenedor-app> chmod -R 755 /var/www/storage/app/public
+   ```
+
+4. **La ruta de descarga en las vistas debe ser:**
+   ```blade
+   href="{{ asset('storage/' . $curso->temario_path) }}"
+   ```
+
+5. **Si usas volúmenes en Docker, asegúrate de que `./www` esté correctamente montado en `/var/www` en todos los servicios necesarios (app, nginx).**
+
+> Si tienes problemas de acceso (error 403 o 404), revisa los pasos anteriores y consulta con el equipo.
+
+---
+
+## 💬 Implementación del Chat entre Usuarios (Arquitectura Hexagonal)
+
+El sistema de chat permite la comunicación entre usuarios (alumnos y profesores) y está implementado siguiendo una arquitectura hexagonal (Ports & Adapters) para facilitar el mantenimiento y la escalabilidad.
+
+### Estructura principal
+- **Dominio:**
+  - `app/Domain/Chat/Message.php`: Entidad de mensaje.
+  - `app/Domain/Chat/ChatRepositoryInterface.php`: Interfaz del repositorio de chat.
+- **Aplicación (Casos de uso):**
+  - `app/Application/Chat/SendMessage.php`: Enviar mensajes.
+  - `app/Application/Chat/GetMessagesBetweenUsers.php`: Obtener mensajes entre dos usuarios.
+  - `app/Application/Chat/GetLastChatsForUser.php`: Obtener últimos chats recientes.
+  - `app/Application/Chat/GetUnreadCountForUser.php`: Contar mensajes no leídos.
+  - `app/Application/Chat/MarkMessagesAsRead.php`: Marcar mensajes como leídos.
+- **Infraestructura:**
+  - `app/Infrastructure/Chat/EloquentChatRepository.php`: Implementación con Eloquent.
+  - `app/Models/ChatMessage.php`: Modelo Eloquent para la tabla `chat_messages`.
+- **Controlador:**
+  - `app/Http/Controllers/ChatController.php`: Orquesta los casos de uso y la vista.
+
+### Migraciones
+- `database/migrations/2025_06_30_000000_create_chat_messages_table.php`: Crea la tabla principal del chat.
+- `database/migrations/2025_06_30_120000_add_read_at_to_chat_messages_table.php`: Añade la columna `read_at` para mensajes leídos.
+
+### Vistas
+- `resources/views/chat/index.blade.php`: Lista de usuarios y chats recientes.
+- `resources/views/chat/show.blade.php`: Conversación entre dos usuarios.
+- En el home del alumno (`resources/views/alumno/home.blade.php`), la tarjeta de chat muestra los chats recientes.
+
+### Características
+- Notificación de mensajes nuevos no leídos.
+- Marcar mensajes como leídos al abrir el chat.
+- Arquitectura desacoplada y fácil de extender.
+
+### Notas
+- El modelo y la tabla antigua `messages` han sido eliminados para evitar confusiones.
+- Si necesitas migrar datos antiguos, realiza un script de migración manual.
+
+---

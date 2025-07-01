@@ -69,6 +69,17 @@ class AuthController extends Controller
             'status'   => 'pendiente',
         ]);
 
+        // Crear la persona asociada al usuario
+        $persona = \App\Models\Persona::create([
+            'nombre' => $request->name,
+            'apellido1' => '', // Puedes ajustar si recibes más datos
+            'apellido2' => '',
+            'dni' => null,
+            'tfno' => '',
+            'direccion_id' => null,
+            'user_id' => $user->id,
+        ]);
+
         $token = $user->createToken('mobile')->plainTextToken;
 
         if ($request->has('device_id')) {
@@ -166,6 +177,10 @@ class AuthController extends Controller
             ]);
         }
 
+        Log::info('[Device][LOGIN][DEBUG] Enviando device_id a la app móvil', [
+            'user_id' => $user->id,
+            'device_id' => $deviceId
+        ]);
         return response()->json([
             'ok' => true,
             'device_id' => $deviceId,
@@ -178,6 +193,7 @@ class AuthController extends Controller
      */
     public function storeDevice(Request $request)
     {
+        Log::info('[Device][DEBUG][storeDevice] Request recibido', $request->all());
         $request->validate([
             'device_id' => 'required|string|max:255',
             'fcm_token' => 'required|string|max:1024',

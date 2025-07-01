@@ -20,6 +20,21 @@
     USO: @include('admin.cursos.parts.participante', ['curso' => $curso])
 --}}
 
+@php
+    // Verificar que la variable $curso existe y tiene el ID
+    if (!isset($curso) || !$curso || !$curso->id) {
+        echo '<div class="alert alert-danger">Error: No se proporcionó un curso válido al partial de participantes.</div>';
+        return;
+    }
+    
+    // Cargar las relaciones si no están cargadas
+    if (!$curso->relationLoaded('personas')) {
+        $curso->load('personas.user');
+    }
+    
+    $totalParticipantes = $curso->personas ? $curso->personas->count() : 0;
+@endphp
+
 {{-- Gestión de participantes del curso --}}
 <div class="card h-100">
     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
@@ -27,23 +42,22 @@
             <i class="ri-team-line me-2"></i>
             Participantes
         </span>
-        <a href="{{ route('admin.inscripciones.cursos.inscribir.form', $curso->id) }}" 
-           class="btn btn-warning btn-sm fw-bold shadow"
-           title="Añadir participante">
-            <i class="ri-user-add-line me-1"></i> 
-            Añadir
-        </a>
     </div>
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">
                 <i class="ri-user-line me-2"></i>
                 Total de participantes: 
-                <span class="badge bg-primary">{{ $curso->personas->count() ?? 0 }}</span>
+                <span class="badge bg-primary">{{ $totalParticipantes }}</span>
             </h6>
+            @if($curso->plazas > 0)
+                <small class="text-muted">
+                    {{ $curso->getInscritosCount() }} / {{ $curso->plazas }} plazas ocupadas
+                </small>
+            @endif
         </div>
 
-        @if($curso->personas && $curso->personas->count() > 0)
+        @if($totalParticipantes > 0)
             <div class="table-responsive">
                 <table class="table table-sm table-hover">
                     <thead class="table-success">
@@ -64,10 +78,10 @@
                                             <i class="ri-user-line text-primary"></i>
                                         </div>
                                         <div>
-                                            <strong>{{ $persona->nombre }}</strong>
+                                            <strong>{{ $persona->nombre ?? 'Sin nombre' }}</strong>
                                             <br>
                                             <small class="text-muted">
-                                                {{ $persona->apellido1 }} {{ $persona->apellido2 }}
+                                                {{ $persona->apellido1 ?? '' }} {{ $persona->apellido2 ?? '' }}
                                             </small>
                                         </div>
                                     </div>
@@ -91,12 +105,24 @@
                 </table>
             </div>
             
-            <div class="mt-3">
+            <div class="mt-3 d-flex gap-2">
                 <a href="{{ route('admin.inscripciones.cursos.inscritos', $curso->id) }}" 
                    class="btn btn-outline-success btn-sm">
                     <i class="ri-eye-line me-1"></i>
                     Ver todos los inscritos
                 </a>
+                @if($curso->activo ?? $curso->estado ?? false)
+                    <a href="{{ route('admin.inscripciones.cursos.inscribir.form', $curso->id) }}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="ri-user-add-line me-1"></i>
+                        Añadir más
+                    </a>
+                @else
+                    <button class="btn btn-outline-secondary btn-sm" disabled title="El curso está inactivo. No se pueden inscribir participantes.">
+                        <i class="ri-user-add-line me-1"></i>
+                        Añadir más
+                    </button>
+                @endif
             </div>
         @else
             <div class="text-center py-4">
@@ -107,12 +133,32 @@
                     <i class="ri-information-line me-2"></i>
                     No hay participantes inscritos en este curso.
                 </div>
-                <a href="{{ route('admin.inscripciones.cursos.inscribir.form', $curso->id) }}" 
-                   class="btn btn-success">
-                    <i class="ri-user-add-line me-2"></i>
-                    Inscribir primer participante
-                </a>
+                @if($curso->activo ?? $curso->estado ?? false)
+                    <a href="{{ route('admin.inscripciones.cursos.inscribir.form', $curso->id) }}" 
+                       class="btn btn-success">
+                        <i class="ri-user-add-line me-2"></i>
+                        Inscribir primer participante
+                    </a>
+                @else
+                    <button class="btn btn-secondary" disabled title="El curso está inactivo. No se pueden inscribir participantes.">
+                        <i class="ri-user-add-line me-2"></i>
+                        Inscribir primer participante
+                    </button>
+                @endif
             </div>
         @endif
     </div>
 </div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 50%;
+    font-size: 14px;
+}
+</style>

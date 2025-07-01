@@ -9,8 +9,8 @@ use CleverTIC\AppointmentSuggester\AppointmentServiceProvider as AppointmentSugg
 use CleverTIC\AppointmentSuggester\Contracts\AppointmentSuggesterInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Log;
-
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
                 new AiAppointmentSuggestionService()
             );
         });
+        $this->app->bind(
+            \App\Domain\Chat\ChatRepositoryInterface::class,
+            \App\Infrastructure\Chat\EloquentChatRepository::class
+        );
     }
 
     /**
@@ -46,5 +50,8 @@ class AppServiceProvider extends ServiceProvider
                 ->action('Restablecer contraseña', $url)
                 ->line('Si no solicitaste este cambio, ignora este correo.');
         });
+
+        // Forzar paginación Bootstrap en toda la app
+        Paginator::useBootstrap();
     }
 }

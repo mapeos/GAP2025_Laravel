@@ -94,10 +94,10 @@
                 </div>
               </li>
 
-              <!-- Nuevo elemento para Calendario -->
+              <!-- Nuevo elemento para Chat -->
               <li class="nav-item">
-                <a class="nav-link d-flex align-items-center {{ request()->routeIs('calendario') ? 'active' : '' }}" href="{{ route('calendario') }}">
-                  <span><i class="ri-calendar-line nav-icon me-2"></i>Calendario</span>
+                <a class="nav-link d-flex align-items-center {{ request()->routeIs('chat.index') ? 'active' : '' }}" href="{{ route('chat.index') }}">
+                  <span><i class="ri-chat-3-line nav-icon me-2"></i>Chat</span>
                 </a>
               </li>
             </ul>
@@ -158,11 +158,7 @@
                 </div>
               </div>
               <!-- Second Row: Breadcrumbs -->
-               <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                  <li class="breadcrumb-item "> <a href="/dashboard" class="text-decoration-none"> Dashboard </a> </li>
-                  @yield('breadcrumb')
-                </ol> </nav>
+               @yield('breadcrumbs')
             </div>
             <div class="row">
               @yield('content')
@@ -216,7 +212,7 @@
     <script src="{{ asset('admin/js/main.js') }}" type="module"></script>
 
     @stack('js')
-
+    @stack('scripts')
 
     <!-- Component JS -->
   </body>
