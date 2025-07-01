@@ -135,6 +135,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{curso}', [CursoController::class, 'show'])->name('show');
         Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit');
         Route::put('/{curso}', [CursoController::class, 'update'])->name('update');
+         Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
+        Route::delete('/{curso}/delete-temario', [CursoController::class, 'deleteTemario'])->name('delete-temario');
+        Route::delete('/{curso}/delete-portada', [CursoController::class, 'deletePortada'])->name('delete-portada');
         Route::post('/{curso}/upload', [CursoController::class, 'uploadTemario'])->name('upload');
         Route::post('/{id}/toggle-status', [CursoController::class, 'toggleStatus'])->name('toggle-status');
         Route::post('/{id}/toggle-estado', [CursoController::class, 'toggleEstado'])->name('toggle-estado');

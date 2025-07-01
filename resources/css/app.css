@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Estilos para spinners de carga */
+.btn-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Animación suave para los spinners */
+.spinner-border {
+    animation: spinner-border 0.75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mejoras para botones con spinners */
+.btn .btn-text,
+.btn .btn-spinner {
+    transition: all 0.3s ease;
+}
+
+/* Estilo para botones deshabilitados durante carga */
+.btn:disabled .btn-text {
+    opacity: 0;
+}
+
+.btn:disabled .btn-spinner {
+    opacity: 1;
+}

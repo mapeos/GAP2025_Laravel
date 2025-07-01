@@ -35,12 +35,23 @@
                 <div class="mb-3">
                     <i class="ri-file-pdf-line text-info fs-1"></i>
                 </div>
+                <div class="d-flex gap-2 justify-content-center mb-2">
                 <a href="{{ asset('storage/' . $curso->temario_path) }}" 
                    target="_blank" 
-                   class="btn btn-info btn-lg shadow-sm">
+                       class="btn btn-info btn-sm shadow-sm">
                     <i class="ri-download-line me-2"></i> 
                     Ver/Descargar Temario
             </a>
+                    <form action="{{ route('admin.cursos.delete-temario', $curso->id) }}" method="POST" class="d-inline" 
+                          id="formEliminarTemarioPartial">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm shadow-sm" id="btnEliminarTemarioPartial">
+                            <i class="ri-delete-bin-line me-2"></i> 
+                            Eliminar
+                        </button>
+                    </form>
+                </div>
                 <small class="text-muted d-block mt-2">
                     <i class="ri-time-line me-1"></i>
                     Subido el {{ \Carbon\Carbon::parse(Storage::disk('public')->lastModified($curso->temario_path))->format('d/m/Y H:i') }}
@@ -65,7 +76,7 @@
             Subir nuevo temario
         </h6>
         
-        <form action="{{ route('admin.cursos.upload', $curso->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.cursos.upload', $curso->id) }}" method="POST" enctype="multipart/form-data" id="formTemario">
             @csrf
             <div class="mb-3">
                 <label for="temario" class="form-label">Seleccionar archivo</label>
@@ -76,13 +87,63 @@
                        accept=".pdf,.doc,.docx" 
                        required>
                 <small class="text-muted">
-                    Formatos permitidos: PDF, DOC, DOCX (máx. 5MB)
+                    Formatos permitidos: PDF, DOC, DOCX (máx. 25MB)
                 </small>
             </div>
-            <button type="submit" class="btn btn-success w-100">
+            <button type="submit" class="btn btn-success w-100" id="btnSubirTemario">
+                <span class="btn-text">
                 <i class="ri-upload-line me-2"></i> 
                 Subir temario
+                </span>
+                <span class="btn-spinner" style="display: none;">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Subiendo...
+                </span>
             </button>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Spinner para subida de temario
+    const formTemario = document.getElementById('formTemario');
+    if (formTemario) {
+        formTemario.addEventListener('submit', function(e) {
+            const btn = document.getElementById('btnSubirTemario');
+            const btnText = btn.querySelector('.btn-text');
+            const btnSpinner = btn.querySelector('.btn-spinner');
+            
+            // Mostrar spinner
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-flex';
+            btn.disabled = true;
+        });
+    }
+
+    // Spinner para eliminación de temario con confirmación mejorada
+    const formEliminarTemarioPartial = document.getElementById('formEliminarTemarioPartial');
+    if (formEliminarTemarioPartial) {
+        formEliminarTemarioPartial.addEventListener('submit', function(e) {
+            // Mostrar confirmación personalizada
+            const confirmacion = confirm('¿Estás seguro de que quieres eliminar el temario? Esta acción no se puede deshacer.');
+            
+            if (!confirmacion) {
+                e.preventDefault(); // Cancelar el envío del formulario
+                return false;
+            }
+            
+            // Si se confirma, mostrar spinner
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn) {
+                // Guardar el texto original
+                btn.dataset.originalText = btn.innerHTML;
+                
+                // Mostrar spinner
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Eliminando...';
+                btn.disabled = true;
+            }
+        });
+    }
+});
+</script>

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Modelo de la tabla cursos
@@ -99,43 +100,179 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
     /**
      * Obtener el número de participantes inscritos (solo alumnos)
+     * Método robusto que maneja casos edge y errores de base de datos
      */
     public function getInscritosCount(): int
     {
-        return $this->personasPorRol('alumno')->count();
+        try {
+            // Verificar que el curso existe y tiene ID
+            if (!$this->exists || !$this->id) {
+                return 0;
+            }
+            
+            // Usar una consulta más eficiente y segura
+            return $this->personas()
+                ->whereHas('participaciones', function ($query) {
+                    $query->whereHas('rol', function ($subQuery) {
+                        $subQuery->where('nombre', 'Alumno');
+                    });
+                })
+                ->count();
+        } catch (\Exception $e) {
+            // Log del error para debugging
+            Log::warning('Error al contar inscritos del curso ' . $this->id . ': ' . $e->getMessage());
+            return 0;
+        }
     }
 
     /**
      * Obtener el número de plazas disponibles
+     * Método robusto que maneja valores nulos o inválidos
      */
     public function getPlazasDisponibles(): int
     {
-        return max(0, $this->plazas - $this->getInscritosCount());
+        try {
+            // Verificar que plazas sea un número válido
+            $plazas = intval($this->plazas ?? 0);
+            if ($plazas <= 0) {
+                return 0;
+            }
+            
+            $inscritos = $this->getInscritosCount();
+            return max(0, $plazas - $inscritos);
+        } catch (\Exception $e) {
+            Log::warning('Error al calcular plazas disponibles del curso ' . $this->id . ': ' . $e->getMessage());
+            return 0;
+        }
     }
 
     /**
      * Obtener el porcentaje de ocupación del curso
+     * Método robusto que maneja división por cero y valores inválidos
      */
     public function getPorcentajeOcupacion(): float
     {
-        if ($this->plazas == 0) return 0;
-        return ($this->getInscritosCount() / $this->plazas) * 100;
+        try {
+            // Verificar que plazas sea un número válido mayor que 0
+            $plazas = intval($this->plazas ?? 0);
+            if ($plazas <= 0) {
+                return 0.0;
+            }
+            
+            $inscritos = $this->getInscritosCount();
+            $porcentaje = ($inscritos / $plazas) * 100;
+            
+            // Redondear a 1 decimal y asegurar que no exceda 100%
+            return min(100.0, round($porcentaje, 1));
+        } catch (\Exception $e) {
+            Log::warning('Error al calcular porcentaje de ocupación del curso ' . $this->id . ': ' . $e->getMessage());
+            return 0.0;
+        }
     }
 
     /**
      * Obtener la clase CSS para el color de las plazas según ocupación
+     * Método robusto con colores más intuitivos
      */
     public function getPlazasColorClass(): string
     {
-        $porcentaje = $this->getPorcentajeOcupacion();
-        
-        if ($porcentaje >= 90) {
-            return 'text-danger fw-bold'; // Rojo - menos del 10% disponible
-        } elseif ($porcentaje >= 50) {
-            return 'text-warning fw-bold'; // Amarillo - menos de la mitad disponible
-        } else {
-            return 'text-info'; // Azul claro - más de la mitad disponible
+        try {
+            $porcentaje = $this->getPorcentajeOcupacion();
+            
+            if ($porcentaje >= 100) {
+                return 'text-danger fw-bold'; // Rojo - Curso completo
+            } elseif ($porcentaje >= 80) {
+                return 'text-warning fw-bold'; // Amarillo - Pocas plazas disponibles
+            } elseif ($porcentaje >= 50) {
+                return 'text-info fw-bold'; // Azul - Plazas moderadas
+            } else {
+                return 'text-success fw-bold'; // Verde - Muchas plazas disponibles
+            }
+        } catch (\Exception $e) {
+            Log::warning('Error al obtener clase de color del curso ' . $this->id . ': ' . $e->getMessage());
+            return 'text-muted'; // Color gris por defecto en caso de error
         }
     }
-    
+
+    /**
+     * Verificar si el curso tiene plazas disponibles
+     * Método útil para mostrar/ocultar botones de inscripción
+     */
+    public function tienePlazasDisponibles(): bool
+    {
+        return $this->getPlazasDisponibles() > 0;
+    }
+
+    /**
+     * Verificar si el curso está completo (sin plazas disponibles)
+     */
+    public function estaCompleto(): bool
+    {
+        return $this->getPlazasDisponibles() <= 0;
+    }
+
+    /**
+     * Obtener el estado de disponibilidad del curso como texto
+     */
+    public function getEstadoDisponibilidad(): string
+    {
+        if ($this->estaCompleto()) {
+            return 'Completo';
+        }
+        
+        $disponibles = $this->getPlazasDisponibles();
+        if ($disponibles <= 3) {
+            return 'Últimas plazas';
+        }
+        
+        return 'Disponible';
+    }
+
+    /**
+     * Verificar si el curso ya ha finalizado (fecha fin en el pasado)
+     */
+    public function haFinalizado(): bool
+    {
+        return $this->fechaFin < now()->startOfDay();
+    }
+
+    /**
+     * Verificar si el curso ya ha comenzado (fecha inicio en el pasado)
+     */
+    public function haComenzado(): bool
+    {
+        return $this->fechaInicio <= now()->startOfDay();
+    }
+
+    /**
+     * Verificar si el curso está en progreso (entre fecha inicio y fin)
+     */
+    public function estaEnProgreso(): bool
+    {
+        return $this->haComenzado() && !$this->haFinalizado();
+    }
+
+    /**
+     * Verificar si el curso está en el futuro (no ha comenzado)
+     */
+    public function estaEnFuturo(): bool
+    {
+        return $this->fechaInicio > now()->startOfDay();
+    }
+
+    /**
+     * Obtener el estado temporal del curso como texto
+     */
+    public function getEstadoTemporal(): string
+    {
+        if ($this->haFinalizado()) {
+            return 'Finalizado';
+        } elseif ($this->estaEnProgreso()) {
+            return 'En Progreso';
+        } elseif ($this->estaEnFuturo()) {
+            return 'Próximamente';
+        } else {
+            return 'Desconocido';
+        }
+    }
 }

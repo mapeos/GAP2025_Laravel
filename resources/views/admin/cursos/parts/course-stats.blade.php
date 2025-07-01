@@ -64,35 +64,80 @@
         <div class="card text-center border-0 shadow-sm">
             <div class="card-body">
                 @php
-                    $fechaInicio = \Carbon\Carbon::parse($curso->fechaInicio);
-                    $fechaFin = \Carbon\Carbon::parse($curso->fechaFin);
-                    $hoy = now();
+                    $fechaInicio = \Carbon\Carbon::parse($curso->fechaInicio)->startOfDay();
+                    $fechaFin = \Carbon\Carbon::parse($curso->fechaFin)->startOfDay();
+                    $hoy = now()->startOfDay();
                     
                     if ($hoy < $fechaInicio) {
-                        // Curso futuro
-                        $dias = $fechaInicio->diffInDays($hoy);
+                        // Curso futuro - días para iniciar
+                        $dias = $hoy->diffInDays($fechaInicio, false); // false para evitar números negativos
                         $iconClass = 'ri-calendar-check-line';
                         $textClass = 'text-warning';
                         $texto = 'Días para iniciar';
+                        
+                        // Formatear número grande
+                        if ($dias > 999) {
+                            $diasFormateado = number_format($dias);
+                        } else {
+                            $diasFormateado = $dias;
+                        }
+                        
                     } elseif ($hoy >= $fechaInicio && $hoy <= $fechaFin) {
-                        // Curso en curso
-                        $dias = $fechaFin->diffInDays($hoy);
+                        // Curso en curso - días restantes
+                        $dias = $hoy->diffInDays($fechaFin, false); // false para evitar números negativos
                         $iconClass = 'ri-time-line';
                         $textClass = 'text-success';
-                        $texto = 'Días restantes';
+                        
+                        // Casos especiales para cursos en progreso
+                        if ($dias == 0) {
+                            // Último día del curso
+                            $texto = 'Finaliza hoy';
+                            $diasFormateado = '¡Último día!';
+                        } elseif ($dias == 1) {
+                            // Penúltimo día
+                            $texto = 'Finaliza mañana';
+                            $diasFormateado = '1 día';
+                        } elseif ($hoy->equalTo($fechaInicio)) {
+                            // Primer día del curso
+                            $texto = 'Comenzó hoy';
+                            $diasFormateado = '¡En curso!';
+                        } else {
+                            // Días normales restantes
+                            $texto = 'Días restantes';
+                            // Formatear número grande
+                            if ($dias > 999) {
+                                $diasFormateado = number_format($dias);
+                            } else {
+                                $diasFormateado = $dias;
+                            }
+                        }
+                        
                     } else {
                         // Curso finalizado
-                        $dias = $hoy->diffInDays($fechaFin);
+                        $dias = $fechaFin->diffInDays($hoy, false); // false para evitar números negativos
                         $iconClass = 'ri-check-double-line';
                         $textClass = 'text-secondary';
-                        $texto = 'Días finalizado';
+                        $texto = 'Finalizado hace';
+                        
+                        // Formatear número grande
+                        if ($dias > 999) {
+                            $diasFormateado = number_format($dias);
+                        } else {
+                            $diasFormateado = $dias;
+                        }
+                    }
+                    
+                    // Asegurar que nunca sea negativo
+                    if ($dias < 0) {
+                        $dias = 0;
+                        $diasFormateado = '0';
                     }
                 @endphp
                 
                 <div class="display-6 {{ $textClass }} mb-2">
                     <i class="{{ $iconClass }}"></i>
                 </div>
-                <h4 class="{{ $textClass }}">{{ $dias }}</h4>
+                <h4 class="{{ $textClass }}">{{ $diasFormateado }}</h4>
                 <p class="text-muted mb-0">{{ $texto }}</p>
             </div>
         </div>
