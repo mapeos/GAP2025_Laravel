@@ -16,8 +16,15 @@
 
 
 @push('js')
+    <script type="application/json" id="leadSources-json">
+        @json($leadSources)
+    </script>
     <script>
-      window.leadSourcesData = @json($leadSources);
+      // Leer el JSON desde el script application/json para evitar errores de sintaxis en el editor
+      (function() {
+        const jsonTag = document.getElementById('leadSources-json');
+        window.leadSourcesData = JSON.parse(jsonTag.textContent);
+      })();
       window.initDashboardCharts = function() {
         const leadSources = window.leadSourcesData;
         const total = leadSources.Web + leadSources.API + leadSources.Otro;
@@ -58,6 +65,7 @@
             },
           });
         }
+      };
       // Esperar a que Chart esté disponible antes de inicializar
       function tryInitDashboardCharts() {
         if (typeof Chart === 'undefined') {
