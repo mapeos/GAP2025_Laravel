@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\Facultativo;
 use App\Models\EspecialidadMedica;
 use App\Models\TratamientoMedico;
-use App\Models\SolicitudCita;
 use Illuminate\Support\Facades\Auth;
 
 class FacultativoController extends Controller
