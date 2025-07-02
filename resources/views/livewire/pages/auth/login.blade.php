@@ -32,8 +32,14 @@ new #[Layout('layouts.guest')] class extends Component
             $this->redirectIntended(default: route('alumno.home'), navigate: true);
         } elseif ($user->hasRole('Profesor')) {
             $this->redirectIntended(default: route('profesor.home'), navigate: true);
+        } elseif ($user->hasRole('Facultativo')) {
+            $this->redirectIntended(default: route('facultativo.home'), navigate: true);
+        } elseif ($user->hasRole('Paciente')) {
+            // Para pacientes, redirigir a una página específica o al perfil
+            $this->redirectIntended(default: route('profile.show'), navigate: true);
         } else {
-            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+            // Para usuarios sin rol específico o pendientes, redirigir al perfil
+            $this->redirectIntended(default: route('profile.show'), navigate: true);
         }
     }
 }; ?>
