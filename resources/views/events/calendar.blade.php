@@ -1,4 +1,18 @@
-@extends('template.base')
+@extends('template.base-alumno')
+
+@section('title', 'Calendario de Eventos')
+@section('title-page', 'Calendario')
+
+@section('breadcrumbs')
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb bg-transparent px-0 mb-3">
+        <li class="breadcrumb-item">
+            <a href="{{ route('alumno.home') }}"><i class="ri-home-2-line"></i> Inicio</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Calendario de Eventos</li>
+    </ol>
+</nav>
+@endsection
 
 @section('content')
 <!-- Flatpickr CSS -->

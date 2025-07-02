@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title')</title>
     <!-- SEO Meta Tags -->
     <meta
@@ -49,6 +50,12 @@
 
     <!-- JS compilado por Vite -->
     @vite('resources/js/app.js')
+    
+    <!-- FullCalendar global -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.11/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.11/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.11/index.global.min.js"></script>
   </head>
   <body>
     <div class="wrapper">
@@ -100,13 +107,20 @@
                   <span><i class="ri-chat-3-line nav-icon me-2"></i>Chat</span>
                 </a>
               </li>
+
+              <!-- Elemento para Eventos/Calendario -->
+              <li class="nav-item">
+                <a class="nav-link d-flex align-items-center {{ request()->routeIs('events.calendar') ? 'active' : '' }}" href="{{ route('events.calendar') }}">
+                  <span><i class="ri-calendar-line nav-icon me-2"></i>Eventos</span>
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
 
         <!-- Sticky Footer -->
         <div class="sidebar-footer mt-2">
-          @include('template.partials.sidebar-footer-user')
+          @include('template.partials.sidebar-footer-alumno')
         </div>
       </aside>
 
@@ -145,7 +159,7 @@
           tabindex="-1"
           id="userProfileOffcanvas"
           aria-labelledby="userProfileOffcanvasLabel" >
-          @include('template.partials.user-offcanvas')
+          @include('template.partials.user-offcanvas-alumno')
         </div>
         <!-- Page Content -->
         <div class="content-wrapper py-4">

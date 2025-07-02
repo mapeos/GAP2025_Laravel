@@ -86,6 +86,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('solicitud-cita.recibidas');
     Route::put('/solicitud-cita/{solicitud}/estado', [\App\Http\Controllers\SolicitudCitaController::class, 'ActualizarEstado'])
         ->name('solicitud-cita.actualizar-estado');
+    Route::get('/solicitud-citas/{solicitud}/actualizar-estado', [\App\Http\Controllers\SolicitudCitaController::class, 'ActualizarEstado'])
+        ->name('solicitud-citas.actualizar-estado');
     Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
         ->name('solicitud-cita.store');
 
@@ -386,15 +388,17 @@ Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
     Route::get('/search/users', [\App\Http\Controllers\ChatController::class, 'searchUsers'])->name('searchUsers');
 });
 
-//clinica (temporal)
-Route::get('/facultativo', [FacultativoController::class, 'index']);
-Route::get('/facultativo/citas', [FacultativoController::class, 'citas']);
-Route::get('/facultativo/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas']);
-Route::get('/facultativo/citas/pendientes', [FacultativoController::class, 'citasPendientes']);
-Route::get('/facultativo/cita', [FacultativoController::class, 'cita']);
-Route::get('/facultativo/cita/new', [FacultativoController::class, 'newCita']);
-Route::get('/facultativo/pacientes', [FacultativoController::class, 'pacientes']);
-Route::get('/facultativo/paciente', [FacultativoController::class, 'paciente']);
-Route::get('/facultativo/tratamientos', [FacultativoController::class, 'tratamientos']);
-Route::get('/facultativo/tratamiento', [FacultativoController::class, 'tratamiento']);
-Route::get('/facultativo/tratamiento/new', [FacultativoController::class, 'newTratamiento']);
+// Rutas para Facultativo (médicos)
+Route::middleware(['auth', 'role:Facultativo'])->prefix('facultativo')->name('facultativo.')->group(function () {
+    Route::get('/', [FacultativoController::class, 'index'])->name('home');
+    Route::get('/citas', [FacultativoController::class, 'citas'])->name('citas');
+    Route::get('/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas'])->name('citas.confirmadas');
+    Route::get('/citas/pendientes', [FacultativoController::class, 'citasPendientes'])->name('citas.pendientes');
+    Route::get('/cita', [FacultativoController::class, 'cita'])->name('cita');
+    Route::get('/cita/new', [FacultativoController::class, 'newCita'])->name('cita.new');
+    Route::get('/pacientes', [FacultativoController::class, 'pacientes'])->name('pacientes');
+    Route::get('/paciente', [FacultativoController::class, 'paciente'])->name('paciente');
+    Route::get('/tratamientos', [FacultativoController::class, 'tratamientos'])->name('tratamientos');
+    Route::get('/tratamiento', [FacultativoController::class, 'tratamiento'])->name('tratamiento');
+    Route::get('/tratamiento/new', [FacultativoController::class, 'newTratamiento'])->name('tratamiento.new');
+});
