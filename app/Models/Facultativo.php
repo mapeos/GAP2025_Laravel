@@ -39,7 +39,7 @@ class Facultativo extends Model
 
     public function solicitudesCitas()
     {
-        return $this->hasMany(SolicitudCita::class, 'profesor_id', 'user_id');
+        return $this->hasMany(SolicitudCita::class, 'facultativo_id');
     }
 
     public function scopeActivos($query)

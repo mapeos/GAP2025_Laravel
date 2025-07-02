@@ -1,89 +1,129 @@
-@push('js')
-@push('css')
 @extends('template.base-facultativo')
-@section('title', 'Nueva Cita')
+@section('title', 'Nueva Cita Médica')
+@section('title-sidebar', 'Dashboard Admin')
+@section('title-page', 'Nueva Cita')
 @section('content')
-<div class="container-fluid">
-  <form class="space-y-4" method="POST" action="#">
-    @csrf
-    <style>
-      input[type="text"],
-      input[type="date"],
-      input[type="datetime-local"],
-      input[type="number"],
-      textarea,
-      select {
-        width: 100% !important;
-        background-color: #fff;
-        color: #22223b;
-        border: 1px solid #b5b5b5;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-      }
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4 text-success flex items-center gap-2">
+                <i class="ri-heart-pulse-line"></i>
+                <span>Nueva Cita Médica</span>
+            </h3>
+            
+            <!-- Información sobre el proceso -->
+            <div class="alert alert-info">
+                <h5><i class="ri-information-line me-2"></i>Proceso de Solicitud de Cita</h5>
+                <p class="mb-0">
+                    Para solicitar una nueva cita médica, complete el formulario a continuación. 
+                    La solicitud será revisada y confirmada por el médico correspondiente.
+                </p>
+          </div>
 
-      input[type="text"]:focus,
-      input[type="date"]:focus,
-      input[type="datetime-local"]:focus,
-      input[type="number"]:focus,
-      textarea:focus,
-      select:focus {
-        outline: none;
-        border-color: #38b000;
-        box-shadow: 0 0 0 2px #38b00033;
-        background-color: #f8fff4;
-      }
+            <!-- Botón para abrir modal -->
+            <div class="text-center my-5">
+                <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#solicitudCitaMedicaModal">
+                    <i class="ri-add-line me-2"></i>
+                    Solicitar Nueva Cita Médica
+                </button>
+          </div>
 
-      label {
-        color: #22223b;
-      }
+            <!-- Información adicional -->
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="ri-user-line text-success fs-1 mb-3"></i>
+                            <h5>Seleccionar Paciente</h5>
+                            <p class="text-muted">Elija el paciente que requiere atención médica</p>
+          </div>
+        </div>
+      </div>
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="ri-calendar-line text-success fs-1 mb-3"></i>
+                            <h5>Agendar Fecha</h5>
+                            <p class="text-muted">Seleccione fecha y hora preferida para la consulta</p>
+      </div>
+          </div>
+          </div>
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="ri-heart-pulse-line text-success fs-1 mb-3"></i>
+                            <h5>Especificar Motivo</h5>
+                            <p class="text-muted">Describa el motivo de la consulta y síntomas</p>
+          </div>
+          </div>
+        </div>
+      </div>
 
-      ::placeholder {
-        color: #adb5bd;
-        opacity: 1;
-      }
-    </style>
-    <h3 class="text-success font-bold text-xl mb-4"><i class="ri-sticky-note-add-line"></i> Nueva cita médica</h3>
-    <div class="row g-4">
-      <div class="col-md-6">
-        <label class="block text-sm font-medium mt-3">Motivo</label>
-        <input type="text" name="motivo" required placeholder="Motivo de la cita">
+            <!-- Información sobre especialidades disponibles -->
+            @if(isset($especialidades) && $especialidades->count() > 0)
+                <div class="mt-5">
+                    <h4 class="text-success mb-3">
+                        <i class="ri-stethoscope-line me-2"></i>Especialidades Disponibles
+                    </h4>
+                    <div class="row">
+                        @foreach($especialidades as $especialidad)
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <div class="mb-2">
+                                            <span class="badge" style="background-color: {{ $especialidad->color }}; color: white;">
+                                                {{ $especialidad->nombre }}
+                                            </span>
       </div>
-      <div class="col-md-6">
-        <label class="block text-sm font-medium mt-3">Fecha propuesta</label>
-        <input type="datetime-local" name="fecha_propuesta" required>
+                                        @if($especialidad->descripcion)
+                                            <small class="text-muted">{{ $especialidad->descripcion }}</small>
+                                        @endif
+          </div>
+          </div>
+        </div>
+                        @endforeach
+        </div>
       </div>
-      <div class="col-md-6">
-        <label class="block text-sm font-medium mt-3">Estado</label>
-        <select name="estado" required>
-          <option value="pendiente">Pendiente</option>
-          <option value="confirmada">Confirmada</option>
-          <option value="rechazada">Rechazada</option>
-        </select>
+            @endif
+
+            <!-- Información sobre tratamientos disponibles -->
+            @if(isset($tratamientos) && $tratamientos->count() > 0)
+                <div class="mt-5">
+                    <h4 class="text-success mb-3">
+                        <i class="ri-capsule-line me-2"></i>Tratamientos Disponibles
+                    </h4>
+                    <div class="row">
+                        @foreach($tratamientos->take(6) as $tratamiento)
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ $tratamiento->nombre }}</h6>
+                                        @if($tratamiento->descripcion)
+                                            <p class="card-text small text-muted">{{ $tratamiento->descripcion }}</p>
+                                        @endif
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-info">{{ $tratamiento->duracion_formateada }}</span>
+                                            <span class="text-success fw-bold">{{ $tratamiento->costo_formateado }}</span>
+          </div>
+          </div>
+        </div>
       </div>
-      <div class="col-md-6">
-        <label class="block text-sm font-medium mt-3">Especialidad</label>
-        <select name="especialidad_id">
-          <option value="">Seleccione especialidad</option>
-          <!-- Opciones dinámicas desde el backend -->
-        </select>
+                        @endforeach
+                    </div>
+                    @if($tratamientos->count() > 6)
+                        <div class="text-center mt-3">
+                            <a href="/facultativo/tratamientos" class="btn btn-outline-success">
+                                Ver todos los tratamientos
+                            </a>
       </div>
-      <div class="col-md-6">
-        <label class="block text-sm font-medium mt-3">Duración (minutos)</label>
-        <input type="number" name="duracion_minutos" min="1" placeholder="Ej: 60">
+                    @endif
       </div>
-    </div>
-    <div class="mt-4">
-      <label class="block text-sm font-medium">Síntomas</label>
-      <textarea name="sintomas" rows="2" placeholder="Describa los síntomas"></textarea>
-    </div>
-    <div class="flex justify-end">
-      <button type="submit" class="btn btn-outline-success font-semibold px-4 py-2 rounded mb-3 mt-5">
-        <i class="ri-save-2-line"></i> Guardar cita
-      </button>
-    </div>
-  </form>
+            @endif
+      </div>
+      </div>
 </div>
+
+<!-- Incluir el modal de solicitud de cita médica -->
+@include('facultativo.partials.solicitud-cita-medica-modal')
+
 @endsection
