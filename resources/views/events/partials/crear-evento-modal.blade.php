@@ -12,7 +12,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="crearEventoForm">
+            <form id="crearEventoForm" onsubmit="handleCrearEvento(event)">
                 @csrf
                 <div class="modal-body">
                     <div class="row">
@@ -36,7 +36,7 @@
                         </div>
                         @endif
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -51,13 +51,13 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="descripcion" class="form-label">Descripción</label>
                         <textarea class="form-control" id="descripcion" name="descripcion" rows="3"
                                   placeholder="Descripción del evento..."></textarea>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -74,7 +74,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
                     <div class="mb-3">
                         <label for="participantes" class="form-label">Participantes</label>
@@ -97,4 +97,4 @@
             </form>
         </div>
     </div>
-</div> 
+</div>

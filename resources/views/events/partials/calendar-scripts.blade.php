@@ -344,6 +344,227 @@ function updateEventoAjax(eventoId, data) {
     });
 }
 
+function toggleAgendaView() {
+    const calendarView = document.getElementById('calendar');
+    const agendaView = document.getElementById('agendaView');
+    const btnAgendaView = document.getElementById('btnAgendaView');
+
+    if (currentView === 'calendar') {
+        calendarView.classList.add('d-none');
+        agendaView.classList.remove('d-none');
+        btnAgendaView.innerHTML = '<i class="ri-calendar-line"></i> Ver calendario';
+        currentView = 'agenda';
+        renderAgendaView();
+    } else {
+        calendarView.classList.remove('d-none');
+        agendaView.classList.add('d-none');
+        btnAgendaView.innerHTML = '<i class="ri-list-check-line"></i> Ver agenda';
+        currentView = 'calendar';
+    }
+}
+
+// Renderizar vista de agenda
+function renderAgendaView() {
+    const agendaList = document.getElementById('agendaList');
+    if (!agendaList) return;
+
+    agendaList.innerHTML = '';
+
+    // Agrupar eventos por fecha
+    const eventosPorFecha = {};
+    eventos.forEach(evento => {
+        const fecha = new Date(evento.start).toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        if (!eventosPorFecha[fecha]) {
+            eventosPorFecha[fecha] = [];
+        }
+        eventosPorFecha[fecha].push(evento);
+    });
+
+    // Renderizar eventos agrupados
+    Object.keys(eventosPorFecha).sort().forEach(fecha => {
+        const fechaDiv = document.createElement('div');
+        fechaDiv.className = 'list-group-item list-group-item-secondary fw-bold';
+        fechaDiv.textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+        agendaList.appendChild(fechaDiv);
+
+        eventosPorFecha[fecha].forEach(evento => {
+            const eventoDiv = document.createElement('div');
+            eventoDiv.className = 'list-group-item d-flex justify-content-between align-items-start';
+
+            // Verificar si extendedProps existe antes de acceder a descripcion
+            const descripcion = evento.extendedProps && evento.extendedProps.descripcion ? evento.extendedProps.descripcion : '';
+
+            eventoDiv.innerHTML = `
+                <div class="ms-2 me-auto">
+                    <div class="fw-bold">${evento.title}</div>
+                    <small class="text-muted">${descripcion}</small>
+                </div>
+                <span class="badge bg-primary rounded-pill" style="background-color: ${evento.color || '#007bff'} !important;">
+                    ${new Date(evento.start).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
+                </span>
+            `;
+            eventoDiv.addEventListener('click', () => handleEventClick({event: evento}));
+            agendaList.appendChild(eventoDiv);
+        });
+    });
+}
+
+// Inicializar modales
+function initializeModals() {
+    // Modal crear evento
+    const crearEventoForm = document.getElementById('crearEventoForm');
+    if (crearEventoForm) {
+        crearEventoForm.addEventListener('submit', handleCrearEvento);
+    }
+
+    // Modal editar evento
+    const editarEventoForm = document.getElementById('editarEventoForm');
+    if (editarEventoForm) {
+        editarEventoForm.addEventListener('submit', handleEditarEvento);
+    }
+
+    // Modal solicitud cita
+    const solicitudCitaForm = document.getElementById('solicitudCitaForm');
+    if (solicitudCitaForm) {
+        solicitudCitaForm.addEventListener('submit', handleSolicitudCita);
+    }
+
+    // Modal solicitud cita AI
+    const solicitudCitaAiForm = document.getElementById('solicitudCitaAiForm');
+    if (solicitudCitaAiForm) {
+        solicitudCitaAiForm.addEventListener('submit', handleSolicitudCitaAi);
+    }
+}
+
+// Manejar crear evento
+function handleCrearEvento(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    // Deshabilitar el botón de envío para evitar múltiples envíos
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const spinner = document.getElementById('crearEventoSpinner');
+    const btnText = document.getElementById('crearEventoBtnText');
+
+    if (submitButton) {
+        submitButton.disabled = true;
+        if (spinner) spinner.classList.remove('d-none');
+        if (btnText) btnText.textContent = 'Creando...';
+    }
+
+    fetch('/eventos', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'  // Añadir este encabezado para indicar que esperamos JSON
+        },
+        body: formData
+    })
+    .then(response => {
+        // Verificar si la respuesta es correcta antes de intentar procesarla como JSON
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor: ' + response.status);
+        }
+        // Verificar el tipo de contenido para asegurarse de que es JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta no es JSON válido. Tipo de contenido: ' + contentType);
+        }
+        return response.json();
+    })
+    .then(result => {
+        if (result.success) {
+            showNotification('Evento creado exitosamente', 'success');
+            // Usar try-catch para manejar posibles errores al cerrar el modal
+            try {
+                const modalElement = document.getElementById('crearEventoModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                    // Asegurar que el backdrop se elimine correctamente después de que el modal se oculte
+                    setTimeout(() => {
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) backdrop.remove();
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                        // Forzar el reflow del DOM para que los cambios se apliquen
+                        document.body.offsetHeight;
+                        // Establecer explícitamente el overflow después del reflow
+                        document.body.style.overflow = 'visible';
+                        // Asegurar que la barra de scroll sea visible
+                        document.documentElement.style.overflow = 'auto';
+                        document.documentElement.style.overflowY = 'scroll';
+                    }, 300); // Esperar a que termine la animación de cierre
+                } else {
+                    // Si no hay instancia, intentar cerrar de otra manera
+                    $(modalElement).modal('hide'); // Alternativa con jQuery si está disponible
+                    // Asegurar limpieza después de jQuery
+                    setTimeout(() => {
+                        // Y eliminar el backdrop si existe
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) backdrop.remove();
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                        // Forzar el reflow del DOM para que los cambios se apliquen
+                        document.body.offsetHeight;
+                        // Establecer explícitamente el overflow después del reflow
+                        document.body.style.overflow = 'visible';
+                        // Asegurar que la barra de scroll sea visible
+                        document.documentElement.style.overflow = 'auto';
+                        document.documentElement.style.overflowY = 'scroll';
+                    }, 300);
+                }
+            } catch (error) {
+                console.error('Error al cerrar el modal:', error);
+                // Intentar cerrar el modal de otra manera
+                const modalElement = document.getElementById('crearEventoModal');
+                modalElement.classList.remove('show');
+                modalElement.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                // Forzar el reflow del DOM para que los cambios se apliquen
+                document.body.offsetHeight;
+                // Establecer explícitamente el overflow después del reflow
+                document.body.style.overflow = 'visible';
+                // Asegurar que la barra de scroll sea visible
+                document.documentElement.style.overflow = 'auto';
+                document.documentElement.style.overflowY = 'scroll';
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }
+            e.target.reset();
+            loadEventosAjax();
+        } else {
+            showNotification(result.message || 'Error al crear evento', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al crear evento: ' + error.message, 'error');
+    })
+    .finally(() => {
+        // Re-habilitar el botón de envío y ocultar spinner
+        if (submitButton) {
+            submitButton.disabled = false;
+            if (spinner) spinner.classList.add('d-none');
+            if (btnText) btnText.textContent = 'Crear Evento';
+        }
+        // Asegurar que el scroll esté habilitado
+        document.body.style.overflow = 'auto';
+    });
+}
+
+// Manejar editar evento
+
 // Manejar editar evento (versión mejorada)
 function handleEditarEvento(e) {
     e.preventDefault();
