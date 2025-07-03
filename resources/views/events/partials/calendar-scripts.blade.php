@@ -3,6 +3,7 @@
 let calendar;
 let currentView = 'calendar';
 let eventos = @json($eventos ?? []);
+let userRole = '{{ Auth::user()->roles->first()->name ?? "" }}';
 
 // Inicialización del calendario
 document.addEventListener('DOMContentLoaded', function() {
@@ -186,34 +187,96 @@ function handleEventClick(info) {
         if (modal) {
             // Llenar el modal con los datos del evento
             document.getElementById('editEventoId').value = event.id;
-            document.getElementById('editTitulo').value = event.title;
-            document.getElementById('editDescripcion').value = event.extendedProps.descripcion || '';
-            document.getElementById('editFechaInicio').value = event.start.toISOString().slice(0, 16);
-            document.getElementById('editFechaFin').value = event.end ? event.end.toISOString().slice(0, 16) : '';
-            document.getElementById('editUbicacion').value = event.extendedProps.ubicacion || '';
-            document.getElementById('editUrlVirtual').value = event.extendedProps.url_virtual || '';
 
-            // Seleccionar el tipo de evento correcto
-            if (event.extendedProps.tipo_evento_id && document.getElementById('editTipoEventoId')) {
-                document.getElementById('editTipoEventoId').value = event.extendedProps.tipo_evento_id;
-            }
+            if (userRole === 'Profesor' || userRole === 'Administrador') {
+                // Versión editable para profesores y administradores
+                document.getElementById('editTitulo').value = event.title;
+                document.getElementById('editDescripcion').value = event.extendedProps.descripcion || '';
+                document.getElementById('editFechaInicio').value = event.start.toISOString().slice(0, 16);
+                document.getElementById('editFechaFin').value = event.end ? event.end.toISOString().slice(0, 16) : '';
+                document.getElementById('editUbicacion').value = event.extendedProps.ubicacion || '';
+                document.getElementById('editUrlVirtual').value = event.extendedProps.url_virtual || '';
 
-            // Establecer el estado correcto si existe
-            if (event.extendedProps.status !== undefined && document.getElementById('editStatus')) {
-                document.getElementById('editStatus').value = event.extendedProps.status ? '1' : '0';
-            }
+                // Seleccionar el tipo de evento correcto
+                if (event.extendedProps.tipo_evento_id && document.getElementById('editTipoEventoId')) {
+                    document.getElementById('editTipoEventoId').value = event.extendedProps.tipo_evento_id;
+                }
 
-            // Cargar participantes si existen
-            if (event.extendedProps.participantes && document.getElementById('editParticipantes')) {
-                const participantesSelect = document.getElementById('editParticipantes');
-                // Deseleccionar todos los participantes primero
-                Array.from(participantesSelect.options).forEach(option => option.selected = false);
+                // Establecer el estado correcto si existe
+                if (event.extendedProps.status !== undefined && document.getElementById('editStatus')) {
+                    document.getElementById('editStatus').value = event.extendedProps.status ? '1' : '0';
+                }
 
-                // Seleccionar los participantes del evento
-                event.extendedProps.participantes.forEach(participante => {
-                    const option = Array.from(participantesSelect.options).find(opt => opt.value == participante.id);
-                    if (option) option.selected = true;
-                });
+                // Cargar participantes si existen
+                if (event.extendedProps.participantes && document.getElementById('editParticipantes')) {
+                    const participantesSelect = document.getElementById('editParticipantes');
+                    // Deseleccionar todos los participantes primero
+                    Array.from(participantesSelect.options).forEach(option => option.selected = false);
+
+                    // Seleccionar los participantes del evento
+                    event.extendedProps.participantes.forEach(participante => {
+                        const option = Array.from(participantesSelect.options).find(opt => opt.value == participante.id);
+                        if (option) option.selected = true;
+                    });
+                }
+            } else {
+                // Versión de solo lectura para estudiantes
+                document.getElementById('viewTitulo').textContent = event.title;
+                document.getElementById('viewDescripcion').textContent = event.extendedProps.descripcion || 'No disponible';
+
+                // Formatear fechas para mejor legibilidad
+                const fechaInicio = new Date(event.start);
+                document.getElementById('viewFechaInicio').textContent = fechaInicio.toLocaleString('es-ES');
+
+                if (event.end) {
+                    const fechaFin = new Date(event.end);
+                    document.getElementById('viewFechaFin').textContent = fechaFin.toLocaleString('es-ES');
+                } else {
+                    document.getElementById('viewFechaFin').textContent = 'No disponible';
+                }
+
+                document.getElementById('viewUbicacion').textContent = event.extendedProps.ubicacion || 'No disponible';
+
+                // Para la URL virtual, crear un enlace si existe
+                if (event.extendedProps.url_virtual) {
+                    const urlLink = document.createElement('a');
+                    urlLink.href = event.extendedProps.url_virtual;
+                    urlLink.textContent = event.extendedProps.url_virtual;
+                    urlLink.target = '_blank';
+                    document.getElementById('viewUrlVirtual').innerHTML = '';
+                    document.getElementById('viewUrlVirtual').appendChild(urlLink);
+                } else {
+                    document.getElementById('viewUrlVirtual').textContent = 'No disponible';
+                }
+
+                // Mostrar tipo de evento
+                if (event.extendedProps.tipo_evento_id) {
+                    // Buscar el nombre del tipo de evento
+                    const tipoEventoSelect = document.getElementById('editTipoEventoId');
+                    if (tipoEventoSelect) {
+                        const option = Array.from(tipoEventoSelect.options).find(opt => opt.value == event.extendedProps.tipo_evento_id);
+                        if (option) {
+                            document.getElementById('viewTipoEvento').textContent = option.textContent;
+                        } else {
+                            document.getElementById('viewTipoEvento').textContent = 'Tipo desconocido';
+                        }
+                    } else {
+                        document.getElementById('viewTipoEvento').textContent = 'Tipo desconocido';
+                    }
+                } else {
+                    document.getElementById('viewTipoEvento').textContent = 'No disponible';
+                }
+
+                // Mostrar estado
+                document.getElementById('viewStatus').textContent = event.extendedProps.status ? 'Activo' : 'Inactivo';
+
+                // Mostrar participantes
+                if (event.extendedProps.participantes && event.extendedProps.participantes.length > 0) {
+                    const participantesTexto = event.extendedProps.participantes.map(p => p.name).join(', ');
+                    document.getElementById('viewParticipantes').textContent = participantesTexto;
+                } else {
+                    document.getElementById('viewParticipantes').textContent = 'No hay participantes';
+                }
             }
 
             new bootstrap.Modal(modal).show();
@@ -645,4 +708,126 @@ function renderAgendaView() {
         agendaList.appendChild(noEvents);
     }
 }
+
+function deleteEvento(event) {
+    // Si se proporciona un evento, prevenir el comportamiento predeterminado
+    if (event) {
+        event.preventDefault();
+    }
+
+    const eventoId = document.getElementById('editEventoId').value;
+    if (!confirm('¿Estás seguro de que quieres eliminar este evento?')) {
+        return; // El usuario canceló la operación
+    }
+
+    const modal = document.getElementById('editarEventoModal');
+
+    // Desactivar todos los elementos del modal
+    const allInputs = modal.querySelectorAll('input, select, textarea, button');
+    allInputs.forEach(el => el.disabled = true);
+
+    // Desactivar el botón de cierre del modal
+    const closeButton = modal.querySelector('.btn-close');
+    if (closeButton) closeButton.disabled = true;
+
+    // Obtener el botón de eliminar y añadir spinner
+    const deleteButton = document.querySelector('.btn-danger[onclick="deleteEvento(event)"]');
+    let spinner = null;
+    let btnText = null;
+
+    if (deleteButton) {
+        btnText = deleteButton.querySelector('.btn-text') || deleteButton;
+        const originalText = btnText.textContent;
+        btnText.textContent = 'Eliminando...';
+
+        // Crear y añadir spinner si no existe
+        spinner = deleteButton.querySelector('.spinner-border');
+        if (!spinner) {
+            spinner = document.createElement('span');
+            spinner.className = 'spinner-border spinner-border-sm ms-2';
+            spinner.setAttribute('role', 'status');
+            spinner.setAttribute('aria-hidden', 'true');
+            deleteButton.appendChild(spinner);
+        } else {
+            spinner.classList.remove('d-none');
+        }
+    }
+
+    // Crear FormData para enviar la solicitud DELETE
+    const formData = new FormData();
+    formData.append('_method', 'DELETE');
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+    fetch(`/eventos/${eventoId}`, {
+        method: 'POST', // Usamos POST con _method=DELETE para mayor compatibilidad
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        // Intentar procesar como JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // Si no es JSON, devolver un objeto estándar
+            return {
+                success: true,
+                message: 'Evento eliminado exitosamente'
+            };
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            showNotification('Evento eliminado exitosamente', 'success');
+            try {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            } catch (error) {
+                console.error('Error al cerrar el modal:', error);
+                // Fallback para cerrar el modal
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }
+
+            // Cambiar a vista mensual después de eliminar
+            if (calendar) {
+                calendar.changeView('dayGridMonth');
+            }
+
+            // Recargar eventos
+            loadEventosAjax();
+        } else {
+            showNotification(result.message || 'Error al eliminar evento', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification(`Error al eliminar evento: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        // Re-habilitar todos los elementos del modal
+        allInputs.forEach(el => el.disabled = false);
+        if (closeButton) closeButton.disabled = false;
+
+        // Re-habilitar el botón y ocultar spinner
+        if (deleteButton) {
+            if (spinner) spinner.classList.add('d-none');
+            if (btnText) btnText.textContent = 'Eliminar';
+        }
+    });
+}
+
 </script>
