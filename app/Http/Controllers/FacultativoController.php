@@ -28,23 +28,48 @@ class FacultativoController extends Controller
         $especialidades = EspecialidadMedica::activas()->get();
         $tratamientos = TratamientoMedico::activos()->with('especialidad')->get();
         
-        // Obtener citas del facultativo actual
-        $facultativo = Facultativo::where('user_id', Auth::id())->first();
+        // Obtener citas según el rol del usuario
+        $user = Auth::user();
         $citas = collect();
         
-        if ($facultativo) {
-            $citas = SolicitudCita::where('facultativo_id', $facultativo->id)
-                ->where('tipo_sistema', 'medico')
-                ->with(['alumno', 'especialidad', 'tratamiento']) // alumno = paciente en contexto médico
+        if ($user->hasRole('Administrador')) {
+            // Los administradores ven todas las citas médicas
+            $citas = SolicitudCita::where('tipo_sistema', 'medico')
+                ->with(['alumno', 'especialidad', 'tratamiento', 'facultativo.user'])
                 ->orderBy('fecha_propuesta')
                 ->get();
+        } else {
+            // Los facultativos ven solo sus citas
+            $facultativo = Facultativo::where('user_id', Auth::id())->first();
+            if ($facultativo) {
+                $citas = SolicitudCita::where('facultativo_id', $facultativo->id)
+                    ->where('tipo_sistema', 'medico')
+                    ->with(['alumno', 'especialidad', 'tratamiento'])
+                    ->orderBy('fecha_propuesta')
+                    ->get();
+            }
         }
         
         return view('facultativo.citas', compact('pacientes', 'facultativos', 'especialidades', 'tratamientos', 'citas'));
     }
     
-    public function cita()
+    public function cita($id = null)
     {
+        if ($id) {
+            $facultativo = Facultativo::where('user_id', Auth::id())->first();
+            $cita = null;
+            
+            if ($facultativo) {
+                $cita = SolicitudCita::where('id', $id)
+                    ->where('facultativo_id', $facultativo->id)
+                    ->where('tipo_sistema', 'medico')
+                    ->with(['alumno', 'especialidad', 'tratamiento'])
+                    ->first();
+            }
+            
+            return view('facultativo.cita', compact('cita'));
+        }
+        
         return view('facultativo.cita');
     }
     

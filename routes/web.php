@@ -18,6 +18,7 @@ use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\PagoController;
+use App\Http\Controllers\SolicitudCitaController;
 use Illuminate\Support\Facades\Auth;
 
 // --------------------------------------------
@@ -393,17 +394,21 @@ Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
 });
 
 // Rutas para Facultativo (médicos)
-Route::middleware(['auth', 'role:Facultativo'])->prefix('facultativo')->name('facultativo.')->group(function () {
+Route::middleware(['auth', 'role:Facultativo|Administrador'])->prefix('facultativo')->name('facultativo.')->group(function () {
     Route::get('/', [FacultativoController::class, 'index'])->name('home');
     Route::get('/citas', [FacultativoController::class, 'citas'])->name('citas');
     Route::get('/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas'])->name('citas.confirmadas');
     Route::get('/citas/pendientes', [FacultativoController::class, 'citasPendientes'])->name('citas.pendientes');
-    Route::get('/cita', [FacultativoController::class, 'cita'])->name('cita');
+    Route::get('/cita/{id?}', [FacultativoController::class, 'cita'])->name('cita');
     Route::get('/cita/new', [FacultativoController::class, 'newCita'])->name('cita.new');
     Route::get('/pacientes', [FacultativoController::class, 'pacientes'])->name('pacientes');
     Route::get('/paciente', [FacultativoController::class, 'paciente'])->name('paciente');
     Route::get('/tratamientos', [FacultativoController::class, 'tratamientos'])->name('tratamientos');
     Route::get('/tratamiento', [FacultativoController::class, 'tratamiento'])->name('tratamiento');
     Route::get('/tratamiento/new', [FacultativoController::class, 'newTratamiento'])->name('tratamiento.new');
+    
+    // Ruta para actualizar estado de citas médicas
+    Route::put('/citas/{solicitud}/actualizar-estado', [SolicitudCitaController::class, 'ActualizarEstado'])
+        ->name('citas.actualizar-estado');
 });
 

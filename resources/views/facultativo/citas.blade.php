@@ -30,6 +30,9 @@
                         <tr>
                             <th class="text-center">ID</th>
                             <th class="text-center">Paciente</th>
+                            @if(Auth::user()->hasRole('Administrador'))
+                                <th class="text-center">Facultativo</th>
+                            @endif
                             <th class="text-center">Fecha</th>
                             <th class="text-center">Hora</th>
                             <th class="text-center">Duración</th>
@@ -43,6 +46,11 @@
                             <tr>
                                 <td class="text-center align-middle">{{ $cita->id }}</td>
                                 <td class="text-center align-middle">{{ $cita->alumno->name }}</td>
+                                @if(Auth::user()->hasRole('Administrador'))
+                                    <td class="text-center align-middle">
+                                        {{ $cita->facultativo ? $cita->facultativo->user->name : 'N/A' }}
+                                    </td>
+                                @endif
                                 <td class="text-center align-middle">{{ $cita->fecha_propuesta->format('d/m/Y') }}</td>
                                 <td class="text-center align-middle">{{ $cita->fecha_propuesta->format('H:i') }}</td>
                                 <td class="text-center align-middle">
@@ -143,15 +151,67 @@
 <script>
 function confirmarCita(citaId) {
     if (confirm('¿Estás seguro de que quieres confirmar esta cita?')) {
-        // Aquí iría la lógica para confirmar la cita
-        window.location.href = `/solicitud-citas/${citaId}/actualizar-estado?estado=confirmada`;
+        // Crear un formulario temporal para enviar la petición PUT
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/facultativo/citas/${citaId}/actualizar-estado`;
+        
+        // Agregar token CSRF
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfToken);
+        
+        // Agregar método PUT
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'PUT';
+        form.appendChild(methodField);
+        
+        // Agregar estado
+        const estadoField = document.createElement('input');
+        estadoField.type = 'hidden';
+        estadoField.name = 'estado';
+        estadoField.value = 'confirmada';
+        form.appendChild(estadoField);
+        
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 
 function rechazarCita(citaId) {
     if (confirm('¿Estás seguro de que quieres rechazar esta cita?')) {
-        // Aquí iría la lógica para rechazar la cita
-        window.location.href = `/solicitud-citas/${citaId}/actualizar-estado?estado=rechazada`;
+        // Crear un formulario temporal para enviar la petición PUT
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/facultativo/citas/${citaId}/actualizar-estado`;
+        
+        // Agregar token CSRF
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfToken);
+        
+        // Agregar método PUT
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'PUT';
+        form.appendChild(methodField);
+        
+        // Agregar estado
+        const estadoField = document.createElement('input');
+        estadoField.type = 'hidden';
+        estadoField.name = 'estado';
+        estadoField.value = 'rechazada';
+        form.appendChild(estadoField);
+        
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 </script>
