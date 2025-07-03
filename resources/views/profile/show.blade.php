@@ -27,6 +27,12 @@
                         <tr><th>Provincia</th><td>{{ $persona->direccion->provincia }}</td></tr>
                         <tr><th>País</th><td>{{ $persona->direccion->pais }}</td></tr>
                     @endif
+                    <tr>
+                        <th>Foto de perfil</th>
+                        <td>
+                            <img src="{{ $persona->foto_perfil ? asset('storage/' . $persona->foto_perfil) : asset('/admin/img/avatars/avatar2.jpg') }}" alt="Foto de perfil" class="rounded-circle" width="80" height="80">
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             <div class="mt-4 d-flex gap-2">

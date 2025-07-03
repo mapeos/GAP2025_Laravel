@@ -75,7 +75,7 @@
         data-bs-target="#userProfileOffcanvas"
         aria-controls="userProfileOffcanvas">
         <div class="avatar position-relative">
-            <img src="{{ asset('/admin/img/avatars/avatar2.jpg') }}" alt="User" class="rounded-circle" />
+            <img src="{{ Auth::user()->persona && Auth::user()->persona->foto_perfil ? asset('storage/' . Auth::user()->persona->foto_perfil) : asset('/admin/img/avatars/avatar2.jpg') }}" alt="User" class="rounded-circle" />
             <span class="online-indicator"></span>
         </div>
     </button>

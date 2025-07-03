@@ -4,7 +4,7 @@
            <div class="user-profile-cover"></div>
            <div class="user-profile-avatar">
                <div class="avatar-wrapper">
-                   <img src="{{ asset('/admin/img/avatars/avatar2.jpg') }}" alt="User" class="rounded-circle" />
+                   <img src="{{ auth()->user()?->persona && auth()->user()->persona->foto_perfil ? asset('storage/' . auth()->user()->persona->foto_perfil) : asset('/admin/img/avatars/avatar2.jpg') }}" alt="User" class="rounded-circle" />
                    <span class="status-badge online"></span>
                </div>
            </div>
@@ -68,4 +68,4 @@
                <i class="ri-logout-box-r-line"></i> <span>Cerrar Sesión</span>
            </a>
        </div>
-   </div> 
+   </div>
