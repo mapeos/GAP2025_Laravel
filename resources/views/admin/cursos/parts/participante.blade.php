@@ -36,7 +36,7 @@
 @endphp
 
 {{-- Gestión de participantes del curso --}}
-<div class="card h-100">
+<div class="card">
     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
         <span>
             <i class="ri-team-line me-2"></i>

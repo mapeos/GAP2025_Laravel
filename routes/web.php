@@ -132,10 +132,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [CursoController::class, 'index'])->name('index');
         Route::get('/create', [CursoController::class, 'create'])->name('create');
         Route::post('/', [CursoController::class, 'store'])->name('store');
-        Route::get('/{curso}', [CursoController::class, 'show'])->name('show');
-        Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit');
-        Route::put('/{curso}', [CursoController::class, 'update'])->name('update');
-         Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
+        
+        // Rutas específicas deben ir ANTES que la ruta genérica {curso}
+        Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
         Route::delete('/{curso}/delete-temario', [CursoController::class, 'deleteTemario'])->name('delete-temario');
         Route::delete('/{curso}/delete-portada', [CursoController::class, 'deletePortada'])->name('delete-portada');
         Route::post('/{curso}/upload', [CursoController::class, 'uploadTemario'])->name('upload');
@@ -143,6 +142,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/toggle-estado', [CursoController::class, 'toggleEstado'])->name('toggle-estado');
         Route::post('/{id}/delete', [CursoController::class, 'delete'])->name('delete');
         Route::post('/{id}/restore', [CursoController::class, 'restore'])->name('restore');
+        
+        // Rutas genéricas van al final
+        Route::get('/{curso}', [CursoController::class, 'show'])->name('show');
+        Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit');
+        Route::put('/{curso}', [CursoController::class, 'update'])->name('update');
     });
 
     // Rutas públicas de cursos (para ver detalles)
