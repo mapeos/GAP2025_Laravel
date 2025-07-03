@@ -29,9 +29,12 @@
                     @endif
                 </tbody>
             </table>
-            <div class="mt-4">
+            <div class="mt-4 d-flex gap-2">
                 <a href="{{ route('profile.edit') }}" class="btn btn-secondary">
                     <i class="ri-user-settings-line me-1"></i> Editar Perfil
+                </a>
+                <a href="{{ route('alumno.home') }}" class="btn btn-outline-primary">
+                    <i class="ri-arrow-go-back-line me-1"></i> Volver al inicio
                 </a>
             </div>
         </div>
