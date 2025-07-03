@@ -273,132 +273,70 @@ class EventoController extends Controller
         $tipoRecordatorio = Cache::remember('tipo_recordatorio', 3600, function () {
             return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
         });
-
+    
         if ($tipoRecordatorio && $evento->tipo_evento_id == $tipoRecordatorio->id && $evento->creado_por != Auth::id()) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No tienes permiso para actualizar este recordatorio personal.'
+                    'message' => 'No tienes permiso para editar este recordatorio personal.'
                 ], 403);
             }
-            abort(403, 'No tienes permiso para actualizar este recordatorio personal.');
+            abort(403, 'No tienes permiso para editar este recordatorio personal.');
         }
-
+    
+        // Si el usuario es estudiante, no puede cambiar el tipo de evento
+        if (Auth::user()->hasRole('Alumno') && $request->has('tipo_evento_id') && $request->tipo_evento_id != $evento->tipo_evento_id) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para cambiar el tipo de evento.'
+                ], 403);
+            }
+            return redirect()->back()
+                ->with('error', 'No tienes permiso para cambiar el tipo de evento.')
+                ->withInput();
+        }
+    
         DB::beginTransaction();
         try {
+            // Actualizar datos básicos del evento
+            $evento->fill($request->all());
+            $evento->save();
+    
+            // Sincronizar participantes si se proporcionan
+            if ($request->has('participantes')) {
+                $participantes = $request->participantes;
+                $evento->participantes()->sync($participantes);
+            }
+    
+            // Limpiar cache
+            $this->clearEventosCache();
+    
+            DB::commit();
+    
             // Si la petición es AJAX, responde con JSON
-            if ($request->expectsJson()) {
-                $validator = Validator::make($request->all(), [
-                    'titulo' => 'sometimes|required|string|max:255',
-                    'descripcion' => 'nullable|string',
-                    'fecha_inicio' => 'sometimes|required|date',
-                    'fecha_fin' => 'sometimes|required|date|after_or_equal:fecha_inicio',
-                ]);
-
-                if ($validator->fails()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Error de validación',
-                        'errors' => $validator->errors()
-                    ], 422);
-                }
-
-                // Si el usuario es alumno, no permitir cambiar el tipo de evento
-                if (Auth::user()->hasRole('alumno') && isset($request->tipo_evento_id)) {
-                    $recordatorioPersonal = Cache::remember('tipo_recordatorio', 3600, function () {
-                        return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-                    });
-                    if ($recordatorioPersonal && $recordatorioPersonal->id != $request->tipo_evento_id) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'No tienes permiso para cambiar el tipo de evento.'
-                        ], 403);
-                    }
-                }
-
-                $evento->update($request->only([
-                    'titulo',
-                    'descripcion',
-                    'fecha_inicio',
-                    'fecha_fin',
-                    'ubicacion',
-                    'url_virtual',
-                    'tipo_evento_id',
-                    'status'
-                ]));
-
-                // Sincronizar participantes si se proporcionan
-                if ($request->has('participantes')) {
-                    $evento->participantes()->sync($request->participantes);
-                }
-
-                // Limpiar cache
-                $this->clearEventosCache();
-
-                DB::commit();
-
-                // En el método update, cuando devuelves JSON
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Evento actualizado exitosamente',
-                    'data' => $evento->load(['tipoEvento:id,nombre,color', 'participantes:id,name,email'])
+                    'evento' => $evento
                 ]);
             }
-
-            // Si es una petición de formulario tradicional
-            $validator = Validator::make($request->all(), [
-                'titulo' => 'required|string|max:255',
-                'descripcion' => 'nullable|string',
-                'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-                'ubicacion' => 'nullable|string|max:255',
-                'url_virtual' => 'nullable|url|max:255',
-                'tipo_evento_id' => 'required|exists:tipos_evento,id',
-                'participantes' => 'nullable|array',
-                'participantes.*' => 'exists:users,id',
-            ]);
-
-            if ($validator->fails()) {
-                return redirect()->back()
-                    ->withErrors($validator)
-                    ->withInput();
-            }
-
-            // Si el usuario es alumno, forzar tipo de evento a Recordatorio Personal
-            if (Auth::user()->hasRole('alumno')) {
-                $recordatorioPersonal = Cache::remember('tipo_recordatorio', 3600, function () {
-                    return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
-                });
-                if ($recordatorioPersonal) {
-                    $request->merge(['tipo_evento_id' => $recordatorioPersonal->id]);
-                }
-            }
-
-            $evento->update($request->all());
-
-            // Sincronizar participantes si se proporcionan
-            if ($request->has('participantes')) {
-                $evento->participantes()->sync($request->participantes);
-            }
-
-            // Limpiar cache
-            $this->clearEventosCache();
-
-            DB::commit();
-
-            return redirect()->route('admin.events.index')
+    
+            // Petición normal (formulario)
+            return redirect()->route('events.show', $evento->id)
                 ->with('success', 'Evento actualizado exitosamente.');
-
+    
         } catch (\Exception $e) {
             DB::rollback();
-
-            if ($request->expectsJson()) {
+    
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error al actualizar el evento: ' . $e->getMessage()
                 ], 500);
             }
-
+    
             return redirect()->back()
                 ->with('error', 'Error al actualizar evento: ' . $e->getMessage())
                 ->withInput();
@@ -410,16 +348,13 @@ class EventoController extends Controller
      */
     public function destroy(Evento $evento)
     {
-        // Verificar si se solicita respuesta JSON explícitamente
-        $forceJson = request()->has('json');
-
         // Verificar si es un recordatorio personal y si el usuario actual es el creador
         $tipoRecordatorio = Cache::remember('tipo_recordatorio', 3600, function () {
             return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
         });
 
         if ($tipoRecordatorio && $evento->tipo_evento_id == $tipoRecordatorio->id && $evento->creado_por != Auth::id()) {
-            if (request()->expectsJson()) {
+            if (request()->expectsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No tienes permiso para eliminar este recordatorio personal.'
@@ -442,8 +377,8 @@ class EventoController extends Controller
             DB::commit();
 
             // Si la petición es AJAX, responde con JSON
-            if ($forceJson || request()->expectsJson()) {
-                return response()->json(['success' => true]);
+            if (request()->expectsJson() || request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Evento eliminado exitosamente']);
             }
 
             // Petición normal (formulario)
@@ -453,7 +388,7 @@ class EventoController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
 
-            if (request()->expectsJson()) {
+            if (request()->expectsJson() || request()->ajax() || request()->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error al eliminar evento: ' . $e->getMessage()

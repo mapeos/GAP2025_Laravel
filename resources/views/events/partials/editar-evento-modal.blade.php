@@ -6,10 +6,10 @@
                 <h5 class="modal-title" id="editarEventoModalLabel">Editar Evento</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editarEventoForm">
+            <form id="editarEventoForm" onsubmit="handleEditarEvento(event)">
                 @csrf
                 @method('PUT')
-                <input type="hidden" id="editEventoId" name="evento_id">
+                <input type="hidden" id="editEventoId" name="id">
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-8">
@@ -79,7 +79,7 @@
                             <option value="0">Inactivo</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="editParticipantes" class="form-label">Participantes</label>
                         <select class="form-select" id="editParticipantes" name="participantes[]" multiple>
@@ -116,99 +116,118 @@ function deleteEvento(event) {
     }
 
     const eventoId = document.getElementById('editEventoId').value;
-    if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-        const modal = document.getElementById('editarEventoModal');
+    if (!confirm('¿Estás seguro de que quieres eliminar este evento?')) {
+        return; // El usuario canceló la operación
+    }
 
-        // Desactivar todos los elementos del modal
-        const allInputs = modal.querySelectorAll('input, select, textarea, button');
-        allInputs.forEach(el => el.disabled = true);
+    const modal = document.getElementById('editarEventoModal');
 
-        // Desactivar el botón de cierre del modal
-        const closeButton = modal.querySelector('.btn-close');
-        if (closeButton) closeButton.disabled = true;
+    // Desactivar todos los elementos del modal
+    const allInputs = modal.querySelectorAll('input, select, textarea, button');
+    allInputs.forEach(el => el.disabled = true);
 
-        // Obtener el botón de eliminar y añadir spinner
-        const deleteButton = document.querySelector('.btn-danger[onclick="deleteEvento(event)"]');
-        let spinner = null;
-        let btnText = null;
+    // Desactivar el botón de cierre del modal
+    const closeButton = modal.querySelector('.btn-close');
+    if (closeButton) closeButton.disabled = true;
 
-        if (deleteButton) {
-            btnText = deleteButton.querySelector('.btn-text') || deleteButton;
-            const originalText = btnText.textContent;
-            btnText.textContent = 'Eliminando...';
+    // Obtener el botón de eliminar y añadir spinner
+    const deleteButton = document.querySelector('.btn-danger[onclick="deleteEvento(event)"]');
+    let spinner = null;
+    let btnText = null;
 
-            // Crear y añadir spinner si no existe
-            spinner = deleteButton.querySelector('.spinner-border');
-            if (!spinner) {
-                spinner = document.createElement('span');
-                spinner.className = 'spinner-border spinner-border-sm ms-2';
-                spinner.setAttribute('role', 'status');
-                spinner.setAttribute('aria-hidden', 'true');
-                deleteButton.appendChild(spinner);
-            } else {
-                spinner.classList.remove('d-none');
-            }
+    if (deleteButton) {
+        btnText = deleteButton.querySelector('.btn-text') || deleteButton;
+        const originalText = btnText.textContent;
+        btnText.textContent = 'Eliminando...';
+
+        // Crear y añadir spinner si no existe
+        spinner = deleteButton.querySelector('.spinner-border');
+        if (!spinner) {
+            spinner = document.createElement('span');
+            spinner.className = 'spinner-border spinner-border-sm ms-2';
+            spinner.setAttribute('role', 'status');
+            spinner.setAttribute('aria-hidden', 'true');
+            deleteButton.appendChild(spinner);
+        } else {
+            spinner.classList.remove('d-none');
+        }
+    }
+
+    // Crear FormData para enviar la solicitud DELETE
+    const formData = new FormData();
+    formData.append('_method', 'DELETE');
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+    fetch(`/eventos/${eventoId}`, {
+        method: 'POST', // Usamos POST con _method=DELETE para mayor compatibilidad
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
         }
 
-        // Añadir parámetro json=true a la URL para forzar respuesta JSON
-        fetch(`/admin/events/${eventoId}?json=true`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+        // Intentar procesar como JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // Si no es JSON, devolver un objeto estándar
+            return {
+                success: true,
+                message: 'Evento eliminado exitosamente'
+            };
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            showNotification('Evento eliminado exitosamente', 'success');
+            try {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            } catch (error) {
+                console.error('Error al cerrar el modal:', error);
+                // Fallback para cerrar el modal
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
             }
-        })
-        .then(response => {
-            // Primero verificar si la respuesta es JSON
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json().then(data => {
-                    if (data.success) {
-                        // Operación exitosa
-                        showNotification('Evento eliminado exitosamente', 'success');
-                        bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
 
-                        // Cambiar a vista mensual después de eliminar
-                        calendar.changeView('dayGridMonth');
-
-                        // Recargar eventos
-                        loadEventosAjax();
-                    } else {
-                        showNotification(data.message || 'Error al eliminar evento', 'error');
-                    }
-                    return data;
-                });
-            } else {
-                // Si no es JSON, manejar como éxito de todas formas
-                showNotification('Evento eliminado exitosamente', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
-
-                // Cambiar a vista mensual después de eliminar
+            // Cambiar a vista mensual después de eliminar
+            if (calendar) {
                 calendar.changeView('dayGridMonth');
-
-                // Recargar eventos
-                loadEventosAjax();
-
-                return { success: true };
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error al eliminar evento', 'error');
-        })
-        .finally(() => {
-            // Re-habilitar todos los elementos del modal
-            allInputs.forEach(el => el.disabled = false);
-            if (closeButton) closeButton.disabled = false;
 
-            // Re-habilitar el botón y ocultar spinner
-            if (deleteButton) {
-                if (spinner) spinner.classList.add('d-none');
-                if (btnText) btnText.textContent = 'Eliminar';
-            }
-        });
-    }
+            // Recargar eventos
+            loadEventosAjax();
+        } else {
+            showNotification(result.message || 'Error al eliminar evento', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification(`Error al eliminar evento: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        // Re-habilitar todos los elementos del modal
+        allInputs.forEach(el => el.disabled = false);
+        if (closeButton) closeButton.disabled = false;
+
+        // Re-habilitar el botón y ocultar spinner
+        if (deleteButton) {
+            if (spinner) spinner.classList.add('d-none');
+            if (btnText) btnText.textContent = 'Eliminar';
+        }
+    });
 }
 
 function verDetallesEvento() {
