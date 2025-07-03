@@ -404,7 +404,7 @@ Route::middleware(['auth', 'role:Facultativo|Administrador'])->prefix('facultati
     Route::get('/pacientes', [FacultativoController::class, 'pacientes'])->name('pacientes');
     Route::get('/paciente', [FacultativoController::class, 'paciente'])->name('paciente');
     Route::get('/tratamientos', [FacultativoController::class, 'tratamientos'])->name('tratamientos');
-    Route::get('/tratamiento', [FacultativoController::class, 'tratamiento'])->name('tratamiento');
+    Route::get('/tratamiento/{id}', [FacultativoController::class, 'tratamiento'])->name('tratamiento');
     Route::get('/tratamiento/new', [FacultativoController::class, 'newTratamiento'])->name('tratamiento.new');
     
     // Ruta para actualizar estado de citas médicas

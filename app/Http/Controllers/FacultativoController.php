@@ -153,10 +153,10 @@ class FacultativoController extends Controller
         $tratamientos = TratamientoMedico::with('especialidad')->get();
         return view('facultativo.tratamientos', compact('tratamientos'));
     }
-    
-    public function tratamiento()
+    public function tratamiento($id)
     {
-        return view('facultativo.tratamiento');
+        $tratamiento = TratamientoMedico::with('especialidad')->findOrFail($id);
+        return view('facultativo.tratamiento', compact('tratamiento'));
     }
     
     public function newTratamiento()
