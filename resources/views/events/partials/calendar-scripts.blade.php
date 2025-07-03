@@ -90,7 +90,44 @@ function initializeEventListeners() {
     }
 
     // Modales
-    initializeModals();
+    // Inicializar modales y sus formularios
+    function initializeModales() {
+        // Modal de crear evento
+        const crearEventoModal = document.getElementById('crearEventoModal');
+        if (crearEventoModal) {
+            const crearEventoForm = crearEventoModal.querySelector('form');
+            if (crearEventoForm) {
+                crearEventoForm.addEventListener('submit', handleCrearEvento);
+            }
+        }
+
+        // Modal de editar evento
+        const editarEventoModal = document.getElementById('editarEventoModal');
+        if (editarEventoModal) {
+            const editarEventoForm = editarEventoModal.querySelector('form');
+            if (editarEventoForm) {
+                editarEventoForm.addEventListener('submit', handleEditarEvento);
+            }
+        }
+
+        // Modal de solicitud de cita
+        const solicitudCitaModal = document.getElementById('solicitudCitaModal');
+        if (solicitudCitaModal) {
+            const solicitudCitaForm = solicitudCitaModal.querySelector('form');
+            if (solicitudCitaForm) {
+                solicitudCitaForm.addEventListener('submit', handleSolicitudCita);
+            }
+        }
+
+        // Modal de solicitud de cita AI
+        const solicitudCitaAiModal = document.getElementById('solicitudCitaAiModal');
+        if (solicitudCitaAiModal) {
+            const solicitudCitaAiForm = solicitudCitaAiModal.querySelector('form');
+            if (solicitudCitaAiForm) {
+                solicitudCitaAiForm.addEventListener('submit', handleSolicitudCitaAi);
+            }
+        }
+    }
 }
 
 // Cargar eventos vía AJAX
@@ -98,7 +135,7 @@ function loadEventosAjax() {
     // Mostrar indicador de carga si es necesario
     const calendarEl = document.getElementById('calendar');
     if (calendarEl) {
-        calendarEl.classList.add('loading'); // Puedes añadir un estilo CSS para esto
+        calendarEl.classList.add('loading');
     }
 
     fetch('/eventos/json')
@@ -155,23 +192,23 @@ function handleEventClick(info) {
             document.getElementById('editFechaFin').value = event.end ? event.end.toISOString().slice(0, 16) : '';
             document.getElementById('editUbicacion').value = event.extendedProps.ubicacion || '';
             document.getElementById('editUrlVirtual').value = event.extendedProps.url_virtual || '';
-            
+
             // Seleccionar el tipo de evento correcto
             if (event.extendedProps.tipo_evento_id && document.getElementById('editTipoEventoId')) {
                 document.getElementById('editTipoEventoId').value = event.extendedProps.tipo_evento_id;
             }
-            
+
             // Establecer el estado correcto si existe
             if (event.extendedProps.status !== undefined && document.getElementById('editStatus')) {
                 document.getElementById('editStatus').value = event.extendedProps.status ? '1' : '0';
             }
-            
+
             // Cargar participantes si existen
             if (event.extendedProps.participantes && document.getElementById('editParticipantes')) {
                 const participantesSelect = document.getElementById('editParticipantes');
                 // Deseleccionar todos los participantes primero
                 Array.from(participantesSelect.options).forEach(option => option.selected = false);
-                
+
                 // Seleccionar los participantes del evento
                 event.extendedProps.participantes.forEach(participante => {
                     const option = Array.from(participantesSelect.options).find(opt => opt.value == participante.id);
@@ -208,271 +245,69 @@ function handleEventResize(info) {
     });
 }
 
-// Actualizar evento vía AJAX
+// Actualizar evento vía AJAX (versión mejorada)
 function updateEventoAjax(eventoId, data) {
-    fetch(`/admin/events/${eventoId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showNotification('Evento actualizado exitosamente', 'success');
-        } else {
-            showNotification('Error al actualizar evento', 'error');
-            calendar.refetchEvents();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al actualizar evento', 'error');
-        calendar.refetchEvents();
-    });
-}
-
-// Alternar vista de agenda
-function toggleAgendaView() {
-    const calendarView = document.getElementById('calendar');
-    const agendaView = document.getElementById('agendaView');
-    const btnAgendaView = document.getElementById('btnAgendaView');
-
-    if (currentView === 'calendar') {
-        calendarView.classList.add('d-none');
-        agendaView.classList.remove('d-none');
-        btnAgendaView.innerHTML = '<i class="ri-calendar-line"></i> Ver calendario';
-        currentView = 'agenda';
-        renderAgendaView();
-    } else {
-        calendarView.classList.remove('d-none');
-        agendaView.classList.add('d-none');
-        btnAgendaView.innerHTML = '<i class="ri-list-check-line"></i> Ver agenda';
-        currentView = 'calendar';
-    }
-}
-
-// Renderizar vista de agenda
-function renderAgendaView() {
-    const agendaList = document.getElementById('agendaList');
-    if (!agendaList) return;
-
-    agendaList.innerHTML = '';
-
-    // Agrupar eventos por fecha
-    const eventosPorFecha = {};
-    eventos.forEach(evento => {
-        const fecha = new Date(evento.start).toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        if (!eventosPorFecha[fecha]) {
-            eventosPorFecha[fecha] = [];
-        }
-        eventosPorFecha[fecha].push(evento);
-    });
-
-    // Renderizar eventos agrupados
-    Object.keys(eventosPorFecha).sort().forEach(fecha => {
-        const fechaDiv = document.createElement('div');
-        fechaDiv.className = 'list-group-item list-group-item-secondary fw-bold';
-        fechaDiv.textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
-        agendaList.appendChild(fechaDiv);
-
-        eventosPorFecha[fecha].forEach(evento => {
-            const eventoDiv = document.createElement('div');
-            eventoDiv.className = 'list-group-item d-flex justify-content-between align-items-start';
-
-            // Verificar si extendedProps existe antes de acceder a descripcion
-            const descripcion = evento.extendedProps && evento.extendedProps.descripcion ? evento.extendedProps.descripcion : '';
-
-            eventoDiv.innerHTML = `
-                <div class="ms-2 me-auto">
-                    <div class="fw-bold">${evento.title}</div>
-                    <small class="text-muted">${descripcion}</small>
-                </div>
-                <span class="badge bg-primary rounded-pill" style="background-color: ${evento.color || '#007bff'} !important;">
-                    ${new Date(evento.start).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
-                </span>
-            `;
-            eventoDiv.addEventListener('click', () => handleEventClick({event: evento}));
-            agendaList.appendChild(eventoDiv);
-        });
-    });
-}
-
-// Inicializar modales
-function initializeModals() {
-    // Modal crear evento
-    const crearEventoForm = document.getElementById('crearEventoForm');
-    if (crearEventoForm) {
-        crearEventoForm.addEventListener('submit', handleCrearEvento);
+    // Crear un FormData para enviar los datos
+    const formData = new FormData();
+    for (const key in data) {
+        formData.append(key, data[key]);
     }
 
-    // Modal editar evento
-    const editarEventoForm = document.getElementById('editarEventoForm');
-    if (editarEventoForm) {
-        editarEventoForm.addEventListener('submit', handleEditarEvento);
-    }
-
-    // Modal solicitud cita
-    const solicitudCitaForm = document.getElementById('solicitudCitaForm');
-    if (solicitudCitaForm) {
-        solicitudCitaForm.addEventListener('submit', handleSolicitudCita);
-    }
-
-    // Modal solicitud cita AI
-    const solicitudCitaAiForm = document.getElementById('solicitudCitaAiForm');
-    if (solicitudCitaAiForm) {
-        solicitudCitaAiForm.addEventListener('submit', handleSolicitudCitaAi);
-    }
-}
-
-// Manejar crear evento
-function handleCrearEvento(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-
-    // Deshabilitar el botón de envío para evitar múltiples envíos
-    const submitButton = e.target.querySelector('button[type="submit"]');
-    const spinner = document.getElementById('crearEventoSpinner');
-    const btnText = document.getElementById('crearEventoBtnText');
-
-    if (submitButton) {
-        submitButton.disabled = true;
-        if (spinner) spinner.classList.remove('d-none');
-        if (btnText) btnText.textContent = 'Creando...';
-    }
-
-    fetch('/eventos', {
-        method: 'POST',
+    return fetch(`/eventos/${eventoId}`, {
+        method: 'POST', // Cambiamos a POST para mayor compatibilidad
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json'  // Añadir este encabezado para indicar que esperamos JSON
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
     .then(response => {
-        // Verificar si la respuesta es correcta antes de intentar procesarla como JSON
         if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor: ' + response.status);
+            throw new Error(`Error HTTP: ${response.status}`);
         }
-        // Verificar el tipo de contenido para asegurarse de que es JSON
+
+        // Intentar procesar como JSON
         const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('La respuesta no es JSON válido. Tipo de contenido: ' + contentType);
-        }
-        return response.json();
-    })
-    .then(result => {
-        if (result.success) {
-            showNotification('Evento creado exitosamente', 'success');
-            // Usar try-catch para manejar posibles errores al cerrar el modal
-            try {
-                const modalElement = document.getElementById('crearEventoModal');
-                const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                if (modalInstance) {
-                    modalInstance.hide();
-                    // Asegurar que el backdrop se elimine correctamente después de que el modal se oculte
-                    setTimeout(() => {
-                        const backdrop = document.querySelector('.modal-backdrop');
-                        if (backdrop) backdrop.remove();
-                        document.body.classList.remove('modal-open');
-                        document.body.style.overflow = '';
-                        document.body.style.paddingRight = '';
-                        // Forzar el reflow del DOM para que los cambios se apliquen
-                        document.body.offsetHeight;
-                        // Establecer explícitamente el overflow después del reflow
-                        document.body.style.overflow = 'visible';
-                        // Asegurar que la barra de scroll sea visible
-                        document.documentElement.style.overflow = 'auto';
-                        document.documentElement.style.overflowY = 'scroll';
-                    }, 300); // Esperar a que termine la animación de cierre
-                } else {
-                    // Si no hay instancia, intentar cerrar de otra manera
-                    $(modalElement).modal('hide'); // Alternativa con jQuery si está disponible
-                    // Asegurar limpieza después de jQuery
-                    setTimeout(() => {
-                        // Y eliminar el backdrop si existe
-                        const backdrop = document.querySelector('.modal-backdrop');
-                        if (backdrop) backdrop.remove();
-                        document.body.classList.remove('modal-open');
-                        document.body.style.overflow = '';
-                        document.body.style.paddingRight = '';
-                        // Forzar el reflow del DOM para que los cambios se apliquen
-                        document.body.offsetHeight;
-                        // Establecer explícitamente el overflow después del reflow
-                        document.body.style.overflow = 'visible';
-                        // Asegurar que la barra de scroll sea visible
-                        document.documentElement.style.overflow = 'auto';
-                        document.documentElement.style.overflowY = 'scroll';
-                    }, 300);
-                }
-            } catch (error) {
-                console.error('Error al cerrar el modal:', error);
-                // Intentar cerrar el modal de otra manera
-                const modalElement = document.getElementById('crearEventoModal');
-                modalElement.classList.remove('show');
-                modalElement.style.display = 'none';
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-                // Forzar el reflow del DOM para que los cambios se apliquen
-                document.body.offsetHeight;
-                // Establecer explícitamente el overflow después del reflow
-                document.body.style.overflow = 'visible';
-                // Asegurar que la barra de scroll sea visible
-                document.documentElement.style.overflow = 'auto';
-                document.documentElement.style.overflowY = 'scroll';
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) backdrop.remove();
-            }
-            e.target.reset();
-            loadEventosAjax();
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
         } else {
-            showNotification(result.message || 'Error al crear evento', 'error');
+            // Si no es JSON, devolver un objeto estándar
+            return {
+                success: true,
+                message: 'Evento actualizado exitosamente'
+            };
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al crear evento: ' + error.message, 'error');
-    })
-    .finally(() => {
-        // Re-habilitar el botón de envío y ocultar spinner
-        if (submitButton) {
-            submitButton.disabled = false;
-            if (spinner) spinner.classList.add('d-none');
-            if (btnText) btnText.textContent = 'Crear Evento';
-        }
-        // Asegurar que el scroll esté habilitado
-        document.body.style.overflow = 'auto';
     });
 }
 
-// Manejar editar evento
+// Manejar editar evento (versión mejorada)
 function handleEditarEvento(e) {
     e.preventDefault();
     const eventoId = document.getElementById('editEventoId').value;
-    const formData = new FormData(e.target);
-    const modal = document.getElementById('editarEventoModal');
+    const form = e.target;
+    const formData = new FormData(form);
 
-    // Obtener el botón de envío y añadir spinner
-    const submitButton = e.target.querySelector('button[type="submit"]');
-    let spinner = null;
-    let btnText = null;
+    // Añadir el método PUT para Laravel
+    formData.append('_method', 'PUT');
+
+    // Eliminar el campo id del FormData ya que está en la URL
+    formData.delete('id');
+
+    const modal = document.getElementById('editarEventoModal');
 
     // Desactivar todos los elementos del modal
     const allInputs = modal.querySelectorAll('input, select, textarea, button');
     allInputs.forEach(el => el.disabled = true);
-    
+
     // Desactivar el botón de cierre del modal
     const closeButton = modal.querySelector('.btn-close');
     if (closeButton) closeButton.disabled = true;
+
+    // Obtener el botón de envío y añadir spinner
+    const submitButton = form.querySelector('button[type="submit"]');
+    let spinner = null;
+    let btnText = null;
 
     if (submitButton) {
         btnText = submitButton.querySelector('.btn-text') || submitButton;
@@ -492,31 +327,49 @@ function handleEditarEvento(e) {
         }
     }
 
-    fetch(`/admin/events/${eventoId}`, {
-        method: 'PUT',
+    fetch(`/eventos/${eventoId}`, {
+        method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
     .then(response => {
-        // Verificar si la respuesta es JSON
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        // Intentar procesar como JSON
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             return response.json();
         } else {
-            // Si no es JSON, convertir a un objeto JSON simulado
+            // Si no es JSON, devolver un objeto estándar
             return {
-                success: response.ok,
-                message: response.ok ? 'Evento actualizado exitosamente' : 'Error al actualizar evento'
+                success: true,
+                message: 'Evento actualizado exitosamente'
             };
         }
     })
     .then(result => {
         if (result.success) {
             showNotification('Evento actualizado exitosamente', 'success');
-            bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
+            try {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            } catch (error) {
+                console.error('Error al cerrar el modal:', error);
+                // Fallback para cerrar el modal
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }
             loadEventosAjax();
         } else {
             showNotification(result.message || 'Error al actualizar evento', 'error');
@@ -524,13 +377,13 @@ function handleEditarEvento(e) {
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error al actualizar evento', 'error');
+        showNotification(`Error al actualizar evento: ${error.message}`, 'error');
     })
     .finally(() => {
         // Re-habilitar todos los elementos del modal
         allInputs.forEach(el => el.disabled = false);
         if (closeButton) closeButton.disabled = false;
-        
+
         // Re-habilitar el botón de envío y ocultar spinner
         if (submitButton) {
             if (spinner) spinner.classList.add('d-none');
@@ -664,6 +517,132 @@ function removeBackToMonthButton() {
     const backButton = document.querySelector('.fc-toolbar .btn-secondary');
     if (backButton && backButton.innerHTML.includes('Ver mes')) {
         backButton.remove();
+    }
+}
+
+// Función para alternar entre vista de calendario y agenda
+function toggleAgendaView() {
+    const calendarContainer = document.getElementById('calendar');
+    const agendaContainer = document.getElementById('agendaView');
+
+    if (currentView === 'calendar') {
+        // Cambiar a vista de agenda
+        calendarContainer.classList.add('d-none');
+        agendaContainer.classList.remove('d-none');
+        currentView = 'agenda';
+
+        // Cargar eventos en la vista de agenda
+        renderAgendaView();
+
+        // Cambiar texto del botón
+        const btnAgendaView = document.getElementById('btnAgendaView');
+        if (btnAgendaView) {
+            btnAgendaView.innerHTML = '<i class="ri-calendar-line me-1"></i> Ver calendario';
+        }
+    } else {
+        // Cambiar a vista de calendario
+        calendarContainer.classList.remove('d-none');
+        agendaContainer.classList.add('d-none');
+        currentView = 'calendar';
+
+        // Cambiar texto del botón
+        const btnAgendaView = document.getElementById('btnAgendaView');
+        if (btnAgendaView) {
+            btnAgendaView.innerHTML = '<i class="ri-list-check-line me-1"></i> Ver agenda';
+        }
+    }
+}
+
+// Función para renderizar eventos en la vista de agenda
+function renderAgendaView() {
+    const agendaList = document.getElementById('agendaList');
+    if (!agendaList) return;
+
+    // Limpiar lista actual
+    agendaList.innerHTML = '';
+
+    // Ordenar eventos por fecha
+    const sortedEventos = [...eventos].sort((a, b) => {
+        return new Date(a.start || a.fecha_inicio) - new Date(b.start || b.fecha_inicio);
+    });
+
+    // Agrupar eventos por fecha
+    const eventsByDate = {};
+    sortedEventos.forEach(evento => {
+        const eventDate = new Date(evento.start || evento.fecha_inicio);
+        const dateKey = eventDate.toISOString().split('T')[0];
+
+        if (!eventsByDate[dateKey]) {
+            eventsByDate[dateKey] = [];
+        }
+        eventsByDate[dateKey].push(evento);
+    });
+
+    // Crear elementos para cada fecha y sus eventos
+    Object.keys(eventsByDate).sort().forEach(dateKey => {
+        const date = new Date(dateKey);
+        const formattedDate = date.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Crear encabezado de fecha
+        const dateHeader = document.createElement('div');
+        dateHeader.className = 'list-group-item list-group-item-secondary';
+        dateHeader.innerHTML = `<strong>${formattedDate}</strong>`;
+        agendaList.appendChild(dateHeader);
+
+        // Agregar eventos de esta fecha
+        eventsByDate[dateKey].forEach(evento => {
+            const eventItem = document.createElement('div');
+            eventItem.className = 'list-group-item list-group-item-action';
+
+            const eventTime = new Date(evento.start || evento.fecha_inicio).toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const endTime = evento.end || evento.fecha_fin ? new Date(evento.end || evento.fecha_fin).toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '';
+
+            const timeDisplay = endTime ? `${eventTime} - ${endTime}` : eventTime;
+
+            eventItem.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">${evento.title || evento.titulo}</h5>
+                    <small>${timeDisplay}</small>
+                </div>
+                <p class="mb-1">${evento.extendedProps?.descripcion || evento.descripcion || ''}</p>
+                <small>
+                    ${evento.extendedProps?.ubicacion || evento.ubicacion ? `<i class="ri-map-pin-line"></i> ${evento.extendedProps?.ubicacion || evento.ubicacion}` : ''}
+                    ${evento.extendedProps?.url_virtual || evento.url_virtual ? `<i class="ri-global-line ms-2"></i> <a href="${evento.extendedProps?.url_virtual || evento.url_virtual}" target="_blank">Enlace virtual</a>` : ''}
+                </small>
+            `;
+
+            // Agregar evento click para ver detalles
+            eventItem.addEventListener('click', function() {
+                // Puedes implementar aquí la lógica para mostrar detalles del evento
+                // Por ejemplo, abrir el modal de edición o una página de detalles
+                const eventId = evento.id;
+                if (eventId) {
+                    window.location.href = `/eventos/${eventId}`;
+                }
+            });
+
+            agendaList.appendChild(eventItem);
+        });
+    });
+
+    // Mensaje si no hay eventos
+    if (Object.keys(eventsByDate).length === 0) {
+        const noEvents = document.createElement('div');
+        noEvents.className = 'list-group-item text-center text-muted';
+        noEvents.innerHTML = '<i class="ri-calendar-line fs-1 mb-2"></i><p>No hay eventos programados</p>';
+        agendaList.appendChild(noEvents);
     }
 }
 </script>
