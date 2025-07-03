@@ -2,6 +2,11 @@
 @section('title', 'Chat')
 @section('title-page', 'Chat entre usuarios')
 @section('content')
+<div class="d-inline-block mb-3">
+  <a href="{{ route('alumno.home') }}" class="btn btn-outline-primary btn-sm">
+    <i class="ri-arrow-go-back-line me-1"></i> Volver al inicio
+  </a>
+</div>
 <div class="container my-4">
     <h5 class="mb-4">Mensajes recientes</h5>
     <ul class="list-group mb-4">

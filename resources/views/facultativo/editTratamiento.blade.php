@@ -55,7 +55,7 @@ $especialidades = collect([
           color: #38b000;
         }
       </style>
-      <h3 class="form-title font-bold text-xl mb-4"><i class="ri-sticky-note-add-line"></i> Nuevo Tratamiento Médico</h3>
+      <h3 class="form-title font-bold text-xl mb-4"><i class="ri-sticky-note-add-line"></i> Editar Tratamiento Médico</h3>
       <div class="row g-4">
         <div class="col-md-6">
           <label class="block text-sm font-medium">Nombre del tratamiento</label>

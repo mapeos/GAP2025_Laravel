@@ -14,10 +14,20 @@
 @endsection
 
 @section('content')
+@php
+    $user = Auth::user();
+    $persona = $user ? $user->persona : null;
+    $misCursos = $persona ? $persona->cursos()->get() : collect();
+    $eventosFuturos = collect();
+    $profesores = collect();
+    $mensajesRecientes = collect();
+    $usuariosChat = collect();
+@endphp
+
 <div class="row">
     <div class="col-md-12 mb-4">
         <div class="alert alert-welcome p-4 rounded-3">
-            <h4 class="alert-heading mb-3">Bienvenido, {{ Auth::user()->name }}</h4>
+            <h4 class="alert-heading mb-3">Bienvenido, {{ $user ? $user->name : 'Usuario' }}</h4>
             <p class="mb-0">Este es tu panel de control personal. Aquí podrás gestionar tu perfil y acceder a todas tus funciones.</p>
         </div>
     </div>
@@ -32,10 +42,6 @@
             </div>
             <div class="card-body text-start text-muted">
                 <i class="ri-graduation-cap-line display-4 mb-3"></i>
-                @php
-                    $persona = Auth::user()->persona;
-                    $misCursos = $persona ? $persona->cursos()->get() : collect();
-                @endphp
                 @if($misCursos->count())
                     <ul class="list-unstyled mb-0">
                         @foreach($misCursos as $curso)
@@ -82,6 +88,7 @@
                 @php
                     $cursosDisponibles = \App\Models\Curso::where('estado', 'activo')
                         ->whereNotIn('id', $misCursos->pluck('id'))
+                        ->select('id', 'titulo', 'descripcion')
                         ->get();
                 @endphp
                 <i class="ri-booklet-line display-4 mb-3 text-success"></i>
@@ -151,17 +158,11 @@
             </div>
             <div class="card-body text-center">
                 <h6 class="mb-2">Chats recientes</h6>
-                @php
-                    // Obtener los últimos chats usando el mismo método que en el index
-                    $chatService = app(\App\Application\Chat\GetLastChatsForUser::class);
-                    $mensajesRecientes = $chatService->execute(Auth::id(), 5);
-                    $usuarios = \App\Models\User::whereIn('id', collect($mensajesRecientes)->map(fn($m) => $m->senderId == Auth::id() ? $m->receiverId : $m->senderId))->get();
-                @endphp
                 <ul class="list-group list-group-flush">
                     @forelse($mensajesRecientes as $mensaje)
                         @php
-                            $otro = $mensaje->senderId == Auth::id() ? $mensaje->receiverId : $mensaje->senderId;
-                            $usuario = $usuarios->firstWhere('id', $otro);
+                            $otro = $user && $mensaje->senderId == $user->id ? $mensaje->receiverId : $mensaje->senderId;
+                            $usuario = $usuariosChat->firstWhere('id', $otro);
                         @endphp
                         <li class="list-group-item px-0 py-1">
                             <a href="{{ route('chat.show', $otro) }}" class="text-decoration-none">
@@ -192,17 +193,17 @@
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <strong>Nombre:</strong> {{ Auth::user()->name }}
+                    <strong>Nombre:</strong> {{ $user->name }}
                 </div>
                 <div class="mb-3">
-                    <strong>Email:</strong> {{ Auth::user()->email }}
+                    <strong>Email:</strong> {{ $user->email }}
                 </div>
-                @if(Auth::user()->persona)
+                @if($persona)
                     <div class="mb-3">
-                        <strong>DNI:</strong> {{ Auth::user()->persona->dni }}
+                        <strong>DNI:</strong> {{ $persona->dni }}
                     </div>
                     <div class="mb-3">
-                        <strong>Teléfono:</strong> {{ Auth::user()->persona->tfno ?? 'No especificado' }}
+                        <strong>Teléfono:</strong> {{ $persona->tfno ?? 'No especificado' }}
                     </div>
                 @else
                     <div class="alert alert-info">
@@ -224,38 +225,22 @@
         <div class="card card-hover h-100 border-warning">
             <div class="card-header bg-warning text-dark d-flex align-items-center">
                 <i class="ri-calendar-check-line me-2"></i>
-                <h5 class="card-title mb-0">Mis próximas citas</h5>
+                <h5 class="card-title mb-0">Mi Agenda</h5>
             </div>
             <div class="card-body text-start">
-                @php
-                    $proximasCitas = \App\Models\EventoParticipante::with('evento')
-                        ->where('user_id', Auth::id())
-                        ->whereHas('evento', function($q) { $q->where('fecha_inicio', '>=', now()); })
-                        ->orderByDesc('id')
-                        ->take(3)
-                        ->get();
-                @endphp
-                <i class="ri-calendar-event-line display-4 mb-3 text-warning"></i>
-                @if($proximasCitas->count())
-                    <ul class="list-unstyled mb-0">
-                        @foreach($proximasCitas as $cita)
-                            <li class="mb-3">
-                                <strong>{{ $cita->evento->titulo ?? 'Evento eliminado' }}</strong><br>
-                                <small class="text-muted">
-                                    {{ $cita->evento && $cita->evento->fecha_inicio ? $cita->evento->fecha_inicio->format('d/m/Y H:i') : '' }}
-                            </small><br>
-                            <span class="badge bg-secondary">{{ $cita->rol }}</span>
-                            @if($cita->evento && $cita->evento->ubicacion)
-                                <span class="badge bg-light text-dark">{{ $cita->evento->ubicacion }}</span>
-                            @endif
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="mb-0">No tienes citas agendadas próximamente.</p>
-                @endif
+                
+                <div class="text-center py-4">
+                    <i class="ri-calendar-event-line display-4 text-muted mb-3"></i>
+                    <h6 class="text-muted">Mi Agenda</h6>
+                    <p class="text-muted small mb-3">Accede a tu calendario para ver eventos y solicitar citas</p>
+                    <a href="{{ route('events.calendar') }}" class="btn btn-warning btn-sm">
+                        <i class="ri-calendar-line me-1"></i> Ver Calendario
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+
 @endsection
