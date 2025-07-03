@@ -110,6 +110,12 @@ class ProfileController extends Controller
         }
 
         $persona->save();
+        // Sincronizar el nombre completo en el modelo User
+        $userModel = \App\Models\User::find($user->id);
+        if ($userModel) {
+            $userModel->name = $persona->getNombreCompletoAttribute();
+            $userModel->save();
+        }
         // Log::info('ProfileController@update:PERSONA_SAVE', ['persona_id' => $persona->id, 'direccion_id' => $persona->direccion_id, 'persona' => $persona->toArray()]);
 
         return redirect()->route('profile.show')->with('success', 'Perfil actualizado correctamente');
