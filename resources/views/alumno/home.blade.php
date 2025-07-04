@@ -20,8 +20,12 @@
     $misCursos = $persona ? $persona->cursos()->get() : collect();
     $eventosFuturos = collect();
     $profesores = collect();
-    $mensajesRecientes = collect();
-    $usuariosChat = collect();
+    // Obtener chats recientes y usuarios igual que en el notifications dropdown
+    $unreadService = app(\App\Application\Chat\GetUnreadCountForUser::class);
+    $unreadCounts = $unreadService->execute(Auth::id());
+    $lastChatsService = app(\App\Application\Chat\GetLastChatsForUser::class);
+    $mensajesRecientes = $lastChatsService->execute(Auth::id(), 5);
+    $usuariosChat = \App\Models\User::whereIn('id', collect($mensajesRecientes)->map(fn($m) => $m->senderId == Auth::id() ? $m->receiverId : $m->senderId))->get();
 @endphp
 
 <div class="row">
@@ -161,19 +165,25 @@
                 <ul class="list-group list-group-flush">
                     @forelse($mensajesRecientes as $mensaje)
                         @php
-                            $otro = $user && $mensaje->senderId == $user->id ? $mensaje->receiverId : $mensaje->senderId;
+                            $otro = $mensaje->senderId == Auth::id() ? $mensaje->receiverId : $mensaje->senderId;
                             $usuario = $usuariosChat->firstWhere('id', $otro);
+                            $unread = $unreadCounts[$otro] ?? 0;
                         @endphp
                         <li class="list-group-item px-0 py-1">
-                            <a href="{{ route('chat.show', $otro) }}" class="text-decoration-none">
-                                <strong>{{ $usuario ? $usuario->name : 'Usuario #' . $otro }}</strong>:
-                                {{ \Illuminate\Support\Str::limit($mensaje->content, 30) }}
-                                <br>
-                                <small class="text-muted">
-                                    @if($mensaje->createdAt)
-                                        {{ \Carbon\Carbon::parse($mensaje->createdAt)->format('d/m/Y H:i') }}
+                            <a href="{{ route('chat.show', $otro) }}" class="d-flex align-items-center text-decoration-none">
+                                <div class="avatar avatar-sm bg-info-subtle me-2"><i class="ri-chat-3-line text-info"></i></div>
+                                <div class="flex-grow-1 text-start">
+                                    <strong>{{ $usuario ? $usuario->name : 'Usuario #' . $otro }}</strong>
+                                    @if($unread > 0)
+                                        <span class="badge bg-danger ms-2">{{ $unread }}</span>
                                     @endif
-                                </small>
+                                    <div class="small text-muted">
+                                        {{ \Illuminate\Support\Str::limit($mensaje->content, 40) }}<br>
+                                        @if($mensaje->createdAt)
+                                            <span>{{ \Carbon\Carbon::parse($mensaje->createdAt)->diffForHumans() }}</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </a>
                         </li>
                     @empty
