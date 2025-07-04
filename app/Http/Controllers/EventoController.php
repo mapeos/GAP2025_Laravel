@@ -273,7 +273,7 @@ class EventoController extends Controller
         $tipoRecordatorio = Cache::remember('tipo_recordatorio', 3600, function () {
             return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
         });
-    
+
         if ($tipoRecordatorio && $evento->tipo_evento_id == $tipoRecordatorio->id && $evento->creado_por != Auth::id()) {
             if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -283,7 +283,7 @@ class EventoController extends Controller
             }
             abort(403, 'No tienes permiso para editar este recordatorio personal.');
         }
-    
+
         // Si el usuario es estudiante, no puede cambiar el tipo de evento
         if (Auth::user()->hasRole('Alumno') && $request->has('tipo_evento_id') && $request->tipo_evento_id != $evento->tipo_evento_id) {
             if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
@@ -296,24 +296,24 @@ class EventoController extends Controller
                 ->with('error', 'No tienes permiso para cambiar el tipo de evento.')
                 ->withInput();
         }
-    
+
         DB::beginTransaction();
         try {
             // Actualizar datos básicos del evento
             $evento->fill($request->all());
             $evento->save();
-    
+
             // Sincronizar participantes si se proporcionan
             if ($request->has('participantes')) {
                 $participantes = $request->participantes;
                 $evento->participantes()->sync($participantes);
             }
-    
+
             // Limpiar cache
             $this->clearEventosCache();
-    
+
             DB::commit();
-    
+
             // Si la petición es AJAX, responde con JSON
             if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -322,21 +322,21 @@ class EventoController extends Controller
                     'evento' => $evento
                 ]);
             }
-    
+
             // Petición normal (formulario)
             return redirect()->route('events.show', $evento->id)
                 ->with('success', 'Evento actualizado exitosamente.');
-    
+
         } catch (\Exception $e) {
             DB::rollback();
-    
+
             if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error al actualizar el evento: ' . $e->getMessage()
                 ], 500);
             }
-    
+
             return redirect()->back()
                 ->with('error', 'Error al actualizar evento: ' . $e->getMessage())
                 ->withInput();

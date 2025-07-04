@@ -5,19 +5,18 @@ let currentView = 'calendar';
 let eventos = @json($eventos ?? []);
 let userRole = '{{ Auth::user()->roles->first()->name ?? "" }}';
 
-// Inicialización del calendario
+// Iniciar calendario
 document.addEventListener('DOMContentLoaded', function() {
     initializeCalendar();
     initializeEventListeners();
 
-    // Opcional: Actualizar eventos después de la carga inicial
-    // para asegurar que tenemos los datos más recientes
+    // Actualizar eventos después de la carga inicial para asegurar que tenemos los datos más recientes (Opcional)
     setTimeout(() => {
         loadEventosAjax();
     }, 500);
 });
 
-// Inicializar FullCalendar
+// Iniciar FullCalendar
 function initializeCalendar() {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
@@ -293,22 +292,44 @@ function handleEventClick(info) {
 // Manejar arrastre de evento
 function handleEventDrop(info) {
     const event = info.event;
+
     updateEventoAjax(event.id, {
         fecha_inicio: event.start.toISOString(),
         fecha_fin: event.end ? event.end.toISOString() : event.start.toISOString()
+    })
+    .then(result => {
+        if (!result.success) {
+            info.revert();
+            showNotification(result.message || 'Error al actualizar evento', 'error');
+        }
+    })
+    .catch(error => {
+        info.revert();
+        showNotification(`Error al actualizar evento: ${error.message}`, 'error');
     });
 }
 
-// Manejar redimensionamiento de evento
+// Manejar el estirar los eventos
 function handleEventResize(info) {
     const event = info.event;
+
     updateEventoAjax(event.id, {
         fecha_inicio: event.start.toISOString(),
         fecha_fin: event.end.toISOString()
+    })
+    .then(result => {
+        if (!result.success) {
+            info.revert();
+            showNotification(result.message || 'Error al actualizar evento', 'error');
+        }
+    })
+    .catch(error => {
+        info.revert();
+        showNotification(`Error al actualizar evento: ${error.message}`, 'error');
     });
 }
 
-// Actualizar evento vía AJAX (versión mejorada)
+// Actualizacion eventos AJAX
 function updateEventoAjax(eventoId, data) {
     // Crear un FormData para enviar los datos
     const formData = new FormData();
@@ -316,8 +337,10 @@ function updateEventoAjax(eventoId, data) {
         formData.append(key, data[key]);
     }
 
+    formData.append('_method', 'PUT');
+
     return fetch(`/eventos/${eventoId}`, {
-        method: 'POST', // Cambiamos a POST para mayor compatibilidad
+        method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json',
@@ -415,6 +438,8 @@ function renderAgendaView() {
     });
 }
 
+// Modales
+
 // Inicializar modales
 function initializeModals() {
     // Modal crear evento
@@ -441,6 +466,8 @@ function initializeModals() {
         solicitudCitaAiForm.addEventListener('submit', handleSolicitudCitaAi);
     }
 }
+
+//Crear Eventos
 
 // Manejar crear evento
 function handleCrearEvento(e) {
@@ -563,9 +590,9 @@ function handleCrearEvento(e) {
     });
 }
 
-// Manejar editar evento
+// Editar eventos
 
-// Manejar editar evento (versión mejorada)
+// Manejar editar evento
 function handleEditarEvento(e) {
     e.preventDefault();
     const eventoId = document.getElementById('editEventoId').value;
