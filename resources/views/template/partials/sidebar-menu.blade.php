@@ -29,14 +29,6 @@
 
             </ul>
         </li>
-                <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
-        <!-- CURSOS Section -->
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
-                <i class="ri-file-list-3-line"></i> <span>Cursos</span>
-                    </a>
-        </li>
-
         <!-- Seccion de Calendario -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
