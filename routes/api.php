@@ -3,10 +3,14 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriasController;
 use App\Http\Controllers\Api\NewsController;
-use App\Http\Controllers\EventoController;
+use App\Http\Controllers\Api\EventoApiController; // Agregado el nuevo controlador
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\Api\CursoController;
+use App\Http\Controllers\Api\AgendaController;
+use App\Http\Controllers\Api\SolicitudCitaApiController;
+use App\Http\Controllers\Api\AppointmentOptionsController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
@@ -41,10 +45,60 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']); // Logout y revocación de token
     Route::get('auth/me', [AuthController::class, 'me']);          // Info del usuario autenticado
     Route::post('auth/device', [AuthController::class, 'storeDevice']); // Guardar/actualizar info del dispositivo móvil
-    Route::apiResource('eventos', EventoController::class);
-    Route::apiResource('tipos-evento', TipoEventoController::class);
-    Route::apiResource('evento-participante', EventoParticipanteController::class);
-});
+    Route::apiResource('eventos', EventoApiController::class)->names([
+        'index' => 'api.eventos.index',
+        'store' => 'api.eventos.store',
+        'show' => 'api.eventos.show',
+        'update' => 'api.eventos.update',
+        'destroy' => 'api.eventos.destroy'
+    ]); // Rutas para la API de eventos
+    Route::apiResource('tipos-evento', TipoEventoController::class)->names([
+        'index' => 'api.tipos-evento.index',
+        'store' => 'api.tipos-evento.store',
+        'show' => 'api.tipos-evento.show',
+        'update' => 'api.tipos-evento.update',
+        'destroy' => 'api.tipos-evento.destroy'
+    ]);
+    Route::apiResource('evento-participante', EventoParticipanteController::class)->names([
+        'index' => 'api.evento-participante.index',
+        'store' => 'api.evento-participante.store',
+        'show' => 'api.evento-participante.show',
+        'update' => 'api.evento-participante.update',
+        'destroy' => 'api.evento-participante.destroy'
+    ]);
+
+    // Rutas específicas para agenda/calendario
+    Route::get('agenda/eventos', [EventoApiController::class, 'agenda']); // Eventos para agenda/calendario
+    Route::get('agenda/resumen', [EventoApiController::class, 'resumen']); // Resumen de eventos para dashboard
+
+    // Rutas especializadas para frontend de agenda
+    Route::prefix('agenda')->group(function () {
+        Route::get('mes-actual', [AgendaController::class, 'mesActual']); // Eventos del mes para calendario
+        Route::get('dia-actual', [AgendaController::class, 'diaActual']); // Eventos del día para agenda
+        Route::get('estadisticas', [AgendaController::class, 'estadisticas']); // Estadísticas para dashboard
+        Route::get('buscar', [AgendaController::class, 'buscar']); // Búsqueda de eventos
+    });
+
+    // Rutas para solicitudes de citas (académicas y médicas)
+    Route::prefix('appointments')->group(function () {
+        Route::get('/', [SolicitudCitaApiController::class, 'index']); // Listar solicitudes del usuario
+        Route::post('/', [SolicitudCitaApiController::class, 'store']); // Crear nueva solicitud
+        Route::get('/{id}', [SolicitudCitaApiController::class, 'show']); // Ver solicitud específica
+        Route::patch('/{id}/status', [SolicitudCitaApiController::class, 'updateStatus']); // Actualizar estado (profesores)
+        Route::delete('/{id}/cancel', [SolicitudCitaApiController::class, 'cancel']); // Cancelar solicitud (alumnos)
+        Route::get('/statistics/summary', [SolicitudCitaApiController::class, 'statistics']); // Estadísticas
+    });
+
+    // Rutas para opciones de citas (profesores, especialidades, tratamientos)
+    Route::prefix('appointment-options')->group(function () {
+        Route::get('professors', [AppointmentOptionsController::class, 'professors']); // Lista de profesores
+        Route::get('specialties', [AppointmentOptionsController::class, 'specialties']); // Especialidades médicas
+        Route::get('treatments', [AppointmentOptionsController::class, 'treatments']); // Tratamientos médicos
+        Route::get('doctors', [AppointmentOptionsController::class, 'doctors']); // Doctores por especialidad
+        Route::get('all', [AppointmentOptionsController::class, 'all']); // Todas las opciones
+        Route::get('available-slots', [AppointmentOptionsController::class, 'availableSlots']); // Horarios disponibles
+    });
+}); // Close auth:sanctum middleware group
 
 // Rutas para administración de usuarios pendientes (solo admin)
 Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
@@ -52,15 +106,22 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
     Route::post('admin/users/{user}/validate', [AuthController::class, 'validateAndAssignRole']); // Validar y asignar rol
 });
 
-// Rutas para cursos
+// Rutas para cursos autenticadas (requieren token Sanctum)
+Route::middleware('auth:sanctum')->prefix('cursos')->group(function () {
+    Route::get('/mis-cursos', [CursoController::class, 'misCursos']); // Mis cursos
+    Route::post('/{id}/suscribirse', [CursoController::class, 'suscribirse']); // Suscribirse a curso
+    Route::delete('/{id}/cancelar-suscripcion', [CursoController::class, 'cancelarSuscripcion']); // Cancelar suscripción
+});
 
+// Rutas para cursos (públicas - no requieren autenticación)
 Route::prefix('cursos')->group(function () {
-    Route::get('/', [CursoController::class, 'index']);
-    Route::get('/{id}', [CursoController::class, 'show']);
-    Route::get('/activos', [CursoController::class, 'activos']);
-    Route::get('/inactivos', [CursoController::class, 'inactivos']);
-    Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']);
-    Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']);
+    Route::get('/', [CursoController::class, 'index']); // Listar todos los cursos
+    Route::get('/activos', [CursoController::class, 'activos']); // Cursos activos
+    Route::get('/inactivos', [CursoController::class, 'inactivos']); // Cursos inactivos
+    Route::get('/ordenados/fecha-inicio-desc', [CursoController::class, 'ordenadosPorFechaInicioDesc']); // Ordenados por fecha
+    Route::get('/ultimos/{n?}', [CursoController::class, 'ultimosCursos']); // Últimos N cursos
+    // IMPORTANT: Wildcard routes must come LAST
+    Route::get('/{id}', [CursoController::class, 'show']); // Mostrar curso específico
 });
 
 // Registro de dispositivo SIN autenticación (primer contacto, sin usuario)
@@ -81,3 +142,13 @@ Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send', [Notif
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-fcm-v1', [NotificationController::class, 'sendFcmV1']);
 // Ruta para enviar notificaciones WebPush
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-webpush', [App\Http\Controllers\Api\NotificationController::class, 'sendWebPush']);
+
+// Debug route to test Sanctum authentication
+Route::middleware('auth:sanctum')->get('debug/auth-test', function(Request $request) {
+    return response()->json([
+        'authenticated' => true,
+        'user_id' => $request->user()->id,
+        'user_email' => $request->user()->email,
+        'token_id' => $request->user()->currentAccessToken()->id ?? null
+    ]);
+});

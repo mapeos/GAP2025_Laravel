@@ -42,7 +42,8 @@ class SendFirebaseNotificationJob implements ShouldQueue
             'title' => $this->title,
             'body' => $this->body,
         ]);
-        $credentialsPath = env('FIREBASE_CREDENTIALS');
+        // Usar storage_path directamente para evitar problemas de rutas
+        $credentialsPath = storage_path('app/private/firebase/service-account.json');
         $credentials = json_decode(file_get_contents($credentialsPath), true);
         Log::info('[FCM][Job] Credenciales cargadas', [
             'project_id' => $credentials['project_id'] ?? null,

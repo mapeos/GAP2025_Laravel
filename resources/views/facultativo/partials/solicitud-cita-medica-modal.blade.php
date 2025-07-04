@@ -8,7 +8,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="solicitudCitaMedicaForm" action="{{ route('solicitud-citas.store') }}" method="POST">
+            <form id="solicitudCitaMedicaForm" action="#" method="POST">
                 @csrf
                 <input type="hidden" name="tipo_sistema" value="medico">
                 <div class="modal-body">

@@ -22,7 +22,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($citasConfirmadas as $cita)
+                    @forelse($citas as $cita)
                         <tr>
                             <td class="text-center align-middle">{{ $cita->id }}</td>
                             <td class="text-center align-middle">

@@ -76,8 +76,44 @@
 </div>
 @endsection
 @push('js')
-<script src="{{ asset('js/chat-pagination.js') }}"></script>
-@endpush
-@push('scripts')
-<script src="/js/chat-user-search.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(function() {
+    $('.user-search-input').each(function() {
+        var $input = $(this);
+        var rol = $input.data('rol');
+        var $userList = $('#user-list-' + rol);
+        var timeout = null;
+        $input.on('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(function() {
+                var search = $input.val();
+                $.ajax({
+                    url: '/chat/search/users',
+                    data: { rol: rol, search: search },
+                    xhrFields: { withCredentials: true },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function(html) {
+                        $userList.html(html);
+                    }
+                });
+            }, 250);
+        });
+        $userList.on('click', '.pagination-ajax-link', function(e) {
+            e.preventDefault();
+            var page = $(this).data('page');
+            var search = $input.val();
+            $.ajax({
+                url: '/chat/search/users',
+                data: { rol: rol, search: search, page: page },
+                xhrFields: { withCredentials: true },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(html) {
+                    $userList.html(html);
+                }
+            });
+        });
+    });
+});
+</script>
 @endpush

@@ -8,6 +8,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Message;
 
 class User extends Authenticatable
 {
@@ -84,11 +85,11 @@ class User extends Authenticatable
 
     public function mensajesEnviados()
     {
-        return $this->hasMany(\App\Models\Message::class, 'user_id_origen');
+        return $this->hasMany(ChatMessage::class, 'sender_id');
     }
 
     public function mensajesRecibidos()
     {
-        return $this->hasMany(\App\Models\Message::class, 'user_id_destino');
+        return $this->hasMany(ChatMessage::class, 'receiver_id');
     }
 }

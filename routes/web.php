@@ -367,14 +367,34 @@ Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->
             $q->whereIn('participacion.estado', ['pendiente', 'espera', 'activo', 'rechazado']);
         })->with(['cursos' => function($q) {
             $q->withPivot('estado');
-        }])->get()->flatMap(function($persona) {
+        }])
+        ->get()
+        ->flatMap(function($persona) {
             return $persona->cursos->map(function($curso) use ($persona) {
                 $curso->pivot->persona = $persona;
                 $curso->curso = $curso; // Asignar el curso a sí mismo para la vista
                 return $curso;
             });
-        });
-        return view('admin.solicitudes.index', ['solicitudes' => $solicitudes]);
+        })
+        ->sortByDesc(function($solicitud) {
+            return $solicitud->pivot->created_at ?? $solicitud->created_at;
+        })
+        ->values();
+
+        // Convertir a LengthAwarePaginator manualmente para paginar colecciones
+        $perPage = 10;
+        $page = request()->input('page', 1);
+        $paginator = new Illuminate\Pagination\LengthAwarePaginator(
+            $solicitudes->forPage($page, $perPage),
+            $solicitudes->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+        if (request()->ajax()) {
+            return view('admin.solicitudes._tabla_paginada', ['solicitudes' => $paginator]);
+        }
+        return view('admin.solicitudes.index', ['solicitudes' => $paginator]);
     })->name('index');
     Route::put('/{curso}/{persona}', function($cursoId, $personaId) {
         $persona = \App\Models\Persona::findOrFail($personaId);

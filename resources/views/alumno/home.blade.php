@@ -20,8 +20,32 @@
     $misCursos = $persona ? $persona->cursos()->get() : collect();
     $eventosFuturos = collect();
     $profesores = collect();
-    $mensajesRecientes = collect();
-    $usuariosChat = collect();
+    // Obtener chats recientes y usuarios igual que en el notifications dropdown
+    $unreadService = app(\App\Application\Chat\GetUnreadCountForUser::class);
+    $unreadCounts = $unreadService->execute(Auth::id());
+    $lastChatsService = app(\App\Application\Chat\GetLastChatsForUser::class);
+    $mensajesRecientes = $lastChatsService->execute(Auth::id(), 5);
+    $usuariosChat = \App\Models\User::whereIn('id', collect($mensajesRecientes)->map(fn($m) => $m->senderId == Auth::id() ? $m->receiverId : $m->senderId))->get();
+    // Obtener próximos eventos donde el usuario es participante o creador
+    // ID del tipo de evento común (Clase, Entrega, Reunión)
+    $tiposComunes = [15, 16, 17]; // Clase, Entrega, Reunión
+    $proximosEventos = \App\Models\Evento::where(function($q) use ($user, $tiposComunes) {
+        $q->whereHas('participantes', function($q2) use ($user) {
+            $q2->where('user_id', $user->id);
+        })
+        ->orWhere('creado_por', $user->id)
+        ->orWhereIn('tipo_evento_id', $tiposComunes);
+    })
+    ->where('fecha_inicio', '>=', now())
+    ->orderBy('fecha_inicio')
+    ->limit(5)
+    ->get();
+    // Obtener próximas citas donde el usuario es alumno (solo sus citas, no eventos de tipo cita)
+    $proximasCitas = \App\Models\SolicitudCita::where('alumno_id', $user->id)
+        ->where('fecha_propuesta', '>=', now())
+        ->orderBy('fecha_propuesta')
+        ->limit(5)
+        ->get();
 @endphp
 
 <div class="row">
@@ -161,19 +185,25 @@
                 <ul class="list-group list-group-flush">
                     @forelse($mensajesRecientes as $mensaje)
                         @php
-                            $otro = $user && $mensaje->senderId == $user->id ? $mensaje->receiverId : $mensaje->senderId;
+                            $otro = $mensaje->senderId == Auth::id() ? $mensaje->receiverId : $mensaje->senderId;
                             $usuario = $usuariosChat->firstWhere('id', $otro);
+                            $unread = $unreadCounts[$otro] ?? 0;
                         @endphp
                         <li class="list-group-item px-0 py-1">
-                            <a href="{{ route('chat.show', $otro) }}" class="text-decoration-none">
-                                <strong>{{ $usuario ? $usuario->name : 'Usuario #' . $otro }}</strong>:
-                                {{ \Illuminate\Support\Str::limit($mensaje->content, 30) }}
-                                <br>
-                                <small class="text-muted">
-                                    @if($mensaje->createdAt)
-                                        {{ \Carbon\Carbon::parse($mensaje->createdAt)->format('d/m/Y H:i') }}
+                            <a href="{{ route('chat.show', $otro) }}" class="d-flex align-items-center text-decoration-none">
+                                <div class="avatar avatar-sm bg-info-subtle me-2"><i class="ri-chat-3-line text-info"></i></div>
+                                <div class="flex-grow-1 text-start">
+                                    <strong>{{ $usuario ? $usuario->name : 'Usuario #' . $otro }}</strong>
+                                    @if($unread > 0)
+                                        <span class="badge bg-danger ms-2">{{ $unread }}</span>
                                     @endif
-                                </small>
+                                    <div class="small text-muted">
+                                        {{ \Illuminate\Support\Str::limit($mensaje->content, 40) }}<br>
+                                        @if($mensaje->createdAt)
+                                            <span>{{ \Carbon\Carbon::parse($mensaje->createdAt)->diffForHumans() }}</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </a>
                         </li>
                     @empty
@@ -228,11 +258,31 @@
                 <h5 class="card-title mb-0">Mi Agenda</h5>
             </div>
             <div class="card-body text-start">
-                
-                <div class="text-center py-4">
-                    <i class="ri-calendar-event-line display-4 text-muted mb-3"></i>
-                    <h6 class="text-muted">Mi Agenda</h6>
-                    <p class="text-muted small mb-3">Accede a tu calendario para ver eventos y solicitar citas</p>
+                <ul class="list-group list-group-flush mb-3">
+                    @forelse($proximosEventos as $evento)
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="ri-calendar-event-line text-primary me-2"></i>
+                            <div>
+                                <strong>{{ $evento->titulo }}</strong><br>
+                                <small class="text-muted">Evento - {{ \Carbon\Carbon::parse($evento->fecha_inicio)->format('d/m/Y H:i') }}</small>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="list-group-item text-muted">No tienes eventos próximos.</li>
+                    @endforelse
+                    @forelse($proximasCitas as $cita)
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="ri-stethoscope-line text-success me-2"></i>
+                            <div>
+                                <strong>Cita: {{ $cita->motivo ?? 'Consulta' }}</strong><br>
+                                <small class="text-muted">{{ \Carbon\Carbon::parse($cita->fecha_propuesta)->format('d/m/Y H:i') }}</small>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="list-group-item text-muted">No tienes citas próximas.</li>
+                    @endforelse
+                </ul>
+                <div class="text-center py-2">
                     <a href="{{ route('events.calendar') }}" class="btn btn-warning btn-sm">
                         <i class="ri-calendar-line me-1"></i> Ver Calendario
                     </a>
