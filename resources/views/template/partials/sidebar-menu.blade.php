@@ -109,18 +109,10 @@
             </ul>
         </li>
         <!-- INSCRIPCIONES Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-file-list-3-line"></i> <span>Inscripciones</span> <i class="ri-arrow-right-s-line ms-auto"></i>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.inscripciones.cursos.activos') }}">
+                <i class="ri-file-list-3-line"></i> <span>Inscripciones</span>
             </a>
-            <ul class="submenu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.inscripciones.cursos.activos') }}"> <span>Inscribir</span> </a>
-                </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/select"> <span>Bajas</span> </a>
-                </li> -->
-            </ul>
         </li>
 
         <!-- Facultativo Section -->
