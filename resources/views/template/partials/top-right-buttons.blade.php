@@ -42,7 +42,7 @@
                     $usuario = $usuarios->firstWhere('id', $otro);
                     $unread = $unreadCounts[$otro] ?? 0;
                 @endphp
-                <a href="{{ route('chat.show', $otro) }}" class="dropdown-item notification-item px-3 py-2 border-bottom">
+                <a href="{{ route('chat.index', ['user_id' => $otro]) }}" class="dropdown-item notification-item px-3 py-2 border-bottom wa-chat-item" data-user-id="{{ $otro }}">
                     <div class="d-flex">
                         <div class="flex-shrink-0">
                             <div class="avatar avatar-sm bg-info-subtle"><i class="ri-chat-3-line text-info"></i></div>

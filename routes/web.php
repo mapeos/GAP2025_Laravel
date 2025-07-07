@@ -411,11 +411,18 @@ Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->
 // Chat entre usuarios (alumnos y profesores)
 Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
     Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
-    Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
+    // Route::get('/{id}', ...) eliminada, todo se gestiona en index
     Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
     Route::get('/search/users', [\App\Http\Controllers\ChatController::class, 'searchUsers'])->name('searchUsers');
     Route::post('/hide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'hide'])->name('hide');
     Route::post('/unhide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'unhide'])->name('unhide');
+    Route::get('/{id}', function($id, \App\Application\Chat\GetMessagesBetweenUsers $getMessages, \App\Application\Chat\MarkMessagesAsRead $markAsRead) {
+        // Solo responder si es AJAX
+        if (!request()->ajax() && !request('ajax')) {
+            abort(404);
+        }
+        return app(\App\Http\Controllers\ChatController::class)->show($id, $getMessages, $markAsRead);
+    })->where('id', '[0-9]+');
 });
 
 // Rutas para Facultativo (médicos)

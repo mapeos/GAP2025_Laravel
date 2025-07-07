@@ -17,24 +17,48 @@ class ChatController extends Controller
     // Mostrar lista de usuarios para chatear
     public function index(GetLastChatsForUser $getLastChats, GetUnreadCountForUser $getUnreadCount)
     {
-        $profesores = User::role('Profesor')->where('id', '!=', Auth::id())->select('id', 'name')->paginate(10, ['*'], 'profesores');
-        $alumnos = User::role('Alumno')->where('id', '!=', Auth::id())->select('id', 'name')->paginate(10, ['*'], 'alumnos');
-        $usuarios = [
-            'profesor' => $profesores,
-            'alumno' => $alumnos,
+        // Traer todos los usuarios menos el actual, sin paginación ni filtro estricto de rol
+        $usuariosQuery = User::where('id', '!=', Auth::id());
+        $usuariosTodos = $usuariosQuery->select('id', 'name')->get();
+        // Agrupar por rol si se desea mantener la separación visual
+        $usuariosPorRol = [
+            'profesor' => $usuariosTodos->filter(fn($u) => $u->hasRole('Profesor')),
+            'alumno' => $usuariosTodos->filter(fn($u) => $u->hasRole('Alumno')),
+            'otros' => $usuariosTodos->filter(fn($u) => !$u->hasRole('Profesor') && !$u->hasRole('Alumno')),
         ];
         $mensajesRecibidos = $getLastChats->execute(Auth::id(), 10);
         $unreadCounts = $getUnreadCount->execute(Auth::id());
-        return view('chat.index', compact('usuarios', 'mensajesRecibidos', 'unreadCounts'));
+        return view('chat.index', [
+            'usuarios' => $usuariosPorRol,
+            'mensajesRecibidos' => $mensajesRecibidos,
+            'unreadCounts' => $unreadCounts,
+        ]);
     }
 
     // Mostrar conversación con un usuario
     public function show($id, GetMessagesBetweenUsers $getMessages, MarkMessagesAsRead $markAsRead)
     {
         $user = User::findOrFail($id);
-        // Marcar como leídos los mensajes recibidos de este usuario
         $markAsRead->execute(Auth::id(), $id);
         $mensajes = $getMessages->execute(Auth::id(), $id, 50);
+        if (request()->ajax() || request('ajax')) {
+            // Formatear fechas y foto para JS
+            $mensajes = collect($mensajes)->map(function($m) use ($user) {
+                $m = (object) $m;
+                $m->createdAt_fmt = isset($m->createdAt) && $m->createdAt ? \Carbon\Carbon::parse($m->createdAt)->format('d/m/Y H:i') : '';
+                if ($m->senderId != Auth::id()) {
+                    $m->foto_perfil = optional($user->persona)->foto_perfil;
+                } else {
+                    $m->foto_perfil = optional(Auth::user()->persona)->foto_perfil;
+                }
+                return $m;
+            });
+            return response()->json([
+                'user' => [ 'id' => $user->id, 'name' => $user->name ],
+                'mensajes' => $mensajes,
+                'authId' => Auth::id(),
+            ]);
+        }
         return view('chat.show', compact('user', 'mensajes'));
     }
 
@@ -45,6 +69,22 @@ class ChatController extends Controller
             'mensaje' => 'required|string|max:2000',
         ]);
         $sendMessage->execute(Auth::id(), $id, $request->mensaje);
+        if ($request->ajax() || $request->wantsJson()) {
+            // Devolver mensajes actualizados para el chat
+            $getMessages = app(\App\Application\Chat\GetMessagesBetweenUsers::class);
+            $user = \App\Models\User::findOrFail($id);
+            $mensajes = $getMessages->execute(Auth::id(), $id, 50);
+            $mensajes = collect($mensajes)->map(function($m) {
+                $m = (object) $m;
+                $m->createdAt_fmt = isset($m->createdAt) && $m->createdAt ? \Carbon\Carbon::parse($m->createdAt)->format('d/m/Y H:i') : '';
+                return $m;
+            });
+            return response()->json([
+                'user' => [ 'id' => $user->id, 'name' => $user->name ],
+                'mensajes' => $mensajes,
+                'authId' => Auth::id(),
+            ]);
+        }
         return redirect()->route('chat.show', $id);
     }
 
