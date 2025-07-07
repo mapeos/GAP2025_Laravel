@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\ChatApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,6 +98,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('doctors', [AppointmentOptionsController::class, 'doctors']); // Doctores por especialidad
         Route::get('all', [AppointmentOptionsController::class, 'all']); // Todas las opciones
         Route::get('available-slots', [AppointmentOptionsController::class, 'availableSlots']); // Horarios disponibles
+    });
+
+    // Rutas para chat entre usuarios (alumnos y profesores)
+    Route::prefix('chat')->group(function () {
+        Route::get('overview', [ChatApiController::class, 'getChatOverview']); // Obtener vista general del chat (chats recientes + usuarios disponibles)
+        Route::get('users', [ChatApiController::class, 'getUsers']); // Obtener lista de usuarios para chatear
+        Route::get('users/search', [ChatApiController::class, 'searchUsers']); // Buscar usuarios por rol y nombre
+        Route::get('recent', [ChatApiController::class, 'getRecentChats']); // Obtener chats recientes
+        Route::get('conversation/{userId}', [ChatApiController::class, 'getConversation']); // Obtener conversación con un usuario
+        Route::post('send/{userId}', [ChatApiController::class, 'sendMessage']); // Enviar mensaje a un usuario
     });
 }); // Close auth:sanctum middleware group
 

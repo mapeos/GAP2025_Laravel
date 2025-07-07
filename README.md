@@ -1357,25 +1357,61 @@ El sistema de chat permite la comunicación entre usuarios (alumnos y profesores
 - **Infraestructura:**
   - `app/Infrastructure/Chat/EloquentChatRepository.php`: Implementación con Eloquent.
   - `app/Models/ChatMessage.php`: Modelo Eloquent para la tabla `chat_messages`.
-- **Controlador:**
-  - `app/Http/Controllers/ChatController.php`: Orquesta los casos de uso y la vista.
+- **Controladores:**
+  - `app/Http/Controllers/ChatController.php`: Orquesta los casos de uso y la vista web.
+  - `app/Http/Controllers/Api/ChatApiController.php`: API REST para aplicaciones móviles.
+
+### API REST para Aplicaciones Móviles
+
+El sistema incluye una API completa para integración con aplicaciones móviles (Ionic Angular, React Native, etc.):
+
+#### Endpoints Principales:
+- **GET** `/api/chat/overview` - Vista general del chat (chats recientes + usuarios disponibles)
+- **GET** `/api/chat/users` - Lista de usuarios disponibles para chatear
+- **GET** `/api/chat/users/search` - Búsqueda de usuarios por rol y nombre
+- **GET** `/api/chat/recent` - Conversaciones recientes
+- **GET** `/api/chat/conversation/{userId}` - Mensajes de una conversación específica
+- **POST** `/api/chat/send/{userId}` - Enviar mensaje a un usuario
+
+#### Características de la API:
+- Autenticación con Laravel Sanctum
+- Respuestas JSON estructuradas
+- Manejo de errores completo
+- Optimizada para aplicaciones móviles
+- Documentación completa en `CHAT_API_DOCUMENTATION.md`
+
+#### Ejemplo de uso en Ionic Angular:
+```typescript
+// Cargar pantalla principal del chat
+getChatOverview(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/chat/overview`, this.getHeaders());
+}
+
+// Enviar mensaje
+sendMessage(userId: number, message: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/chat/send/${userId}`,
+    { message }, this.getHeaders());
+}
+```
 
 ### Migraciones
 - `database/migrations/2025_06_30_000000_create_chat_messages_table.php`: Crea la tabla principal del chat.
-- `database/migrations/2025_06_30_120000_add_read_at_to_chat_messages_table.php`: Añade la columna `read_at` para mensajes leídos.
 
-### Vistas
+### Vistas Web
 - `resources/views/chat/index.blade.php`: Lista de usuarios y chats recientes.
 - `resources/views/chat/show.blade.php`: Conversación entre dos usuarios.
 - En el home del alumno (`resources/views/alumno/home.blade.php`), la tarjeta de chat muestra los chats recientes.
 
 ### Características
-- Notificación de mensajes nuevos no leídos.
-- Marcar mensajes como leídos al abrir el chat.
-- Arquitectura desacoplada y fácil de extender.
+- Comunicación en tiempo real entre usuarios
+- Interfaz web y API móvil
+- Búsqueda de usuarios por rol
+- Historial de conversaciones
+- Arquitectura desacoplada y escalable
 
 ### Notas
 - El modelo y la tabla antigua `messages` han sido eliminados para evitar confusiones.
-- Si necesitas migrar datos antiguos, realiza un script de migración manual.
+- La API está optimizada para aplicaciones móviles con endpoints eficientes.
+- Consulta `CHAT_API_DOCUMENTATION.md` para documentación completa de la API.
 
 ---
