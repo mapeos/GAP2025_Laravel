@@ -17,8 +17,8 @@ class ChatController extends Controller
     // Mostrar lista de usuarios para chatear
     public function index(GetLastChatsForUser $getLastChats, GetUnreadCountForUser $getUnreadCount)
     {
-        // Traer todos los usuarios menos el actual, sin paginación ni filtro estricto de rol
-        $usuariosQuery = User::where('id', '!=', Auth::id());
+        // Traer todos los usuarios menos el actual, con la relación persona
+        $usuariosQuery = User::where('id', '!=', Auth::id())->with('persona');
         $usuariosTodos = $usuariosQuery->select('id', 'name')->get();
         // Agrupar por rol si se desea mantener la separación visual
         $usuariosPorRol = [
