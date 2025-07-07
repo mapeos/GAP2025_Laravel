@@ -20,6 +20,7 @@ use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\SolicitudCitaController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AlumnoController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -238,7 +239,7 @@ Route::put('admin/categorias/{id}/restore', [CategoriasController::class, 'resto
 Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('pendiente.home');
 // Rutas para el rol Alumno
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
-    Route::view('/alumno/home', 'alumno.home')->name('alumno.home');
+    Route::get('/alumno/home', [AlumnoController::class, 'home'])->name('alumno.home');
 });
 // Rutas para el rol Profesor
 Route::middleware(['auth', 'role:Profesor'])->group(function () {
