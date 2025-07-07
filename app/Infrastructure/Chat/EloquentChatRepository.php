@@ -41,7 +41,8 @@ class EloquentChatRepository implements ChatRepositoryInterface
 
     public function getLastChatsForUser(int $userId, int $limit = 10): array
     {
-        // Obtener el último mensaje de cada conversación donde el usuario es receptor o emisor
+        // Ocultar chats marcados como ocultos por el usuario
+        $hidden = \App\Models\ChatHidden::where('user_id', $userId)->pluck('other_user_id')->toArray();
         $sub = \App\Models\ChatMessage::selectRaw('LEAST(sender_id, receiver_id) as u1, GREATEST(sender_id, receiver_id) as u2, MAX(id) as max_id')
             ->where(function($q) use ($userId) {
                 $q->where('sender_id', $userId)->orWhere('receiver_id', $userId);
@@ -50,6 +51,13 @@ class EloquentChatRepository implements ChatRepositoryInterface
 
         $ids = $sub->pluck('max_id');
         $messages = \App\Models\ChatMessage::whereIn('id', $ids)
+            ->where(function($q) use ($userId, $hidden) {
+                foreach ($hidden as $other) {
+                    $q->where(function($q2) use ($userId, $other) {
+                        $q2->where('sender_id', '!=', $other)->orWhere('receiver_id', '!=', $other);
+                    });
+                }
+            })
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();

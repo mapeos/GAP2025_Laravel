@@ -32,11 +32,18 @@
                         <span class="badge bg-danger ms-1">{{ $unread }}</span>
                     @endif
                 </a>
+                <form method="POST" action="{{ route('chat.hide', $otro) }}" class="d-inline hide-chat-form" style="display:inline">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger btn-sm ms-2" onclick="return confirm('¿Ocultar este chat?')">
+                        <i class="ri-eye-off-line"></i> Ocultar
+                    </button>
+                </form>
             </li>
         @empty
             <li class="list-group-item text-muted">No tienes mensajes recientes.</li>
         @endforelse
     </ul>
+    @include('chat._hidden_chats')
     <h4>Usuarios disponibles para chatear</h4>
     <div class="row g-4 mb-4">
         @foreach(['profesor' => 'Profesores', 'alumno' => 'Alumnos'] as $rol => $titulo)
@@ -112,6 +119,16 @@ $(function() {
                     $userList.html(html);
                 }
             });
+        });
+    });
+    // AJAX para ocultar chat sin recargar
+    $('.hide-chat-form').on('submit', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        $.post($form.attr('action'), $form.serialize(), function(resp) {
+            if(resp.success) {
+                $form.closest('li').fadeOut();
+            }
         });
     });
 });

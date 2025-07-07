@@ -411,6 +411,8 @@ Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
     Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
     Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
     Route::get('/search/users', [\App\Http\Controllers\ChatController::class, 'searchUsers'])->name('searchUsers');
+    Route::post('/hide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'hide'])->name('hide');
+    Route::post('/unhide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'unhide'])->name('unhide');
 });
 
 // Rutas para Facultativo (médicos)
