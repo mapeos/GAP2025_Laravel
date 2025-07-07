@@ -165,12 +165,9 @@ function handleDateClick(info) {
     //prevenimos el comportamiento default
     info.jsEvent.preventDefault();
 
-    // Verificar si es una selección por arrastre (tiene propiedad end) o un clic simple
-    const isSelection = info.end !== undefined;
-
-    // Si es un clic simple (no arrastre) en la vista mes, cambiamos a la vista día
-    if (calendar.view.type === 'dayGridMonth' && !isSelection) {
-        calendar.changeView('timeGridDay', info.dateStr);
+    // si estamos en la vista cambiamos a la vista dia al hacer click en una fecha.
+    if (calendar.view.type === 'dayGridMonth') {
+        calendar.changeView ('timeGridDay', info.dateStr);
         return;
     }
 
