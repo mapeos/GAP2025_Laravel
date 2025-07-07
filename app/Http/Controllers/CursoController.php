@@ -468,7 +468,4 @@ class CursoController extends Controller
         }
     }
 
-    /**
-     * Descargar diploma en PDF 
-     */
 }
