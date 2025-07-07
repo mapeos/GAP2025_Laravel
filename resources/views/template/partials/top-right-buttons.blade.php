@@ -1,3 +1,4 @@
+@if(Auth::check())
 @php
     // Obtener los mensajes no leídos para el usuario autenticado
     $unreadService = app(\App\Application\Chat\GetUnreadCountForUser::class);
@@ -80,3 +81,7 @@
         </div>
     </button>
 </div>
+@else
+<!-- Theme Toggle Button for non-authenticated users -->
+<button class="btn p-0 border-0 shadow-none" id="theme-toggle"><i class="ri-sun-line fs-5"></i></button>
+@endif

@@ -17,6 +17,7 @@
         "vite": "^6.2.4"
     },
     "dependencies": {
+        "puppeteer": "^24.11.2",
         "tom-select": "^2.4.3"
     }
 }
