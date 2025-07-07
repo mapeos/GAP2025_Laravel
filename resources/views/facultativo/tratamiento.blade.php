@@ -78,7 +78,7 @@ $tratamiento = (object)[
             </table>
         </div>
     </div>
-    <a href="/facultativo/tratamientos" class="btn btn-outline-success">
+                    <a href="{{ route('facultativo.tratamientos') }}" class="btn btn-outline-success">
         <i class="ri-arrow-left-line"></i> Volver a la lista de tratamientos
     </a>
 </div>
