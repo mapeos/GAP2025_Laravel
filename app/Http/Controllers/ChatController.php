@@ -72,11 +72,16 @@ class ChatController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             // Devolver mensajes actualizados para el chat
             $getMessages = app(\App\Application\Chat\GetMessagesBetweenUsers::class);
-            $user = \App\Models\User::findOrFail($id);
+            $user = \App\Models\User::with('persona')->findOrFail($id);
             $mensajes = $getMessages->execute(Auth::id(), $id, 50);
-            $mensajes = collect($mensajes)->map(function($m) {
+            $mensajes = collect($mensajes)->map(function($m) use ($user) {
                 $m = (object) $m;
                 $m->createdAt_fmt = isset($m->createdAt) && $m->createdAt ? \Carbon\Carbon::parse($m->createdAt)->format('d/m/Y H:i') : '';
+                if ($m->senderId != Auth::id()) {
+                    $m->foto_perfil = optional($user->persona)->foto_perfil;
+                } else {
+                    $m->foto_perfil = optional(Auth::user()->persona)->foto_perfil;
+                }
                 return $m;
             });
             return response()->json([

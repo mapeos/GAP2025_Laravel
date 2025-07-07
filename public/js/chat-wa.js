@@ -47,27 +47,30 @@ document.addEventListener('DOMContentLoaded', function() {
         html += `</form></div>`;
         mainPanel.innerHTML = html;
         scrollToBottom(mainPanel.querySelector('.chat-mensajes'));
-        // Envío de mensaje
-        mainPanel.querySelector('.chat-send-form').addEventListener('submit', function(e) {
+    }
+
+    // Delegación para evitar recarga incluso si el DOM cambia
+    document.body.addEventListener('submit', function(e) {
+        if (e.target && e.target.classList.contains('chat-send-form')) {
             e.preventDefault();
-            const input = this.querySelector('input[name="mensaje"]');
+            const form = e.target;
+            const input = form.querySelector('input[name="mensaje"]');
             const mensaje = input.value.trim();
             if (!mensaje) return;
-            this.querySelector('button[type="submit"]').disabled = true;
-            window.axios.post(`/chat/${user.id}`, { mensaje })
+            form.querySelector('button[type="submit"]').disabled = true;
+            const userId = form.closest('.wa-main').dataset.userId || currentUserId;
+            window.axios.post(`/chat/${userId}`, { mensaje })
                 .then(resp => {
                     if (resp.data && resp.data.mensajes) {
-                        renderChat(user, resp.data.mensajes, authId);
-                    } else {
-                        input.value = '';
-                        this.querySelector('button[type="submit"]').disabled = false;
+                        renderChat(resp.data.user, resp.data.mensajes, resp.data.authId);
                     }
                 })
-                .catch(() => {
-                    this.querySelector('button[type="submit"]').disabled = false;
+                .finally(() => {
+                    form.querySelector('button[type="submit"]').disabled = false;
+                    input.value = '';
                 });
-        });
-    }
+        }
+    });
 
     chatItems.forEach(item => {
         item.addEventListener('click', function(e) {
