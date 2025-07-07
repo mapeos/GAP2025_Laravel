@@ -458,7 +458,7 @@ class CursoController extends Controller
             $frontHtml = view('admin.cursos.diplomas.template', compact('curso'))->render();
             $backHtml = view('admin.cursos.diplomas.template-back', compact('curso'))->render();
             
-            // Combinar ambas páginas con CSS mejorado para separación
+            // Combinar ambas páginas con CSS simplificado y optimizado
             $combinedHtml = '
             <!DOCTYPE html>
             <html>
@@ -478,6 +478,8 @@ class CursoController extends Controller
                         padding: 0; 
                         font-family: "Roboto", sans-serif;
                         background: white;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
                     }
                     
                     .page { 
@@ -663,157 +665,6 @@ class CursoController extends Controller
                         color: #7f8c8d;
                         font-style: italic;
                     }
-                    
-                    .diploma-details {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                        gap: 30px;
-                        margin: 30px 0;
-                        width: 100%;
-                    }
-                    
-                    .detail-section {
-                        background: rgba(255, 255, 255, 0.8);
-                        padding: 25px;
-                        border-radius: 15px;
-                        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-                    }
-                    
-                    .detail-title {
-                        font-size: 1.2rem;
-                        color: #2c3e50;
-                        font-weight: 600;
-                        margin-bottom: 15px;
-                        border-bottom: 2px solid #e74c3c;
-                        padding-bottom: 5px;
-                    }
-                    
-                    .detail-item {
-                        margin-bottom: 12px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                    }
-                    
-                    .detail-label {
-                        font-size: 0.9rem;
-                        color: #7f8c8d;
-                        font-weight: 500;
-                    }
-                    
-                    .detail-value {
-                        font-size: 1rem;
-                        color: #2c3e50;
-                        font-weight: 600;
-                    }
-                    
-                    .verification-section {
-                        text-align: center;
-                        margin: 40px 0;
-                    }
-                    
-                    .qr-code {
-                        width: 120px;
-                        height: 120px;
-                        background: #f8f9fa;
-                        border: 2px solid #2c3e50;
-                        border-radius: 10px;
-                        margin: 0 auto 20px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 0.8rem;
-                        color: #7f8c8d;
-                    }
-                    
-                    .verification-text {
-                        font-size: 0.9rem;
-                        color: #7f8c8d;
-                        margin-bottom: 10px;
-                    }
-                    
-                    .verification-url {
-                        font-size: 0.8rem;
-                        color: #3498db;
-                        font-weight: 500;
-                    }
-                    
-                    .additional-info {
-                        background: rgba(52, 152, 219, 0.1);
-                        padding: 20px;
-                        border-radius: 15px;
-                        margin: 30px 0;
-                    }
-                    
-                    .additional-title {
-                        font-size: 1.1rem;
-                        color: #2c3e50;
-                        font-weight: 600;
-                        margin-bottom: 15px;
-                        text-align: center;
-                    }
-                    
-                    .additional-text {
-                        font-size: 0.9rem;
-                        color: #34495e;
-                        line-height: 1.6;
-                        text-align: justify;
-                    }
-                    
-                    .diploma-footer {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-top: 30px;
-                    }
-                    
-                    .footer-left {
-                        text-align: left;
-                    }
-                    
-                    .footer-right {
-                        text-align: right;
-                    }
-                    
-                    .footer-text {
-                        font-size: 0.8rem;
-                        color: #7f8c8d;
-                    }
-                    
-                    .decorative-corner {
-                        position: absolute;
-                        width: 60px;
-                        height: 60px;
-                        border: 3px solid #e74c3c;
-                    }
-                    
-                    .corner-tl {
-                        top: 40px;
-                        left: 40px;
-                        border-right: none;
-                        border-bottom: none;
-                    }
-                    
-                    .corner-tr {
-                        top: 40px;
-                        right: 40px;
-                        border-left: none;
-                        border-bottom: none;
-                    }
-                    
-                    .corner-bl {
-                        bottom: 40px;
-                        left: 40px;
-                        border-right: none;
-                        border-top: none;
-                    }
-                    
-                    .corner-br {
-                        bottom: 40px;
-                        right: 40px;
-                        border-left: none;
-                        border-top: none;
-                    }
                 </style>
             </head>
             <body>
@@ -822,8 +673,8 @@ class CursoController extends Controller
             </body>
             </html>';
             
-            $pdf = \Spatie\Browsershot\Browsershot::html($combinedHtml)
-                ->setChromePath('/usr/bin/google-chrome')
+            // Configurar Browsershot con opciones optimizadas
+            $browsershot = \Spatie\Browsershot\Browsershot::html($combinedHtml)
                 ->format('A4')
                 ->portrait()
                 ->margins(15, 15, 15, 15)
@@ -831,13 +682,40 @@ class CursoController extends Controller
                 ->noSandbox()
                 ->disableGpu()
                 ->timeout(120)
-                ->pdf();
+                ->waitUntilNetworkIdle()
+                ->preferCssPageSize();
+            
+            // Intentar diferentes rutas de Chrome
+            $chromePaths = [
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium',
+                'C:\Program Files\Google\Chrome\Application\chrome.exe',
+                'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+            ];
+            
+            foreach ($chromePaths as $path) {
+                if (file_exists($path)) {
+                    $browsershot->setChromePath($path);
+                    break;
+                }
+            }
+            
+            $pdf = $browsershot->pdf();
+            
+            // Verificar que el PDF se generó correctamente
+            if (empty($pdf) || strlen($pdf) < 1000) {
+                throw new \Exception('El PDF generado está vacío o corrupto');
+            }
             
             $filename = 'diploma_' . $curso->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
             
             return response($pdf)
                 ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Content-Length', strlen($pdf))
+                ->header('Cache-Control', 'no-cache, must-revalidate')
+                ->header('Pragma', 'no-cache');
                 
         } catch (\Exception $e) {
             Log::error('Error al generar diploma: ' . $e->getMessage());
@@ -1245,7 +1123,7 @@ class CursoController extends Controller
     }
 
     /**
-     * Método de prueba para generar PDF simple con dos páginas
+     * Método de prueba para generar PDF simple y verificar que funciona
      */
     public function downloadDiplomaTest($id)
     {
@@ -1325,8 +1203,8 @@ class CursoController extends Controller
             </body>
             </html>';
             
-            $pdf = \Spatie\Browsershot\Browsershot::html($combinedHtml)
-                ->setChromePath('/usr/bin/google-chrome')
+            // Configurar Browsershot con opciones optimizadas
+            $browsershot = \Spatie\Browsershot\Browsershot::html($combinedHtml)
                 ->format('A4')
                 ->portrait()
                 ->margins(15, 15, 15, 15)
@@ -1334,13 +1212,40 @@ class CursoController extends Controller
                 ->noSandbox()
                 ->disableGpu()
                 ->timeout(120)
-                ->pdf();
+                ->waitUntilNetworkIdle()
+                ->preferCssPageSize();
+            
+            // Intentar diferentes rutas de Chrome
+            $chromePaths = [
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium',
+                'C:\Program Files\Google\Chrome\Application\chrome.exe',
+                'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+            ];
+            
+            foreach ($chromePaths as $path) {
+                if (file_exists($path)) {
+                    $browsershot->setChromePath($path);
+                    break;
+                }
+            }
+            
+            $pdf = $browsershot->pdf();
+            
+            // Verificar que el PDF se generó correctamente
+            if (empty($pdf) || strlen($pdf) < 1000) {
+                throw new \Exception('El PDF generado está vacío o corrupto');
+            }
             
             $filename = 'diploma_test_' . $curso->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
             
             return response($pdf)
                 ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Content-Length', strlen($pdf))
+                ->header('Cache-Control', 'no-cache, must-revalidate')
+                ->header('Pragma', 'no-cache');
                 
         } catch (\Exception $e) {
             Log::error('Error al generar diploma de prueba: ' . $e->getMessage());

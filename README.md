@@ -1036,6 +1036,94 @@ Parámetros query opcionales:
 ```
 ---
 
+## Diplomas para cursos
+Genera diplomas PDF profesionales para los cursos completados usando **Browsershot** y **Puppeteer**.
+
+## 📋 Requisitos Previos
+
+- PHP 8.1+ con extensión **sodium** habilitada
+- Node.js y npm instalados
+- Composer instalado
+
+## 🚀 Instalación Paso a Paso
+
+### 1. Habilitar extensión sodium en PHP
+
+**En Windows:**
+```bash
+# Verificar si está habilitada
+php -m | findstr sodium
+
+# Si no aparece, editar C:\php\php.ini
+# Buscar la línea: ;extension=sodium
+# Quitar el punto y coma: extension=sodium
+# Reiniciar terminal
+```
+
+**En Linux/Mac:**
+```bash
+# Verificar si está habilitada
+php -m | grep sodium
+
+# Si no aparece, instalar:
+sudo apt-get install php-sodium  # Ubuntu/Debian
+# o
+brew install php@8.1  # Mac con Homebrew
+```
+
+### 2. Instalar Browsershot y Puppeteer
+
+```bash
+# En la raíz del proyecto Laravel
+composer require spatie/browsershot
+npm install puppeteer --save
+
+**Nota:** Si ya hiciste `npm install` en el paso anterior, Puppeteer ya estará instalado.
+```
+
+### 3. Verificar instalación
+
+```bash
+# Probar que todo funciona
+
+# Desde fuera del contenedor (en tu terminal local)
+docker exec alumnos-gap-app php artisan diploma:generate 1
+
+# O si estás dentro del contenedor
+php artisan diploma:generate 1
+```
+
+Si se genera un PDF, ¡todo está listo!
+
+## 🛠️ Uso Básico
+
+### Generar diploma para un curso
+
+```bash
+# Generar diploma para curso ID 1
+php artisan diploma:generate 1
+
+# El PDF se guarda en: storage/app/diplomas/
+```
+
+### Usar en el navegador
+
+1. Ve a la página del curso
+2. Haz clic en "Generar Diploma"
+3. Se descarga automáticamente
+
+## ⚙️ Configuración (Opcional)
+
+### Variables de entorno (.env)
+
+```env
+# Configuración de Browsershot
+BROWSERSHOT_CHROME_PATH=/usr/bin/google-chrome
+BROWSERSHOT_NODE_BINARY=/usr/bin/node
+BROWSERSHOT_NPM_BINARY=/usr/bin/npm
+
+
+
 ## Notas para el Frontend
 
 - Todas las respuestas están en formato JSON.

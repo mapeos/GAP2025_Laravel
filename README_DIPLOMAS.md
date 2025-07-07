@@ -12,6 +12,16 @@ Genera diplomas PDF profesionales para los cursos completados usando **Browsersh
 
 ## 🚀 Instalación Paso a Paso
 
+### 0. Después de hacer git pull (para nuevos desarrolladores)
+
+```bash
+# Instalar dependencias de PHP
+composer install
+
+# Instalar dependencias de Node.js (incluye Puppeteer)
+npm install
+```
+
 ### 1. Habilitar extensión sodium en PHP
 
 **En Windows:**
@@ -43,6 +53,8 @@ brew install php@8.1  # Mac con Homebrew
 composer require spatie/browsershot
 npm install puppeteer --save
 ```
+
+**Nota:** Si ya hiciste `npm install` en el paso anterior, Puppeteer ya estará instalado.
 
 ### 3. Verificar instalación
 
@@ -132,6 +144,13 @@ npm --version
 - Verificar recursos del servidor
 - Usar caché para mejorar rendimiento
 
+### Error: "PDF descargado está dañado"
+- Verificar que Chrome esté instalado en el contenedor Docker
+- Ejecutar el comando de prueba: `docker exec alumnos-gap-app php artisan diploma:generate 1`
+- Verificar que el archivo se genera correctamente en `storage/app/diplomas/`
+- Si el comando funciona pero la descarga web no, probar la ruta de prueba: `/admin/cursos/1/diploma/test`
+- Verificar logs en `storage/logs/laravel.log`
+
 ## 📁 Archivos Importantes
 
 ```
@@ -161,6 +180,10 @@ public/css/
 - ✅ **Códigos QR** para verificación
 - ✅ **Nombres de archivo** descriptivos
 - ✅ **Sistema de caché** para mejor rendimiento
+- ✅ **Detección automática** de Chrome/Chromium
+- ✅ **Verificación de integridad** del PDF generado
+- ✅ **Headers HTTP optimizados** para descarga correcta
+- ✅ **Comando Artisan** para generación desde terminal
 
 ## 📞 Soporte
 
