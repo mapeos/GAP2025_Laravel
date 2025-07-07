@@ -190,7 +190,7 @@
                             $unread = $unreadCounts[$otro] ?? 0;
                         @endphp
                         <li class="list-group-item px-0 py-1">
-                            <a href="{{ route('chat.show', $otro) }}" class="d-flex align-items-center text-decoration-none">
+                            <a href="{{ route('chat.index', ['user_id' => $otro]) }}" class="d-flex align-items-center text-decoration-none wa-chat-item" data-user-id="{{ $otro }}">
                                 <div class="avatar avatar-sm bg-info-subtle me-2"><i class="ri-chat-3-line text-info"></i></div>
                                 <div class="flex-grow-1 text-start">
                                     <strong>{{ $usuario ? $usuario->name : 'Usuario #' . $otro }}</strong>
