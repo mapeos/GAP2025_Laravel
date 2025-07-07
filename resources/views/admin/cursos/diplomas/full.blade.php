@@ -96,22 +96,26 @@
         .main-content {
             flex: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         
         .diploma-container {
             width: 100%;
             max-width: 1200px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
+            padding: 20px 0;
         }
         
         .diploma-view {
             display: none;
             width: 100%;
+            padding: 20px 0;
         }
         
         .diploma-view.active {
@@ -120,8 +124,9 @@
         
         .diploma-view .diploma {
             transform: scale(1);
-            transform-origin: center;
+            transform-origin: top center;
             transition: transform 0.3s ease;
+            margin: 0 auto;
         }
         
         .diploma-view .diploma:hover {

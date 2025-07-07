@@ -139,8 +139,7 @@ Route::middleware(['auth'])->group(function () {
         // Rutas específicas deben ir ANTES que la ruta genérica {curso}
         Route::get('/{curso}/diploma', [CursoController::class, 'diploma'])->name('diploma');
 Route::get('/{curso}/diploma/full', [CursoController::class, 'diplomaFull'])->name('diploma.full');
-Route::get('/{curso}/diploma/download', [CursoController::class, 'downloadDiplomaImproved'])->name('diploma.download');
-Route::get('/{curso}/diploma/test', [CursoController::class, 'downloadDiplomaTest'])->name('diploma.test');
+Route::get('/{curso}/diploma/download', [CursoController::class, 'downloadDiploma'])->name('diploma.download');
         Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
         Route::delete('/{curso}/delete-temario', [CursoController::class, 'deleteTemario'])->name('delete-temario');
         Route::delete('/{curso}/delete-portada', [CursoController::class, 'deletePortada'])->name('delete-portada');

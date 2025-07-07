@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diploma - {{ $curso->titulo }} (Dorso)</title>
+    <title>Diploma - {{ $curso->titulo }} (Reverso)</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Roboto:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap');
         
         * {
             margin: 0;
@@ -16,40 +16,43 @@
         body {
             font-family: 'Roboto', sans-serif;
             background: white;
+            width: 100%;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
         
         .diploma {
-            background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
             width: 100%;
-            max-width: 1200px;
-            aspect-ratio: 1.414; /* A4 ratio */
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f1f3f4 100%);
             position: relative;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        /* Marco principal */
+        .diploma-frame {
+            width: 90%;
+            height: 85%;
+            background: white;
+            border: 12px solid #2c3e50;
+            border-radius: 25px;
+            position: relative;
+            box-shadow: 
+                0 0 0 4px #e74c3c,
+                0 20px 40px rgba(0, 0, 0, 0.15),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
             overflow: hidden;
-            border: 8px solid #2c3e50;
         }
         
-        /* Borde decorativo */
-        .diploma::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            border: 2px solid #e74c3c;
-            border-radius: 15px;
-            pointer-events: none;
-        }
-        
-        /* Fondo con patrón sutil */
-        .diploma::after {
+        /* Patrón de fondo */
+        .diploma-frame::before {
             content: '';
             position: absolute;
             top: 0;
@@ -57,23 +60,64 @@
             right: 0;
             bottom: 0;
             background-image: 
-                radial-gradient(circle at 20% 20%, rgba(231, 76, 60, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.05) 0%, transparent 50%);
+                radial-gradient(circle at 20% 20%, rgba(231, 76, 60, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.03) 0%, transparent 50%),
+                linear-gradient(45deg, transparent 48%, rgba(231, 76, 60, 0.02) 50%, transparent 52%);
+            background-size: 100% 100%, 100% 100%, 20px 20px;
             pointer-events: none;
         }
         
+        /* Esquinas decorativas */
+        .corner {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 4px solid #e74c3c;
+        }
+        
+        .corner-tl {
+            top: 30px;
+            left: 30px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 25px 0 0 0;
+        }
+        
+        .corner-tr {
+            top: 30px;
+            right: 30px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 25px 0 0;
+        }
+        
+        .corner-bl {
+            bottom: 30px;
+            left: 30px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 25px;
+        }
+        
+        .corner-br {
+            bottom: 30px;
+            right: 30px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 25px 0;
+        }
+        
+        /* Contenido principal */
         .diploma-content {
             position: relative;
-            z-index: 1;
-            padding: 40px;
+            z-index: 2;
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            min-height: 100vh;
+            padding: 60px;
         }
         
-        /* Header del dorso */
+        /* Header */
         .diploma-header {
             text-align: center;
             margin-bottom: 40px;
@@ -81,128 +125,173 @@
         
         .logo {
             font-family: 'Playfair Display', serif;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 900;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 2px;
         }
         
         .institution {
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: #7f8c8d;
             font-weight: 300;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
+            margin-bottom: 5px;
         }
         
-        /* Título del dorso */
+        .subtitle {
+            font-size: 0.9rem;
+            color: #95a5a6;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+        
+        /* Título del reverso */
         .diploma-title {
             font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 700;
             color: #2c3e50;
             text-align: center;
             margin: 30px 0;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 2px;
         }
         
         /* Información detallada */
         .diploma-details {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin: 30px 0;
-            width: 100%;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 40px 0;
+            flex: 1;
         }
         
         .detail-section {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(231, 76, 60, 0.1);
+            backdrop-filter: blur(10px);
         }
         
         .detail-title {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e74c3c;
-            padding-bottom: 5px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
         }
         
         .detail-item {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(231, 76, 60, 0.1);
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
         }
         
         .detail-label {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #7f8c8d;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .detail-value {
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: #2c3e50;
             font-weight: 600;
+            text-align: right;
         }
         
         /* Código QR y verificación */
         .verification-section {
             text-align: center;
             margin: 40px 0;
+            background: rgba(52, 152, 219, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(52, 152, 219, 0.2);
+        }
+        
+        .verification-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
         }
         
         .qr-code {
-            width: 120px;
-            height: 120px;
-            background: #f8f9fa;
-            border: 2px solid #2c3e50;
-            border-radius: 10px;
+            width: 150px;
+            height: 150px;
+            background: white;
+            border: 3px solid #2c3e50;
+            border-radius: 15px;
             margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: #7f8c8d;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         
         .verification-text {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #7f8c8d;
             margin-bottom: 10px;
+            font-weight: 500;
         }
         
         .verification-url {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: #3498db;
-            font-weight: 500;
+            font-weight: 600;
+            text-decoration: none;
         }
         
         /* Información adicional */
         .additional-info {
-            background: rgba(52, 152, 219, 0.1);
-            padding: 20px;
-            border-radius: 15px;
+            background: rgba(231, 76, 60, 0.05);
+            padding: 25px;
+            border-radius: 20px;
             margin: 30px 0;
+            border: 2px solid rgba(231, 76, 60, 0.2);
         }
         
         .additional-title {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #2c3e50;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 15px;
             text-align: center;
+            font-family: 'Playfair Display', serif;
         }
         
         .additional-text {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #34495e;
-            line-height: 1.6;
+            line-height: 1.7;
             text-align: justify;
+            font-weight: 400;
         }
         
         /* Footer */
@@ -211,6 +300,8 @@
             justify-content: space-between;
             align-items: center;
             margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(231, 76, 60, 0.2);
         }
         
         .footer-left {
@@ -222,154 +313,176 @@
         }
         
         .footer-text {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: #7f8c8d;
+            font-weight: 400;
         }
         
-        /* Elementos decorativos */
-        .decorative-corner {
+        /* Número de diploma */
+        .diploma-number {
             position: absolute;
-            width: 60px;
-            height: 60px;
+            bottom: 40px;
+            left: 60px;
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
+        /* Fecha */
+        .diploma-date {
+            position: absolute;
+            bottom: 40px;
+            right: 60px;
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-style: italic;
+            font-weight: 400;
+        }
+        
+        /* Sello de autenticidad */
+        .seal {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            width: 100px;
+            height: 100px;
             border: 3px solid #e74c3c;
-        }
-        
-        .corner-tl {
-            top: 40px;
-            left: 40px;
-            border-right: none;
-            border-bottom: none;
-        }
-        
-        .corner-tr {
-            top: 40px;
-            right: 40px;
-            border-left: none;
-            border-bottom: none;
-        }
-        
-        .corner-bl {
-            bottom: 40px;
-            left: 40px;
-            border-right: none;
-            border-top: none;
-        }
-        
-        .corner-br {
-            bottom: 40px;
-            right: 40px;
-            border-left: none;
-            border-top: none;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .diploma-content {
-                padding: 30px;
-            }
-            
-            .diploma-details {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .diploma-title {
-                font-size: 2rem;
-            }
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(231, 76, 60, 0.05);
+            font-size: 0.7rem;
+            color: #e74c3c;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.2;
+            transform: rotate(-15deg);
         }
     </style>
 </head>
 <body>
     <div class="diploma">
-        <!-- Esquinas decorativas -->
-        <div class="decorative-corner corner-tl"></div>
-        <div class="decorative-corner corner-tr"></div>
-        <div class="decorative-corner corner-bl"></div>
-        <div class="decorative-corner corner-br"></div>
-        
-        <div class="diploma-content">
-            <!-- Header -->
-            <div class="diploma-header">
-                <div class="logo">Academia GAP</div>
-                <div class="institution">Centro de Formación Profesional</div>
+        <div class="diploma-frame">
+            <!-- Esquinas decorativas -->
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+            
+            <!-- Sello de autenticidad -->
+            <div class="seal">
+                SELLO<br>OFICIAL<br>REVERSO<br>GAP
             </div>
             
-            <!-- Título -->
-            <div class="diploma-title">INFORMACIÓN ADICIONAL</div>
-            
-            <!-- Detalles del curso -->
-            <div class="diploma-details">
-                <div class="detail-section">
-                    <div class="detail-title">Información del Curso</div>
-                    <div class="detail-item">
-                        <span class="detail-label">Código:</span>
-                        <span class="detail-value">CUR-{{ str_pad($curso->id, 4, '0', STR_PAD_LEFT) }}</span>
+            <div class="diploma-content">
+                <!-- Header -->
+                <div class="diploma-header">
+                    <div class="logo">ACADEMIA GAP</div>
+                    <div class="institution">Centro de Formación Profesional</div>
+                    <div class="subtitle">Educación de Calidad • Formación Integral</div>
+                </div>
+                
+                <!-- Título del reverso -->
+                <div class="diploma-title">INFORMACIÓN ADICIONAL</div>
+                
+                <!-- Información detallada -->
+                <div class="diploma-details">
+                    <div class="detail-section">
+                        <div class="detail-title">Datos del Curso</div>
+                        <div class="detail-item">
+                            <span class="detail-label">Nombre del Curso</span>
+                            <span class="detail-value">{{ $curso->titulo }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Código del Curso</span>
+                            <span class="detail-value">{{ str_pad($curso->id, 4, '0', STR_PAD_LEFT) }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Fecha de Inicio</span>
+                            <span class="detail-value">{{ \Carbon\Carbon::parse($curso->fechaInicio)->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Fecha de Finalización</span>
+                            <span class="detail-value">{{ \Carbon\Carbon::parse($curso->fechaFin)->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Duración Total</span>
+                            <span class="detail-value">{{ \Carbon\Carbon::parse($curso->fechaInicio)->diffInDays($curso->fechaFin) }} días</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Estado del Curso</span>
+                            <span class="detail-value">{{ $curso->estado ? 'Activo' : 'Inactivo' }}</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Estado:</span>
-                        <span class="detail-value">{{ ucfirst($curso->estado) }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Plazas:</span>
-                        <span class="detail-value">{{ $curso->plazas }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Precio:</span>
-                        <span class="detail-value">{{ $curso->precio ? '€' . number_format($curso->precio, 2) : 'Gratuito' }}</span>
+                    
+                    <div class="detail-section">
+                        <div class="detail-title">Datos del Diploma</div>
+                        <div class="detail-item">
+                            <span class="detail-label">Número de Diploma</span>
+                            <span class="detail-value">{{ str_pad($curso->id, 4, '0', STR_PAD_LEFT) }}-{{ date('Y') }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Fecha de Emisión</span>
+                            <span class="detail-value">{{ \Carbon\Carbon::now()->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tipo de Certificación</span>
+                            <span class="detail-value">Diploma Profesional</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Nivel de Formación</span>
+                            <span class="detail-value">Formación Continua</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Validez</span>
+                            <span class="detail-value">Permanente</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Institución</span>
+                            <span class="detail-value">Academia GAP</span>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="detail-section">
-                    <div class="detail-title">Descripción del Curso</div>
-                    <div class="detail-item">
-                        <span class="detail-label">Título:</span>
-                        <span class="detail-value">{{ $curso->titulo }}</span>
+                <!-- Código QR y verificación -->
+                <div class="verification-section">
+                    <div class="verification-title">Verificación de Autenticidad</div>
+                    <div class="qr-code">
+                        CÓDIGO QR<br><br>
+                        Escanee para<br>verificar la<br>autenticidad del<br>diploma
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Descripción:</span>
-                        <span class="detail-value">{{ Str::limit($curso->descripcion, 100) }}</span>
+                    <div class="verification-text">Para verificar la autenticidad de este diploma, visite:</div>
+                    <div class="verification-url">www.academiagap.com/verificar</div>
+                </div>
+                
+                <!-- Información adicional -->
+                <div class="additional-info">
+                    <div class="additional-title">Descripción del Programa</div>
+                    <div class="additional-text">
+                        {{ $curso->descripcion ?: 'Este programa de formación profesional ha sido diseñado para proporcionar conocimientos teóricos y prácticos especializados, desarrollando competencias profesionales que permiten a los participantes desempeñarse eficazmente en su área de especialización. El curso incluye evaluaciones continuas, proyectos prácticos y una evaluación final que garantiza la adquisición de los conocimientos y habilidades necesarias para la certificación.' }}
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Horas:</span>
-                        <span class="detail-value">{{ \Carbon\Carbon::parse($curso->fechaInicio)->diffInDays($curso->fechaFin) * 8 }} horas</span>
+                </div>
+                
+                <!-- Footer -->
+                <div class="diploma-footer">
+                    <div class="footer-left">
+                        <div class="footer-text">Este documento es oficial y tiene validez legal</div>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Culminado:</span>
-                        <span class="detail-value">Sí</span>
+                    <div class="footer-right">
+                        <div class="footer-text">Academia GAP - Centro de Formación Profesional</div>
                     </div>
                 </div>
             </div>
             
-            <!-- Verificación -->
-            <div class="verification-section">
-                <div class="qr-code">
-                    QR CODE<br>
-                    {{ $curso->id }}-{{ date('Ymd') }}
-                </div>
-                <div class="verification-text">Verificar autenticidad en:</div>
-                <div class="verification-url">www.academiagap.com/verificar</div>
+            <!-- Número de diploma -->
+            <div class="diploma-number">
+                Diploma N°: {{ str_pad($curso->id, 4, '0', STR_PAD_LEFT) }}-{{ date('Y') }}
             </div>
             
-            <!-- Información adicional -->
-            <div class="additional-info">
-                <div class="additional-title">Notas Importantes</div>
-                <div class="additional-text">
-                    Este diploma es un documento oficial que certifica la participación y finalización exitosa del curso. 
-                    Para verificar su autenticidad, escanee el código QR o visite nuestra página web. 
-                    Este documento no tiene validez legal sin la firma correspondiente del director académico.
-                </div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="diploma-footer">
-                <div class="footer-left">
-                    <div class="footer-text">Documento generado automáticamente</div>
-                    <div class="footer-text">ID: {{ $curso->id }}-{{ date('YmdHis') }}</div>
-                </div>
-                <div class="footer-right">
-                    <div class="footer-text">Página 2 de 2</div>
-                    <div class="footer-text">{{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</div>
-                </div>
+            <!-- Fecha del diploma -->
+            <div class="diploma-date">
+                Emitido el {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </div>
         </div>
     </div>
