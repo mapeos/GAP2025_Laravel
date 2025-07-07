@@ -9,6 +9,7 @@ Genera diplomas PDF profesionales para los cursos completados usando **Browsersh
 - PHP 8.1+ con extensión **sodium** habilitada
 - Node.js y npm instalados
 - Composer instalado
+- Google Chrome instalado (para Browsershot)
 
 ## 🚀 Instalación Paso a Paso
 
@@ -22,7 +23,72 @@ composer install
 npm install
 ```
 
-### 1. Habilitar extensión sodium en PHP
+### 1. Configuración del Dockerfile (para contenedores Docker)
+
+Si estás usando Docker, asegúrate de que tu `Dockerfile` incluya estas dependencias:
+
+```dockerfile
+FROM php:8.3-fpm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libxss1 \
+    libxtst6 \
+    xdg-utils \
+    nodejs \
+    npm \
+    wget \
+    # Dependencias para sodium
+    libsodium-dev \
+    pkg-config
+
+# Install Google Chrome
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions including sodium
+RUN docker-php-ext-install zip pdo_mysql mbstring exif pcntl bcmath gd xml pcntl
+RUN docker-php-ext-install sodium
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+```
+
+### 2. Habilitar extensión sodium en PHP
+
+**En Docker (automático con el Dockerfile anterior):**
+```bash
+# La extensión sodium se instala automáticamente
+# Verificar que esté habilitada dentro del contenedor:
+docker-compose exec www php -m | grep sodium
+```
 
 **En Windows:**
 ```bash
@@ -46,7 +112,7 @@ sudo apt-get install php-sodium  # Ubuntu/Debian
 brew install php@8.1  # Mac con Homebrew
 ```
 
-### 2. Instalar Browsershot y Puppeteer
+### 3. Instalar Browsershot y Puppeteer
 
 ```bash
 # En la raíz del proyecto Laravel
@@ -56,7 +122,7 @@ npm install puppeteer --save
 
 **Nota:** Si ya hiciste `npm install` en el paso anterior, Puppeteer ya estará instalado.
 
-### 3. Verificar instalación
+### 4. Verificar instalación
 
 ```bash
 # Probar que todo funciona
@@ -112,44 +178,81 @@ Editar archivos en `resources/views/admin/cursos/diplomas/`
 
 ### Error: "Extensión sodium no disponible"
 ```bash
-# Verificar que esté habilitada
-php -m | grep sodium
+# En Docker, verificar que esté habilitada:
+docker-compose exec www php -m | grep sodium
 
-# Si no aparece, habilitar en php.ini
-extension=sodium
+# Si no aparece, asegúrate de que el Dockerfile incluya:
+RUN apt-get install -y libsodium-dev pkg-config
+RUN docker-php-ext-install sodium
+
+# En Windows:
+php -m | findstr sodium
+# Si no aparece, editar C:\php\php.ini y descomentar: extension=sodium
+
+# En Linux/Mac:
+php -m | grep sodium
+# Si no aparece: sudo apt-get install php-sodium
 ```
 
 ### Error: "Chrome no encontrado"
 ```bash
-# En Ubuntu/Debian
-sudo apt update && sudo apt install google-chrome-stable
+# En Docker, verificar que Chrome esté instalado:
+docker-compose exec www google-chrome --version
 
-# En Docker, agregar al Dockerfile:
-RUN apt-get update && apt-get install -y google-chrome-stable
+# Si no está instalado, asegúrate de que el Dockerfile incluya:
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable
+
+# En Ubuntu/Debian local:
+sudo apt update && sudo apt install google-chrome-stable
 ```
 
 ### Error: "Node.js no encontrado"
 ```bash
-# Instalar Node.js
+# En Docker, verificar que Node.js esté instalado:
+docker-compose exec www node --version
+docker-compose exec www npm --version
+
+# Si no está instalado, asegúrate de que el Dockerfile incluya:
+RUN apt-get install -y nodejs npm
+
+# En Ubuntu/Debian local:
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt-get install -y nodejs
-
-# Verificar
-node --version
-npm --version
 ```
 
 ### Error: "Timeout al generar PDF"
 - Aumentar timeout en `config/browsershot.php`
 - Verificar recursos del servidor
 - Usar caché para mejorar rendimiento
+- En Docker, verificar que el contenedor tenga suficientes recursos asignados
 
 ### Error: "PDF descargado está dañado"
 - Verificar que Chrome esté instalado en el contenedor Docker
-- Ejecutar el comando de prueba: `docker exec alumnos-gap-app php artisan diploma:generate 1`
+- Ejecutar el comando de prueba: `docker-compose exec www php artisan diploma:generate 1`
 - Verificar que el archivo se genera correctamente en `storage/app/diplomas/`
 - Si el comando funciona pero la descarga web no, probar la ruta de prueba: `/admin/cursos/1/diploma/test`
 - Verificar logs en `storage/logs/laravel.log`
+
+### Error: "Composer dependencies not found"
+```bash
+# En Docker:
+docker-compose exec www composer install
+
+# En local:
+composer install
+```
+
+### Error: "npm dependencies not found"
+```bash
+# En Docker:
+docker-compose exec www npm install
+
+# En local:
+npm install
+```
 
 ## 📁 Archivos Importantes
 
