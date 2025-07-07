@@ -52,19 +52,13 @@ function initializeCalendar() {
             meridiem: false
         },
         dateClick: handleDateClick,
+        select: handleDateClick,
         eventDisplay: 'block',
         eventDidMount: function(info) {
             const event = info.event;
             const tooltip = `${event.title}\n${event.extendedProps.descripcion || ''}\n${new Date(event.start).toLocaleString('es-ES')}`;
             info.el.title = tooltip;
         },
-        viewDidMount: function(info) {
-            if (info.view.type === 'timeGridDay') {
-                addBackToMonthButton();
-            } else {
-                removeBackToMonthButton();
-            }
-        }
     });
 
     calendar.render();
@@ -168,8 +162,23 @@ function loadEventosAjax() {
 
 // Manejar clic en fecha (día)
 function handleDateClick(info) {
-    // Cambiar a vista de día cuando se hace clic en una fecha
-    calendar.changeView('timeGridDay', info.dateStr);
+    //prevenimos el comportamiento default
+    info.jsEvent.preventDefault();
+
+    // si estamos en la vista cambiamos a la vista dia al hacer click en una fecha.
+    if (calendar.view.type === 'dayGridMonth') {
+        calendar.changeView ('timeGridDay', info.dateStr);
+        return;
+    }
+
+    //crear eventos al hacer click en los espacios de hora
+    const modal = document.getElementById('crearEventoModal');
+    if (modal) {
+        document.getElementById('fecha_inicio').value = info.start.toISOString().slice(0, 16);
+        document.getElementById('fecha_fin').value = info.end.toISOString().slice(0, 16);
+        new bootstrap.Modal(modal).show();
+    }
+
 }
 
 // Manejar clic en evento
@@ -292,6 +301,9 @@ function handleEventClick(info) {
 // Manejar arrastre de evento
 function handleEventDrop(info) {
     const event = info.event;
+        if (!confirm('¿Estás seguro de que quieres mover de fecha el evento?')) {
+        return; // El usuario canceló la operación
+    }
 
     updateEventoAjax(event.id, {
         fecha_inicio: event.start.toISOString(),
@@ -312,6 +324,9 @@ function handleEventDrop(info) {
 // Manejar el estirar los eventos
 function handleEventResize(info) {
     const event = info.event;
+        if (!confirm('¿Estás seguro de que quieres modificar las horas del evento?')) {
+        return; // El usuario canceló la operación
+    }
 
     updateEventoAjax(event.id, {
         fecha_inicio: event.start.toISOString(),
@@ -802,34 +817,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Agregar botón para volver a vista de mes
-function addBackToMonthButton() {
-    // Remover botón existente si hay
-    removeBackToMonthButton();
-
-    const toolbar = document.querySelector('.fc-toolbar');
-    if (toolbar) {
-        const backButton = document.createElement('button');
-        backButton.className = 'btn btn-secondary btn-sm ms-2';
-        backButton.innerHTML = '<i class="ri-calendar-line"></i> Ver mes';
-        backButton.onclick = function() {
-            calendar.changeView('dayGridMonth');
-        };
-
-        const rightSection = toolbar.querySelector('.fc-toolbar-chunk:last-child');
-        if (rightSection) {
-            rightSection.appendChild(backButton);
-        }
-    }
-}
-
-// Remover botón de volver a mes
-function removeBackToMonthButton() {
-    const backButton = document.querySelector('.fc-toolbar .btn-secondary');
-    if (backButton && backButton.innerHTML.includes('Ver mes')) {
-        backButton.remove();
-    }
-}
 
 // Función para alternar entre vista de calendario y agenda
 function toggleAgendaView() {

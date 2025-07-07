@@ -208,8 +208,11 @@
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     padding: 30px;
     min-height: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
@@ -218,6 +221,7 @@
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
+    padding: 20px 0;
 }
 
 .diploma-view.active {
@@ -230,8 +234,9 @@
     border-radius: 15px;
     overflow: hidden;
     transform: scale(0.8);
-    transform-origin: center;
+    transform-origin: top center;
     transition: transform 0.3s ease;
+    margin: 0 auto;
 }
 
 .diploma-view .diploma:hover {

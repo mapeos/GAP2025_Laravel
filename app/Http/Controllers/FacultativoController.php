@@ -73,16 +73,7 @@ class FacultativoController extends Controller
         return view('facultativo.cita');
     }
     
-    public function newCita()
-    {
-        // Obtener datos para el modal de citas médicas
-        $pacientes = User::role('Paciente')->get(); // Pacientes (usuarios con rol Paciente)
-        $facultativos = Facultativo::with(['user', 'especialidad'])->activos()->get();
-        $especialidades = EspecialidadMedica::activas()->get();
-        $tratamientos = TratamientoMedico::activos()->with('especialidad')->get();
-        
-        return view('facultativo.nuevaCita', compact('pacientes', 'facultativos', 'especialidades', 'tratamientos'));
-    }
+
     
     public function citasConfirmadas()
     {
@@ -164,8 +155,125 @@ class FacultativoController extends Controller
         $especialidades = EspecialidadMedica::activas()->get();
         return view('facultativo.nuevoTratamiento', compact('especialidades'));
     }
-    public function editTratamiento()
+    public function editTratamiento($id)
     {
-        return view('facultativo.editTratamiento');
+        $tratamiento = TratamientoMedico::with('especialidad')->findOrFail($id);
+        $especialidades = EspecialidadMedica::activas()->get();
+        return view('facultativo.editTratamiento', compact('tratamiento', 'especialidades'));
+    }
+    
+    public function editCita($id)
+    {
+        $cita = SolicitudCita::with(['alumno', 'especialidad', 'tratamiento', 'facultativo.user'])->findOrFail($id);
+        $pacientes = User::role('Paciente')->get();
+        $facultativos = Facultativo::with(['user', 'especialidad'])->activos()->get();
+        $especialidades = EspecialidadMedica::activas()->get();
+        $tratamientos = TratamientoMedico::activos()->with('especialidad')->get();
+        
+        return view('facultativo.editCita', compact('cita', 'pacientes', 'facultativos', 'especialidades', 'tratamientos'));
+    }
+    
+    public function storeTratamiento(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'especialidad_id' => 'required|exists:especialidades_medicas,id',
+            'duracion_minutos' => 'required|integer|min:1',
+            'precio' => 'required|numeric|min:0',
+        ]);
+        
+        TratamientoMedico::create($request->all());
+        
+        return redirect()->route('facultativo.tratamientos')->with('success', 'Tratamiento creado exitosamente.');
+    }
+    
+    public function updateTratamiento(Request $request, $id)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'especialidad_id' => 'required|exists:especialidades_medicas,id',
+            'duracion_minutos' => 'required|integer|min:1',
+            'precio' => 'required|numeric|min:0',
+        ]);
+        
+        $tratamiento = TratamientoMedico::findOrFail($id);
+        $tratamiento->update($request->all());
+        
+        return redirect()->route('facultativo.tratamientos')->with('success', 'Tratamiento actualizado exitosamente.');
+    }
+    
+    public function destroyTratamiento($id)
+    {
+        $tratamiento = TratamientoMedico::findOrFail($id);
+        $tratamiento->delete();
+        
+        return redirect()->route('facultativo.tratamientos')->with('success', 'Tratamiento eliminado exitosamente.');
+    }
+    
+    public function storeCita(Request $request)
+    {
+        $request->validate([
+            'alumno_id' => 'required|exists:users,id',
+            'facultativo_id' => 'required|exists:facultativos,id',
+            'especialidad_id' => 'required|exists:especialidades_medicas,id',
+            'tratamiento_id' => 'nullable|exists:tratamientos_medicos,id',
+            'fecha_propuesta' => 'required|date',
+            'hora_propuesta' => 'required|date_format:H:i',
+            'motivo' => 'required|string',
+            'estado' => 'required|in:pendiente,confirmada,cancelada',
+        ]);
+        
+        // Combinar fecha y hora
+        $fechaHora = $request->fecha_propuesta . ' ' . $request->hora_propuesta;
+        
+        // Validar que la fecha y hora combinada sea futura
+        $fechaCompleta = \Carbon\Carbon::parse($fechaHora);
+        if ($fechaCompleta->isPast()) {
+            return back()->withErrors(['fecha_propuesta' => 'La fecha y hora de la cita debe ser futura.'])->withInput();
+        }
+        
+        SolicitudCita::create([
+            'alumno_id' => $request->alumno_id,
+            'facultativo_id' => $request->facultativo_id,
+            'especialidad_id' => $request->especialidad_id,
+            'tratamiento_id' => $request->tratamiento_id,
+            'fecha_propuesta' => $fechaHora,
+            'motivo' => $request->motivo,
+            'estado' => $request->estado,
+            'tipo_sistema' => 'medico',
+        ]);
+        
+        return redirect()->route('facultativo.citas')->with('success', 'Cita creada exitosamente.');
+    }
+    
+    public function updateCita(Request $request, $id)
+    {
+        $request->validate([
+            'alumno_id' => 'required|exists:users,id',
+            'facultativo_id' => 'required|exists:facultativos,id',
+            'especialidad_id' => 'required|exists:especialidades_medicas,id',
+            'tratamiento_id' => 'nullable|exists:tratamientos_medicos,id',
+            'fecha_propuesta' => 'required|date',
+            'hora_propuesta' => 'required|date_format:H:i',
+            'motivo' => 'required|string',
+            'estado' => 'required|in:pendiente,confirmada,cancelada',
+        ]);
+        
+        $cita = SolicitudCita::findOrFail($id);
+        $fechaHora = $request->fecha_propuesta . ' ' . $request->hora_propuesta;
+        
+        $cita->update([
+            'alumno_id' => $request->alumno_id,
+            'facultativo_id' => $request->facultativo_id,
+            'especialidad_id' => $request->especialidad_id,
+            'tratamiento_id' => $request->tratamiento_id,
+            'fecha_propuesta' => $fechaHora,
+            'motivo' => $request->motivo,
+            'estado' => $request->estado,
+        ]);
+        
+        return redirect()->route('facultativo.citas')->with('success', 'Cita actualizada exitosamente.');
     }
 }
