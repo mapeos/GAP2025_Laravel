@@ -1114,12 +1114,18 @@ RUN apt-get update && apt-get install -y \
     libsodium-dev \
     pkg-config
 
+# Instalar solamente una de las dos opciones: Chromium o Chrome
 # Install Google Chrome
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
+# version con chromium
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-freefont-ttf \
+    --no-install-recommends
 
 # Install PHP extensions including sodium
 RUN docker-php-ext-install zip pdo_mysql mbstring exif pcntl bcmath gd xml pcntl
