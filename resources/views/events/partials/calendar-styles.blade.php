@@ -221,4 +221,27 @@
         font-weight: bold;
         color: #0d6efd;
     }
+    /* Estilos para días desplegables en la agenda */
+    .day-header {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .day-header:hover {
+        background-color: #e2e3e5;
+    }
+
+    .day-events {
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+    }
+
+    .day-events.collapsed {
+        max-height: 0;
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s;
+    }
 </style>

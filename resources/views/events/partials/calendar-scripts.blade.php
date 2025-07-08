@@ -382,76 +382,7 @@ function updateEventoAjax(eventoId, data) {
     });
 }
 
-function toggleAgendaView() {
-    const calendarView = document.getElementById('calendar');
-    const agendaView = document.getElementById('agendaView');
-    const btnAgendaView = document.getElementById('btnAgendaView');
 
-    if (currentView === 'calendar') {
-        calendarView.classList.add('d-none');
-        agendaView.classList.remove('d-none');
-        btnAgendaView.innerHTML = '<i class="ri-calendar-line"></i> Ver calendario';
-        currentView = 'agenda';
-        renderAgendaView();
-    } else {
-        calendarView.classList.remove('d-none');
-        agendaView.classList.add('d-none');
-        btnAgendaView.innerHTML = '<i class="ri-list-check-line"></i> Ver agenda';
-        currentView = 'calendar';
-    }
-}
-
-// Renderizar vista de agenda
-function renderAgendaView() {
-    const agendaList = document.getElementById('agendaList');
-    if (!agendaList) return;
-
-    agendaList.innerHTML = '';
-
-    // Agrupar eventos por fecha
-    const eventosPorFecha = {};
-    eventos.forEach(evento => {
-        const fecha = new Date(evento.start).toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        if (!eventosPorFecha[fecha]) {
-            eventosPorFecha[fecha] = [];
-        }
-        eventosPorFecha[fecha].push(evento);
-    });
-
-    // Renderizar eventos agrupados
-    Object.keys(eventosPorFecha).sort().forEach(fecha => {
-        const fechaDiv = document.createElement('div');
-        fechaDiv.className = 'list-group-item list-group-item-secondary fw-bold';
-        fechaDiv.textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
-        agendaList.appendChild(fechaDiv);
-
-        eventosPorFecha[fecha].forEach(evento => {
-            const eventoDiv = document.createElement('div');
-            eventoDiv.className = 'list-group-item d-flex justify-content-between align-items-start';
-
-            // Verificar si extendedProps existe antes de acceder a descripcion
-            const descripcion = evento.extendedProps && evento.extendedProps.descripcion ? evento.extendedProps.descripcion : '';
-
-            eventoDiv.innerHTML = `
-                <div class="ms-2 me-auto">
-                    <div class="fw-bold">${evento.title}</div>
-                    <small class="text-muted">${descripcion}</small>
-                </div>
-                <span class="badge bg-primary rounded-pill" style="background-color: ${evento.color || '#007bff'} !important;">
-                    ${new Date(evento.start).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
-                </span>
-            `;
-            eventoDiv.addEventListener('click', () => handleEventClick({event: evento}));
-            agendaList.appendChild(eventoDiv);
-        });
-    });
-}
 
 // Modales
 
@@ -876,7 +807,16 @@ function renderAgendaView() {
         eventsByDate[dateKey].push(evento);
     });
 
-    // Crear elementos para cada fecha y sus eventos
+    // Mensaje si no hay eventos
+    if (Object.keys(eventsByDate).length === 0) {
+        const noEvents = document.createElement('div');
+        noEvents.className = 'list-group-item text-center text-muted';
+        noEvents.innerHTML = '<i class="ri-calendar-line fs-1 mb-2"></i><p>No hay eventos programados</p>';
+        agendaList.appendChild(noEvents);
+        return;
+    }
+
+    // elementos para cada fecha y sus eventos
     Object.keys(eventsByDate).sort().forEach(dateKey => {
         const date = new Date(dateKey);
         const formattedDate = date.toLocaleDateString('es-ES', {
@@ -886,13 +826,26 @@ function renderAgendaView() {
             day: 'numeric'
         });
 
-        // Crear encabezado de fecha
-        const dateHeader = document.createElement('div');
-        dateHeader.className = 'list-group-item list-group-item-secondary';
-        dateHeader.innerHTML = `<strong>${formattedDate}</strong>`;
-        agendaList.appendChild(dateHeader);
+        // contenedor para el día
+        const dayContainer = document.createElement('div');
+        dayContainer.className = 'day-container';
+        agendaList.appendChild(dayContainer);
 
-        // Agregar eventos de esta fecha
+        // encabezado de fecha
+        const dateHeader = document.createElement('div');
+        dateHeader.className = 'list-group-item list-group-item-secondary day-header d-flex justify-content-between align-items-center';
+        dateHeader.innerHTML = `
+            <strong>${formattedDate}</strong>
+            <i class="ri-arrow-down-s-line toggle-icon"></i>
+        `;
+        dayContainer.appendChild(dateHeader);
+
+        // contenedor para los eventos del día
+        const eventsContainer = document.createElement('div');
+        eventsContainer.className = 'day-events collapsed'; // Agregar 'collapsed' aquí para que esté colapsado por defecto
+        dayContainer.appendChild(eventsContainer);
+
+        // Agregar eventos de esta fecha al contenedor
         eventsByDate[dateKey].forEach(evento => {
             const eventItem = document.createElement('div');
             eventItem.className = 'list-group-item list-group-item-action';
@@ -921,27 +874,32 @@ function renderAgendaView() {
                 </small>
             `;
 
-            // Agregar evento click para ver detalles
+            // click para ver detalles
             eventItem.addEventListener('click', function() {
-                // Puedes implementar aquí la lógica para mostrar detalles del evento
-                // Por ejemplo, abrir el modal de edición o una página de detalles
                 const eventId = evento.id;
                 if (eventId) {
                     window.location.href = `/eventos/${eventId}`;
                 }
             });
 
-            agendaList.appendChild(eventItem);
+            eventsContainer.appendChild(eventItem);
         });
-    });
 
-    // Mensaje si no hay eventos
-    if (Object.keys(eventsByDate).length === 0) {
-        const noEvents = document.createElement('div');
-        noEvents.className = 'list-group-item text-center text-muted';
-        noEvents.innerHTML = '<i class="ri-calendar-line fs-1 mb-2"></i><p>No hay eventos programados</p>';
-        agendaList.appendChild(noEvents);
-    }
+        // funcionalidad para expandir/colapsar
+        dateHeader.addEventListener('click', function() {
+            eventsContainer.classList.toggle('collapsed');
+            const icon = dateHeader.querySelector('.toggle-icon');
+            if (icon) {
+                icon.style.transform = eventsContainer.classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0)';
+            }
+        });
+
+        // Establecer la rotación inicial del icono (colapsado por defecto)
+        const icon = dateHeader.querySelector('.toggle-icon');
+        if (icon) {
+            icon.style.transform = 'rotate(-90deg)';
+        }
+    });
 }
 
 function deleteEvento(event) {
