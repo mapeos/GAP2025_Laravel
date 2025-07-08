@@ -18,7 +18,7 @@
                         <div class="flex-grow-1 ms-3">
                             <h6 class="card-title mb-1">Citas de Hoy</h6>
                             <h3 class="mb-0">{{ $solicitudesPendientes ?? 0 }}</h3>
-                            <a href="/facultativo/citas" class="text-white text-decoration-underline small">Ver citas</a>
+                            <a href="{{ route('facultativo.citas') }}" class="text-white text-decoration-underline small">Ver citas</a>
                         </div>
                     </div>
                 </div>
@@ -34,7 +34,7 @@
                         <div class="flex-grow-1 ms-3">
                             <h6 class="card-title mb-1">Citas a confirmar</h6>
                             <h3 class="mb-0">{{ $eventosMes ?? 0 }}</h3>
-                            <a href="/facultativo/citas/pendientes" class="text-white text-decoration-underline small">Ver citas a confirmar</a>
+                            <a href="{{ route('facultativo.citas.pendientes') }}" class="text-white text-decoration-underline small">Ver citas a confirmar</a>
                         </div>
                     </div>
                 </div>
@@ -51,7 +51,7 @@
                             <h6 class="card-title mb-1 ">Siguiente cita</h6>
                             <h6 class="mb-0">nombre del paciente</h6>
                             <!-- link a cita siguiente -->
-                            <a href="/facultativo/pacientes" class="text-white text-decoration-underline small">Ver siguiente cita</a>
+                            <a href="{{ route('facultativo.pacientes') }}" class="text-white text-decoration-underline small">Ver siguiente cita</a>
                         </div>
                     </div>
                 </div>
@@ -90,7 +90,7 @@
                             <span class="badge bg-warning">pendiente</span>
                         </td>
                         <td class="text-center align-middle">
-                            <a href="{{ url('/facultativo/cita/'.$cita->id) }}" class="btn btn-primary btn-sm mr-2">
+                            <a href="{{ route('facultativo.cita', $cita->id) }}" class="btn btn-primary btn-sm mr-2">
                                 <i class="ri-search-line"></i> Detalles
                             </a>
                             <button class="btn btn-success btn-sm mr-2">
@@ -109,7 +109,7 @@
                 </tbody>
             </table>
         </div>
-        <a class="btn btn-warning mt-3" href="/facultativo/citas/pendientes">Ver más</a>
+                        <a class="btn btn-warning mt-3" href="{{ route('facultativo.citas.pendientes') }}">Ver más</a>
     </div>
 </div>
 @endsection

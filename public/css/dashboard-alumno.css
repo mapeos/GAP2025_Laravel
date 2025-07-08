@@ -1,0 +1,217 @@
+body {
+    background: linear-gradient(135deg, #f0f4f9 0%, #e9f7fa 100%) !important;
+    min-height: 100vh;
+}
+
+/* Estilos modernos para el dashboard del alumno */
+.dashboard-alumno-bg {
+    background: transparent;
+    min-height: 100vh;
+    padding-bottom: 2rem;
+}
+.card-modern {
+    border: none;
+    border-radius: 1.2rem;
+    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.07);
+    background: #fff;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    min-height: 220px;
+}
+.card-modern:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.10);
+    z-index: 2;
+}
+.card-modern .card-header {
+    border: none;
+    background: transparent;
+    padding-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+.card-modern .icon-bg {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-right: 0.7rem;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7f0ff 100%);
+    color: #3b82f6;
+}
+.card-modern .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 0;
+}
+.card-modern .card-body {
+    padding-top: 0.7rem;
+    padding-bottom: 1.2rem;
+}
+.card-modern ul {
+    padding-left: 0;
+    list-style: none;
+}
+.card-modern li {
+    margin-bottom: 1.1rem;
+}
+.card-modern .btn {
+    border-radius: 0.7rem;
+    font-weight: 500;
+}
+.card-modern .badge {
+    font-size: 0.95em;
+    border-radius: 0.7rem;
+    padding: 0.3em 0.8em;
+}
+.card-modern .display-4 {
+    font-size: 2.5rem;
+    opacity: 0.15;
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    pointer-events: none;
+}
+.card-modern .list-group-item {
+    border: none;
+    background: transparent;
+    padding-left: 0;
+    padding-right: 0;
+}
+.card-modern .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #6c757d;
+}
+.card-modern .alert-welcome {
+    background: linear-gradient(90deg, #e0e7ff 0%, #c7f0ff 100%);
+    border: none;
+    color: #222;
+    border-radius: 1.2rem;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.04);
+}
+
+/* Grid y tarjetas principales */
+.card-main {
+    min-height: 380px;
+    grid-row: span 2;
+    grid-column: span 1;
+}
+.card-chat {
+    min-height: 380px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+.dashboard-grid-alumno {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr;
+    grid-template-rows: 1.2fr 0.8fr 0.8fr;
+    gap: 2.2rem 2.2rem;
+    padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.dashboard-card-main {
+    grid-column: 1 / 2;
+    grid-row: 1 / span 2;
+}
+.dashboard-card-chat {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
+}
+.dashboard-card-perfil {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+}
+.dashboard-card-agenda {
+    grid-column: 2 / 3;
+    grid-row: 3 / 4;
+}
+.dashboard-card-cursos {
+    grid-column: 1 / 2;
+    grid-row: 4 / 5;
+}
+.dashboard-card-temarios {
+    grid-column: 2 / 3;
+    grid-row: 4 / 5;
+}
+
+@media (min-width: 992px) {
+    .dashboard-alumno-bg .container-fluid > .row:first-child {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        grid-template-rows: 1fr;
+        gap: 2rem;
+    }
+    .dashboard-alumno-bg .container-fluid > .row:first-child > .col-lg-6 {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .dashboard-alumno-bg .container-fluid > .row:first-child > .col-lg-6:first-child {
+        grid-row: 1 / span 1;
+        grid-column: 1 / 2;
+    }
+    .dashboard-alumno-bg .container-fluid > .row:first-child > .col-lg-6:last-child {
+        grid-row: 1 / span 1;
+        grid-column: 2 / 3;
+    }
+}
+
+/* Tarjetas secundarias */
+@media (min-width: 992px) {
+    .dashboard-alumno-bg .row.mt-1 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+    }
+    .dashboard-alumno-bg .row.mt-1 > div {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+/* Ajustes para responsividad */
+@media (max-width: 991px) {
+    .dashboard-alumno-bg .container-fluid > .row {
+        display: flex;
+        flex-direction: column;
+    }
+    .dashboard-alumno-bg .row.mt-1 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .dashboard-alumno-bg .row.mt-1 > div {
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+}
+@media (max-width: 1200px) {
+    .dashboard-grid-alumno {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(6, auto);
+        gap: 1.5rem;
+        padding: 1.2rem;
+    }
+    .dashboard-card-main,
+    .dashboard-card-chat,
+    .dashboard-card-perfil,
+    .dashboard-card-agenda,
+    .dashboard-card-cursos,
+    .dashboard-card-temarios {
+        grid-column: 1 / 2 !important;
+        grid-row: auto !important;
+    }
+}

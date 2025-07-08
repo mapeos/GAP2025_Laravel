@@ -7,7 +7,7 @@
 @section('content')
 <div class="container">
     <h3 class="mb-4 text-success"><i class="fas fa-calendar-alt"></i> Tratamientos Médicos</h3>
-    <a href="/facultativo/tratamiento/new" class="btn btn-outline-success mt-3 mb-3"><i class="ri-add-line text-lg"></i> Nuevo Tratamiento</a>
+    <a href="{{ route('facultativo.tratamiento.new') }}" class="btn btn-outline-success mt-3 mb-3"><i class="ri-add-line text-lg"></i> Nuevo Tratamiento</a>
     <div class="card shadow-sm mb-5">
         <div class="card-body p-0">
             <table class="table table-hover mb-0 text-center align-middle table-bordered">
@@ -41,13 +41,13 @@
                             </td>
                             <td class="text-center align-middle">
                                 <div class="d-flex flex-column align-items-center gap-2">
-                                    <a href="/facultativo/tratamiento/{{ $tratamiento->id }}" class="btn btn-primary btn-sm w-100 mb-1">
+                                    <a href="{{ route('facultativo.tratamiento', $tratamiento->id) }}" class="btn btn-primary btn-sm w-100 mb-1">
                                         <i class="ri-search-line"></i> Detalles
                                     </a>
-                                    <a href="/facultativo/tratamiento/{{ $tratamiento->id }}/edit" class="btn btn-warning btn-sm w-100 mb-1">
+                                    <a href="{{ route('facultativo.tratamiento.edit', $tratamiento->id) }}" class="btn btn-warning btn-sm w-100 mb-1">
                                         <i class="ri-edit-line"></i> Editar
                                     </a>
-                                    <form action="/facultativo/tratamiento/{{ $tratamiento->id }}" method="POST" class="w-100">
+                                    <form action="{{ route('facultativo.tratamiento.destroy', $tratamiento->id) }}" method="POST" class="w-100">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-sm w-100">

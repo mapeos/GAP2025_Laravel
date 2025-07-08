@@ -5,16 +5,17 @@
 @section('title-sidebar', 'Dashboard Admin')
 @section('content')
 <div class="container py-4">
-    <a href="/facultativo/cita/new" class="btn btn-outline-success mb-3"><i class="ri-add-line text-lg"></i> Nueva cita</a>
-    <h3 class="mb-4 text-success flex items-center gap-2">
-        <i class="fas fa-calendar-alt"></i>
-        <span>Citas Médicas</span>
-    </h3>
-    
-    <!-- Botón para abrir modal de nueva cita -->
-    <button type="button" class="btn btn-outline-success mt-3 mb-3" data-bs-toggle="modal" data-bs-target="#solicitudCitaMedicaModal">
-        <i class="ri-add-line text-lg"></i> Nueva Cita Médica
-    </button>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-success flex items-center gap-2">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Citas Médicas</span>
+        </h3>
+        
+        <!-- Botón para abrir modal de nueva cita -->
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#solicitudCitaMedicaModal">
+            <i class="ri-add-line text-lg"></i> Nueva Cita Médica
+        </button>
+    </div>
     
     <!-- Tabla de todas las citas -->
     <div class="card shadow-sm mb-5">
@@ -69,7 +70,7 @@
                                     @endif
                                 </td>
                                 <td class="text-center align-middle">
-                                    <a href="/facultativo/cita/{{ $cita->id }}" class="btn btn-primary btn-sm me-1" title="Ver detalles">
+                                    <a href="{{ route('facultativo.cita', $cita->id) }}" class="btn btn-primary btn-sm me-1" title="Ver detalles">
                                         <i class="ri-search-line"></i>
                                     </a>
                                     @if($cita->estado === 'pendiente')
@@ -132,7 +133,7 @@
                                             onclick="rechazarCita({{ $cita->id }})">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
-                                    <a href="/facultativo/cita/{{ $cita->id }}" class="btn btn-primary btn-sm" title="Ver detalles">
+                                    <a href="{{ route('facultativo.cita', $cita->id) }}" class="btn btn-primary btn-sm" title="Ver detalles">
                                         <i class="ri-search-line"></i> Detalles
                                     </a>
                                 </td>

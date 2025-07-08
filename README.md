@@ -1036,6 +1036,165 @@ Parámetros query opcionales:
 ```
 ---
 
+## Diplomas para cursos
+Genera diplomas PDF profesionales para los cursos completados usando **Browsershot** y **Puppeteer**.
+
+## 📋 Requisitos Previos
+
+- PHP 8.1+ con extensión **sodium** habilitada
+- Node.js y npm instalados
+- Composer instalado
+
+## 🚀 Instalación Paso a Paso
+
+### Habilitar extensión sodium en PHP
+
+**En Windows:**
+```bash
+# Verificar si está habilitada
+php -m | findstr sodium
+
+# Si no aparece, editar C:\php\php.ini
+# Buscar la línea: ;extension=sodium
+# Quitar el punto y coma: extension=sodium
+# Reiniciar terminal
+```
+
+**En Linux/Mac:**
+```bash
+# Verificar si está habilitada
+php -m | grep sodium
+
+# Si no aparece, instalar:
+sudo apt-get install php-sodium  # Ubuntu/Debian
+# o
+brew install php@8.1  # Mac con Homebrew
+```
+
+### 1. Configuración del Dockerfile (para contenedores Docker)
+
+Si estás usando Docker, asegúrate de que tu `Dockerfile` incluya estas dependencias:
+
+```dockerfile
+FROM php:8.3-fpm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libxss1 \
+    libxtst6 \
+    xdg-utils \
+    nodejs \
+    npm \
+    wget \
+    # Dependencias para sodium
+    libsodium-dev \
+    pkg-config
+
+# Instalar solamente una de las dos opciones: Chromium o Chrome
+# Install Google Chrome
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+# version con chromium
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-freefont-ttf \
+    --no-install-recommends
+
+# Install PHP extensions including sodium
+RUN docker-php-ext-install zip pdo_mysql mbstring exif pcntl bcmath gd xml pcntl
+RUN docker-php-ext-install sodium
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+```
+
+### Habilitar extensión sodium en PHP
+
+**En Docker (automático con el Dockerfile anterior):**
+```bash
+# La extensión sodium se instala automáticamente
+# Verificar que esté habilitada dentro del contenedor:
+docker-compose exec www php -m | grep sodium
+```
+
+### 2. Instalar Browsershot y Puppeteer
+
+```bash
+# En la raíz del proyecto Laravel
+composer require spatie/browsershot
+npm install puppeteer --save
+
+**Nota:** Si ya hiciste `npm install` en el paso anterior, Puppeteer ya estará instalado.
+```
+
+### 3. Verificar instalación
+
+```bash
+# Probar que todo funciona
+
+# Desde fuera del contenedor (en tu terminal local)
+docker exec alumnos-gap-app php artisan diploma:generate 1
+
+# O si estás dentro del contenedor
+php artisan diploma:generate 1
+```
+
+Si se genera un PDF, ¡todo está listo!
+
+## 🛠️ Uso Básico
+
+### Generar diploma para un curso
+
+```bash
+# Generar diploma para curso ID 1
+php artisan diploma:generate 1
+
+# El PDF se guarda en: storage/app/diplomas/
+```
+
+### Usar en el navegador
+
+1. Ve a la página del curso
+2. Haz clic en "Generar Diploma"
+3. Se descarga automáticamente
+
+## ⚙️ Configuración (Opcional)
+
+### Variables de entorno (.env)
+
+```env
+# Configuración de Browsershot
+BROWSERSHOT_CHROME_PATH=/usr/bin/google-chrome
+BROWSERSHOT_NODE_BINARY=/usr/bin/node
+BROWSERSHOT_NPM_BINARY=/usr/bin/npm
+
 ## Notas para el Frontend
 
 - Todas las respuestas están en formato JSON.

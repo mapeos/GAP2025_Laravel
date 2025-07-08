@@ -129,7 +129,7 @@
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Facultativo</span></li>
         <!-- citas Section -->
         <li class="nav-item">
-            <a class="nav-link" href="/facultativo">
+            <a class="nav-link" href="{{ route('facultativo.home') }}">
                 <i class="ri-home-line"></i> <span>Home</span>
             </a>
         </li>
@@ -140,35 +140,35 @@
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/citas">
+                    <a class="nav-link" href="{{ route('facultativo.citas') }}">
                         <i class="ri-calendar-todo-fill"></i><span>Lista de citas</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/cita/new">
-                        <i class="ri-sticky-note-add-line"></i></i><span>Nueva citas</span>
+                    <a class="nav-link" href="{{ route('facultativo.citas') }}">
+                        <i class="ri-sticky-note-add-line"></i></i><span>Nueva cita</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/citas/confirmadas">
+                    <a class="nav-link" href="{{ route('facultativo.citas.confirmadas') }}">
                         <i class="ri-calendar-check-line"></i> <span>Citas Confirmadas</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/citas/pendientes" target="_blank">
+                    <a class="nav-link" href="{{ route('facultativo.citas.pendientes') }}" target="_blank">
                         <i class="ri-calendar-schedule-line"></i> <span>Citas Pendientes</span>
                     </a>
             </ul>
         </li>
         <!-- PACIENTE Section -->
         <li class="nav-item">
-            <a class="nav-link" href="/facultativo/pacientes">
+            <a class="nav-link" href="{{ route('facultativo.pacientes') }}">
                 <i class="ri-team-line"></i> <span>Pacientes</span>
             </a>
         </li>
         <!-- Tratamientos Section -->
         <li class="nav-item">
-            <a class="nav-link" href="/facultativo/tratamientos">
+            <a class="nav-link" href="{{ route('facultativo.tratamientos') }}">
                 <i class="ri-capsule-line"></i> <span>Tratamientos</span>
             </a>
         </li>

@@ -36,9 +36,9 @@ $tratamientos = collect([
 @section('title', 'Editar Cita')
 @section('content')
 <div class="container-fluid">
-   <form class="space-y-4" method="POST" action="#">
-      @csrf
-      @method('PUT')
+   <form class="space-y-4" method="POST" action="{{ route('facultativo.cita.update', $cita->id) }}">
+        @method('PUT')
+        @csrf
       <style>
         input[type="text"], input[type="date"], input[type="datetime-local"], input[type="number"], textarea, select {
           width: 100% !important;

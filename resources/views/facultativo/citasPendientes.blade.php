@@ -35,7 +35,7 @@
                                 <span class="badge bg-warning">pendiente</span>
                             </td>
                             <td class="text-center align-middle">
-                                <a href="{{ url('/facultativo/cita/'.$cita->id) }}" class="btn btn-primary btn-sm mr-2">
+                                <a href="{{ route('facultativo.cita', $cita->id) }}" class="btn btn-primary btn-sm mr-2">
                                     <i class="ri-search-line"></i> Detalles
                                 </a>
                                 <button class="btn btn-success btn-sm mr-2">

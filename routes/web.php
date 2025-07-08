@@ -21,6 +21,7 @@ use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\SolicitudCitaController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AlumnoController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -139,8 +140,8 @@ Route::middleware(['auth'])->group(function () {
         
         // Rutas específicas deben ir ANTES que la ruta genérica {curso}
         Route::get('/{curso}/diploma', [CursoController::class, 'diploma'])->name('diploma');
-        Route::get('/{curso}/diploma/full', [CursoController::class, 'diplomaFull'])->name('diploma.full');
-        Route::get('/{curso}/diploma/download', [CursoController::class, 'downloadDiplomaImproved'])->name('diploma.download');
+Route::get('/{curso}/diploma/full', [CursoController::class, 'diplomaFull'])->name('diploma.full');
+Route::get('/{curso}/diploma/download', [CursoController::class, 'downloadDiploma'])->name('diploma.download');
         Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
         Route::delete('/{curso}/delete-temario', [CursoController::class, 'deleteTemario'])->name('delete-temario');
         Route::delete('/{curso}/delete-portada', [CursoController::class, 'deletePortada'])->name('delete-portada');
@@ -239,7 +240,7 @@ Route::put('admin/categorias/{id}/restore', [CategoriasController::class, 'resto
 Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('pendiente.home');
 // Rutas para el rol Alumno
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
-    Route::view('/alumno/home', 'alumno.home')->name('alumno.home');
+    Route::get('/alumno/home', [AlumnoController::class, 'home'])->name('alumno.home');
 });
 // Rutas para el rol Profesor
 Route::middleware(['auth', 'role:Profesor'])->group(function () {
@@ -419,11 +420,18 @@ Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->
 // Chat entre usuarios (alumnos y profesores)
 Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
     Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
-    Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
+    // Route::get('/{id}', ...) eliminada, todo se gestiona en index
     Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
     Route::get('/search/users', [\App\Http\Controllers\ChatController::class, 'searchUsers'])->name('searchUsers');
     Route::post('/hide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'hide'])->name('hide');
     Route::post('/unhide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'unhide'])->name('unhide');
+    Route::get('/{id}', function($id, \App\Application\Chat\GetMessagesBetweenUsers $getMessages, \App\Application\Chat\MarkMessagesAsRead $markAsRead) {
+        // Solo responder si es AJAX
+        if (!request()->ajax() && !request('ajax')) {
+            abort(404);
+        }
+        return app(\App\Http\Controllers\ChatController::class)->show($id, $getMessages, $markAsRead);
+    })->where('id', '[0-9]+');
 });
 
 // Rutas para Facultativo (médicos)
@@ -432,13 +440,26 @@ Route::middleware(['auth', 'role:Facultativo|Administrador'])->prefix('facultati
     Route::get('/citas', [FacultativoController::class, 'citas'])->name('citas');
     Route::get('/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas'])->name('citas.confirmadas');
     Route::get('/citas/pendientes', [FacultativoController::class, 'citasPendientes'])->name('citas.pendientes');
+    
+    // Rutas específicas de citas (deben ir antes que las rutas con parámetros)
+    Route::get('/cita/{id}/edit', [FacultativoController::class, 'editCita'])->name('cita.edit');
     Route::get('/cita/{id?}', [FacultativoController::class, 'cita'])->name('cita');
-    Route::get('/cita/new', [FacultativoController::class, 'newCita'])->name('cita.new');
+    
     Route::get('/pacientes', [FacultativoController::class, 'pacientes'])->name('pacientes');
     Route::get('/paciente', [FacultativoController::class, 'paciente'])->name('paciente');
     Route::get('/tratamientos', [FacultativoController::class, 'tratamientos'])->name('tratamientos');
-    Route::get('/tratamiento/{id}', [FacultativoController::class, 'tratamiento'])->name('tratamiento');
+    
+    // Rutas específicas de tratamientos (deben ir antes que las rutas con parámetros)
     Route::get('/tratamiento/new', [FacultativoController::class, 'newTratamiento'])->name('tratamiento.new');
+    Route::get('/tratamiento/{id}/edit', [FacultativoController::class, 'editTratamiento'])->name('tratamiento.edit');
+    Route::get('/tratamiento/{id}', [FacultativoController::class, 'tratamiento'])->name('tratamiento');
+    
+    // Rutas POST/PUT para formularios
+    Route::post('/tratamiento', [FacultativoController::class, 'storeTratamiento'])->name('tratamiento.store');
+    Route::put('/tratamiento/{id}', [FacultativoController::class, 'updateTratamiento'])->name('tratamiento.update');
+    Route::delete('/tratamiento/{id}', [FacultativoController::class, 'destroyTratamiento'])->name('tratamiento.destroy');
+    Route::post('/cita', [FacultativoController::class, 'storeCita'])->name('cita.store');
+    Route::put('/cita/{id}', [FacultativoController::class, 'updateCita'])->name('cita.update');
     
     // Ruta para actualizar estado de citas médicas
     Route::put('/citas/{solicitud}/actualizar-estado', [SolicitudCitaController::class, 'ActualizarEstado'])

@@ -36,31 +36,6 @@
         background-color: #0a58ca !important;
         border-color: #0a53be !important;
     }
-    /* Estilos para los manejadores de redimensionamiento */
-    .fc-event-resizable {
-        position: relative;
-    }
-    .fc-event-resizer {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 4px;
-        background-color: #fff;
-        border: 1px solid #0d6efd;
-        z-index: 4;
-    }
-    .fc-event-resizer-start {
-        top: 50%;
-        left: -4px;
-        margin-top: -4px;
-        cursor: w-resize;
-    }
-    .fc-event-resizer-end {
-        top: 50%;
-        right: -4px;
-        margin-top: -4px;
-        cursor: e-resize;
-    }
 
     /* Estilos para el indicador de carga */
     #calendar.loading {

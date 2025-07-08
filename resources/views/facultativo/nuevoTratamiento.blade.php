@@ -21,7 +21,7 @@ $especialidades = collect([
 @section('title', 'Nueva Cita')
 @section('content')
 <div class="container-fluid">
-   <form class="space-y-4" method="POST" action="#">
+   <form class="space-y-4" method="POST" action="{{ route('facultativo.tratamiento.store') }}">
       @csrf
       @if(isset($tratamiento))
         @method('PUT')
