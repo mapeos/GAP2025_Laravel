@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\Curso;
+use App\Models\Persona;
+use App\Models\Diploma;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Browsershot\Browsershot;
 
 class DiplomaService
@@ -24,45 +27,80 @@ class DiplomaService
         // HTML combinado
         $combinedHtml = $this->generarHtmlContenedor($frontHtml, $backHtml);
 
-        // HTML combinado con separación de páginas
-       /* $combinedHtml = '
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap");
-                * {
-                    box-sizing: border-box;
-                    margin: 0;
-                    padding: 0;
-                }
-                body { margin: 10 0; padding: 0; font-family: "Roboto", sans-serif; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                
-                @page { size: 210mm 297mm; margin: 0; }
-                .page-front { background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f1f3f4 100%); }
-                .page-back { background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f1f3f4 100%); }
-                .page {
-                border: 1px solid blue;
-                    width: 210mm;
-                    height: 297mm;
-                    page-break-after: always;
-                    page-break-inside: avoid;
-                    position: relative;
-                    overflow: hidden;
-                    margin: 0 auto;
-                }
-                .page:last-child { page-break-after: avoid; }
-            </style>
-        </head>
-        <body>
-            <div class="page page-front">' . $frontHtml . '</div>
-            <div class="page page-back">' . $backHtml . '</div>
-        </body>
-        </html>'; */
+        return $this->generarPdfDesdeHtml($combinedHtml);
+    }
 
+    /**
+     * Genera el PDF del diploma para un participante específico
+     * @param Curso $curso
+     * @param Persona $persona
+     * @return string (PDF binario)
+     * @throws \Exception
+     */
+    public function generarDiplomaPdfParaParticipante(Curso $curso, Persona $persona): string
+    {
+        // Renderizar ambas caras con datos del participante
+        $frontHtml = View::make('admin.cursos.diplomas.template2', compact('curso', 'persona'))->render();
+        $backHtml = View::make('admin.cursos.diplomas.template-back', compact('curso', 'persona'))->render();
+
+        // HTML combinado
+        $combinedHtml = $this->generarHtmlContenedor($frontHtml, $backHtml);
+
+        return $this->generarPdfDesdeHtml($combinedHtml);
+    }
+
+    /**
+     * Genera y guarda el diploma para un participante específico
+     * @param Curso $curso
+     * @param Persona $persona
+     * @return Diploma
+     * @throws \Exception
+     */
+    public function generarYGuardarDiploma(Curso $curso, Persona $persona): Diploma
+    {
+        // Verificar si ya existe un diploma para este participante en este curso
+        if (Diploma::existeParaParticipante($curso->id, $persona->id)) {
+            throw new \Exception('Ya existe un diploma para este participante en este curso');
+        }
+
+        // Generar el PDF
+        $pdfContent = $this->generarDiplomaPdfParaParticipante($curso, $persona);
+
+        // Crear el registro del diploma
+        $diploma = new Diploma();
+        $diploma->curso_id = $curso->id;
+        $diploma->persona_id = $persona->id;
+        $diploma->fecha_expedicion = now()->toDateString();
+        
+        // Generar nombre único para el archivo
+        $nombreArchivo = $diploma->generarNombreArchivo();
+        $diploma->path_pdf = 'diplomas/' . $nombreArchivo;
+        
+        // Guardar el PDF en storage
+        Storage::disk('public')->put($diploma->path_pdf, $pdfContent);
+        
+        // Guardar el registro en la base de datos
+        $diploma->save();
+
+        Log::info("Diploma generado para participante {$persona->id} en curso {$curso->id}", [
+            'curso_id' => $curso->id,
+            'persona_id' => $persona->id,
+            'archivo' => $diploma->path_pdf
+        ]);
+
+        return $diploma;
+    }
+
+    /**
+     * Genera el PDF desde HTML usando Browsershot
+     * @param string $html
+     * @return string (PDF binario)
+     * @throws \Exception
+     */
+    private function generarPdfDesdeHtml(string $html): string
+    {
         // Configurar Browsershot
-        $browsershot = Browsershot::html($combinedHtml)
+        $browsershot = Browsershot::html($html)
             ->format('A4')
             ->landscape()
             ->margins(0, 0, 0, 0)
@@ -98,8 +136,6 @@ class DiplomaService
 
         return $pdf;
     }
-
-
 
     /**
      * Envuelve ambas páginas HTML en una estructura común imprimible.

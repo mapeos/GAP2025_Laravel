@@ -140,8 +140,19 @@ Route::middleware(['auth'])->group(function () {
         
         // Rutas específicas deben ir ANTES que la ruta genérica {curso}
         Route::get('/{curso}/diploma', [CursoController::class, 'diploma'])->name('diploma');
-Route::get('/{curso}/diploma/full', [CursoController::class, 'diplomaFull'])->name('diploma.full');
-Route::get('/{curso}/diploma/download', [CursoController::class, 'downloadDiploma'])->name('diploma.download');
+        Route::get('/{curso}/diploma/full', [CursoController::class, 'diplomaFull'])->name('diploma.full');
+        Route::get('/{curso}/diploma/download', [CursoController::class, 'downloadDiploma'])->name('diploma.download');
+        
+        // Nuevas rutas para diplomas por participante
+        Route::post('/{curso}/diploma/participante/{persona}', [CursoController::class, 'generarDiplomaParticipante'])->name('diploma.participante.generar');
+        Route::get('/{curso}/diploma/participante/{persona}/descargar', [CursoController::class, 'descargarDiplomaParticipante'])->name('diploma.participante.descargar');
+        Route::get('/{curso}/diploma/participante/{persona}/ver', [CursoController::class, 'verDiplomaParticipante'])->name('diploma.participante.ver');
+        
+        // Rutas para gestión masiva de diplomas
+        Route::post('/{curso}/diplomas/generar-todos', [CursoController::class, 'generarTodosLosDiplomas'])->name('diplomas.generar-todos');
+        Route::get('/{curso}/diplomas/verificar', [CursoController::class, 'verificarDiplomasCurso'])->name('diplomas.verificar');
+        Route::get('/{curso}/diplomas/descargar-todos', [CursoController::class, 'descargarTodosLosDiplomas'])->name('diplomas.descargar-todos');
+        
         Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
         Route::delete('/{curso}/delete-temario', [CursoController::class, 'deleteTemario'])->name('delete-temario');
         Route::delete('/{curso}/delete-portada', [CursoController::class, 'deletePortada'])->name('delete-portada');
@@ -297,10 +308,7 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
 
 // Rutas de detalle de curso para alumnos
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
-    Route::get('/alumno/cursos/{id}', function($id) {
-        $curso = \App\Models\Curso::findOrFail($id);
-        return view('alumno.cursos.show', compact('curso'));
-    })->name('alumno.cursos.show');
+    Route::get('/alumno/cursos/{id}', [\App\Http\Controllers\Alumno\CursoController::class, 'show'])->name('alumno.cursos.show');
     Route::get('/alumno/cursos/{id}/inscribir', function($id) {
         $curso = \App\Models\Curso::findOrFail($id);
         return view('alumno.cursos.inscribir', compact('curso'));
@@ -335,6 +343,12 @@ Route::prefix('admin')
         Route::post('email-notifications', [EmailNotificationController::class, 'store'])->name('email-notifications.store');
         Route::post('email-notifications/test', [EmailNotificationController::class, 'sendTest'])->name('email-notifications.test');
         Route::get('email-notifications/users', [EmailNotificationController::class, 'getUsers'])->name('email-notifications.users');
+
+        // Gestión de diplomas
+        Route::get('diplomas', [\App\Http\Controllers\Admin\DiplomaController::class, 'index'])->name('diplomas.index');
+        Route::post('diplomas/generar-todos', [\App\Http\Controllers\Admin\DiplomaController::class, 'generarTodos'])->name('diplomas.generar-todos-sistema');
+        Route::get('diplomas/verificar-diplomas', [\App\Http\Controllers\Admin\DiplomaController::class, 'verificarDiplomas'])->name('diplomas.verificar-diplomas');
+        Route::get('diplomas/descargar-todos', [\App\Http\Controllers\Admin\DiplomaController::class, 'descargarTodos'])->name('diplomas.descargar-todos-sistema');
 
         // WhatsApp
         Route::get('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'showForm'])->name('whatsapp.form');

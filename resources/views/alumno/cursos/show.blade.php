@@ -23,6 +23,20 @@
                 <p class="mb-2"><strong>Fechas:</strong> {{ $curso->fechaInicio }} - {{ $curso->fechaFin }}</p>
                 <p class="mb-2"><strong>Plazas:</strong> {{ $curso->plazas }}</p>
                 <p class="mb-2"><strong>Estado:</strong> <span class="badge bg-{{ $curso->estado == 'activo' ? 'success' : 'secondary' }}">{{ ucfirst($curso->estado) }}</span></p>
+
+                {{-- Sección de diploma --}}
+                <div class="mt-4">
+                    <h5><i class="ri-award-line me-2"></i> Diploma del curso</h5>
+                    @if($diploma)
+                        <a href="{{ $diploma->url_pdf }}" target="_blank" class="btn btn-success">
+                            <i class="ri-download-line me-1"></i> Descargar mi diploma
+                        </a>
+                    @else
+                        <button id="solicitar-diploma-btn" class="btn btn-primary">
+                            <i class="ri-file-text-line me-1"></i> Solicitar diploma
+                        </button>
+                    @endif
+                </div>
                 <a href="{{ route('alumno.cursos.inscribir', $curso->id) }}" class="btn btn-success mt-3">
                     <i class="ri-user-add-line me-1"></i> Solicitar inscripción en este curso
                 </a>
@@ -33,3 +47,41 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('solicitar-diploma-btn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            if (!confirm('¿Estás seguro de que quieres solicitar tu diploma?')) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ri-loader-4-line"></i> Generando...';
+            fetch(`/admin/cursos/{{ $curso->id }}/diploma/participante/{{ auth()->user()->persona->id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('¡Diploma generado correctamente!');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ri-file-text-line me-1"></i> Solicitar diploma';
+                }
+            })
+            .catch(() => {
+                alert('Error al generar el diploma. Inténtalo de nuevo.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-file-text-line me-1"></i> Solicitar diploma';
+            });
+        });
+    }
+});
+</script>
+@endpush

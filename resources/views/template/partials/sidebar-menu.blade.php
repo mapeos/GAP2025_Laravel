@@ -104,6 +104,12 @@
                 <i class="ri-file-list-3-line"></i> <span>Cursos</span>
             </a>
         </li>
+        <!-- DIPLOMAS Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.diplomas.index') }}">
+                <i class="ri-award-line"></i> <span>Gestión de Diplomas</span>
+            </a>
+        </li>
         <!-- PARTICIPANTES Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">

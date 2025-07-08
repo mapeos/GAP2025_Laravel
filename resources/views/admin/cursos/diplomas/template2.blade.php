@@ -99,7 +99,13 @@
         </div>
 
         <div class="title">DIPLOMA CONCEDIDO A</div>
-        <div class="subtitle">Nombre del Alumno</div>
+        <div class="subtitle">
+            @if(isset($persona))
+                {{ $persona->nombre ?? '' }} {{ $persona->apellido1 ?? '' }} {{ $persona->apellido2 ?? '' }}
+            @else
+                Nombre del Alumno
+            @endif
+        </div>
 
         <div class="content">
             Por su participación y finalización satisfactoria del curso<br>
