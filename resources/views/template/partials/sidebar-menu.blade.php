@@ -69,12 +69,22 @@
             <ul class="submenu">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.notificaciones.index') }}">
-                        <i class="ri-list-unordered"></i> <span>Listado</span>
+                        <i class="ri-smartphone-line"></i> <span>Push Notifications</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.notificaciones.create') }}">
-                        <i class="ri-add-line"></i> <span>Crear Notificación</span>
+                        <i class="ri-add-line"></i> <span>Crear Push</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.email-notifications.index') }}">
+                        <i class="ri-mail-line"></i> <span>Email Notifications</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.email-notifications.create') }}">
+                        <i class="ri-mail-send-line"></i> <span>Crear Email</span>
                     </a>
                 </li>
             </ul>

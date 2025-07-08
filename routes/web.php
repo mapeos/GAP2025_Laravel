@@ -12,6 +12,7 @@ use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\EmailNotificationController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\FacultativoController;
 use App\Http\Controllers\ProfesorController;
@@ -326,6 +327,13 @@ Route::prefix('admin')
         Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
         Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
         Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
+
+        // Email Notifications
+        Route::get('email-notifications', [EmailNotificationController::class, 'index'])->name('email-notifications.index');
+        Route::get('email-notifications/create', [EmailNotificationController::class, 'create'])->name('email-notifications.create');
+        Route::post('email-notifications', [EmailNotificationController::class, 'store'])->name('email-notifications.store');
+        Route::post('email-notifications/test', [EmailNotificationController::class, 'sendTest'])->name('email-notifications.test');
+        Route::get('email-notifications/users', [EmailNotificationController::class, 'getUsers'])->name('email-notifications.users');
 
         // WhatsApp
         Route::get('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'showForm'])->name('whatsapp.form');

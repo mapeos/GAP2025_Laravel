@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\ChatApiController;
+use App\Http\Controllers\Api\EmailNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -153,6 +154,14 @@ Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send', [Notif
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-fcm-v1', [NotificationController::class, 'sendFcmV1']);
 // Ruta para enviar notificaciones WebPush
 Route::middleware(['auth:sanctum', 'admin'])->post('/notifications/send-webpush', [App\Http\Controllers\Api\NotificationController::class, 'sendWebPush']);
+
+// Email notification routes (admin only)
+Route::middleware(['auth:sanctum', 'admin'])->prefix('email-notifications')->group(function () {
+    Route::post('/send', [EmailNotificationController::class, 'sendNotification'])
+        ->name('api.email-notifications.send');
+    Route::post('/send-to-user/{userId}', [EmailNotificationController::class, 'sendToUser'])
+        ->name('api.email-notifications.send-to-user');
+});
 
 // Debug route to test Sanctum authentication
 Route::middleware('auth:sanctum')->get('debug/auth-test', function(Request $request) {
