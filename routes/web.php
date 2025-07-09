@@ -314,18 +314,47 @@ Route::middleware(['auth', 'role:Alumno'])->group(function () {
         return view('alumno.cursos.inscribir', compact('curso'));
     })->name('alumno.cursos.inscribir');
     Route::post('/alumno/cursos/{id}/inscribir', function($id) {
-        $curso = \App\Models\Curso::findOrFail($id);
-        $user = Auth::user();
-        $persona = $user->persona;
-        // Validar que no esté ya inscrito
-        if ($persona && !$persona->cursos()->where('cursos.id', $curso->id)->exists()) {
-            $persona->cursos()->attach($curso->id, [
-                'rol_participacion_id' => 1, // 1 = alumno
-                'estado' => 'pendiente',
-            ]);
+        try {
+            $curso = \App\Models\Curso::findOrFail($id);
+            $user = Auth::user();
+            $persona = $user->persona;
+            
+            if (!$persona) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'No tienes un perfil de persona asociado.');
+            }
+            
+            // Verificar si ya existe la participación usando el modelo Participacion
+            $participacionExistente = \App\Models\Participacion::where('curso_id', $curso->id)
+                ->where('persona_id', $persona->id)
+                ->first();
+            
+            if ($participacionExistente) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'Ya tienes una inscripción pendiente o activa en este curso.');
+            }
+            
+            // Usar el método helper para crear la participación de forma segura
+            $participacion = \App\Models\Participacion::crearParticipacionSegura(
+                $curso->id,
+                $persona->id,
+                1, // 1 = alumno
+                'pendiente'
+            );
+            
+            if (!$participacion) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'No se pudo procesar la inscripción. Ya podrías estar inscrito.');
+            }
+            
             return redirect()->route('alumno.cursos.show', $curso->id)->with('success', 'Solicitud de inscripción enviada.');
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('[ALUMNO_INSCRIPCION] Error al inscribir alumno', [
+                'curso_id' => $id,
+                'user_id' => Auth::user()?->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->route('alumno.cursos.show', $id)->with('error', 'Error al procesar la inscripción. Por favor, inténtalo de nuevo.');
         }
-        return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'Ya tienes una inscripción pendiente o activa en este curso.');
     })->name('alumno.cursos.inscribir.solicitar');
 });
 

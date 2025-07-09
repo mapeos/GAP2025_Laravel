@@ -243,11 +243,32 @@ class CursoController extends Controller
                 ], 500);
             }
 
-            // Inscribir al usuario
-            $curso->personas()->attach($persona->id, [
-                'rol_participacion_id' => $rolAlumno->id,
-                'estado' => 'pendiente',
-            ]);
+            // Verificar si ya existe la participación usando el modelo Participacion
+            $participacionExistente = \App\Models\Participacion::where('curso_id', $curso->id)
+                ->where('persona_id', $persona->id)
+                ->first();
+            
+            if ($participacionExistente) {
+                return response()->json([
+                    'status' => 409,
+                    'message' => 'Ya estás inscrito en este curso'
+                ], 409);
+            }
+
+            // Usar el método helper para crear la participación de forma segura
+            $participacion = \App\Models\Participacion::crearParticipacionSegura(
+                $curso->id,
+                $persona->id,
+                $rolAlumno->id,
+                'pendiente'
+            );
+            
+            if (!$participacion) {
+                return response()->json([
+                    'status' => 409,
+                    'message' => 'Ya estás inscrito en este curso'
+                ], 409);
+            }
 
             return response()->json([
                 'status' => 200,
