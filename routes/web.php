@@ -20,8 +20,10 @@ use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\SolicitudCitaController;
+use App\Http\Controllers\FacultativoCalendarioController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AlumnoController;
+use App\Http\Controllers\PacienteController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -253,9 +255,36 @@ Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('p
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
     Route::get('/alumno/home', [AlumnoController::class, 'home'])->name('alumno.home');
 });
+
+// Rutas para el rol Paciente
+Route::middleware(['auth', 'role:Paciente'])->group(function () {
+    Route::get('/paciente/home', [PacienteController::class, 'home'])->name('paciente.home');
+    Route::get('/paciente/solicitar-cita', [PacienteController::class, 'solicitarCitaPage'])->name('paciente.solicitar-cita');
+    Route::get('/paciente/mis-citas', [PacienteController::class, 'misCitas'])->name('paciente.mis-citas');
+    Route::post('/paciente/solicitar-cita', [PacienteController::class, 'solicitarCita'])->name('paciente.solicitar-cita.post');
+    Route::get('/paciente/tratamientos/{especialidadId}', [PacienteController::class, 'getTratamientos'])->name('paciente.tratamientos');
+});
 // Rutas para el rol Profesor
 Route::middleware(['auth', 'role:Profesor'])->group(function () {
     Route::view('/profesor/home', 'profesor.home')->name('profesor.home');
+});
+// Rutas para el rol Facultativo
+Route::middleware(['auth', 'role:Facultativo'])->group(function () {
+    Route::get('/facultativo/calendario', [FacultativoCalendarioController::class, 'index'])->name('facultativo.calendario');
+    Route::get('/facultativo/calendario/citas', [FacultativoCalendarioController::class, 'getCitas'])->name('facultativo.calendario.citas');
+    Route::get('/facultativo/calendario/motivos-cita', [FacultativoCalendarioController::class, 'getMotivosCita'])->name('facultativo.calendario.motivos-cita');
+    Route::get('/facultativo/calendario/tratamientos/{especialidadId}', [FacultativoCalendarioController::class, 'getTratamientosPorEspecialidad'])->name('facultativo.calendario.tratamientos');
+    Route::get('/facultativo/calendario/pacientes', [FacultativoCalendarioController::class, 'getPacientes'])->name('facultativo.calendario.pacientes');
+    
+    // Rutas para citas con IA para facultativos
+    Route::post('/facultativo/ai/appointments/suggest', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointment'])->name('facultativo.ai.appointments.suggest');
+    Route::post('/facultativo/ai/appointments/create', [\App\Http\Controllers\AiAppointmentController::class, 'createAppointment'])->name('facultativo.ai.appointments.create');
+});
+
+// Rutas para el calendario médico (accesible para facultativos y pacientes)
+Route::middleware(['auth', 'role:Facultativo|Paciente'])->group(function () {
+    Route::get('/facultativo/calendario', [FacultativoCalendarioController::class, 'index'])->name('facultativo.calendario');
+    Route::get('/facultativo/calendario/citas', [FacultativoCalendarioController::class, 'getCitas'])->name('facultativo.calendario.citas');
 });
 
 //--------------------------------------------

@@ -35,8 +35,8 @@ new #[Layout('layouts.guest')] class extends Component
         } elseif ($user->hasRole('Facultativo')) {
             $this->redirectIntended(default: route('facultativo.home'), navigate: true);
         } elseif ($user->hasRole('Paciente')) {
-            // Para pacientes, redirigir a una página específica o al perfil
-            $this->redirectIntended(default: route('profile.show'), navigate: true);
+            // Para pacientes, redirigir a su home específico
+            $this->redirectIntended(default: route('paciente.home'), navigate: true);
         } else {
             // Para usuarios sin rol específico o pendientes, redirigir al perfil
             $this->redirectIntended(default: route('profile.show'), navigate: true);
