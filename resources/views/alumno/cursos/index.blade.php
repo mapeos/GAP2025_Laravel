@@ -38,7 +38,7 @@
                                     <div class="mb-2">
                                         <small class="text-muted">
                                             <i class="ri-calendar-line me-1"></i>
-                                            {{ $curso->fechaInicio->format('d/m/Y') }} - {{ $curso->fechaFin->format('d/m/Y') }}
+                                            {{ \Carbon\Carbon::parse($curso->fechaInicio)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($curso->fechaFin)->format('d/m/Y') }}
                                         </small>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center">
@@ -94,7 +94,7 @@
                                         <div class="mb-2">
                                             <small class="text-muted">
                                                 <i class="ri-calendar-line me-1"></i>
-                                                {{ $curso->fechaInicio->format('d/m/Y') }} - {{ $curso->fechaFin->format('d/m/Y') }}
+                                                {{ \Carbon\Carbon::parse($curso->fechaInicio)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($curso->fechaFin)->format('d/m/Y') }}
                                             </small>
                                         </div>
                                         <div class="mb-2">

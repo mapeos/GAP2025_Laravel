@@ -30,7 +30,7 @@
                                 <ul class="list-unstyled">
                                     <li class="mb-2">
                                         <i class="ri-calendar-line text-primary me-2"></i>
-                                        <strong>Fechas:</strong> {{ $curso->fechaInicio->format('d/m/Y') }} - {{ $curso->fechaFin->format('d/m/Y') }}
+                                        <strong>Fechas:</strong> {{ \Carbon\Carbon::parse($curso->fechaInicio)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($curso->fechaFin)->format('d/m/Y') }}
                                     </li>
                                     <li class="mb-2">
                                         <i class="ri-group-line text-primary me-2"></i>
@@ -56,7 +56,7 @@
                                 <ul class="list-unstyled">
                                     <li class="mb-2">
                                         <i class="ri-calendar-check-line text-primary me-2"></i>
-                                        <strong>Duración:</strong> {{ $curso->fechaInicio->diffInDays($curso->fechaFin) }} días
+                                        <strong>Duración:</strong> {{ \Carbon\Carbon::parse($curso->fechaInicio)->diffInDays(\Carbon\Carbon::parse($curso->fechaFin)) }} días
                                     </li>
                                     <li class="mb-2">
                                         <i class="ri-user-star-line text-primary me-2"></i>

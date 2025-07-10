@@ -15,18 +15,28 @@ class AlumnoController extends Controller
     {
         $user = Auth::user();
         $persona = $user->persona ?? null;
+        
         // Cursos en los que está inscrito el alumno
-        $misCursos = method_exists($user, 'cursos') ? $user->cursos : ($persona && method_exists($persona, 'cursos') ? $persona->cursos : collect());
-        // Cursos disponibles (no inscritos)
-        $cursosDisponibles = \App\Models\Curso::whereNotIn('id', $misCursos->pluck('id'))->get();
+        $misCursos = collect();
+        if ($persona && method_exists($persona, 'cursos')) {
+            $misCursos = $persona->cursos()->withPivot('estado')->get();
+        }
+        
+        // Cursos disponibles (no inscritos) - asegurar que se carguen como Carbon
+        $cursosDisponibles = Curso::whereNotIn('id', $misCursos->pluck('id'))
+            ->where('estado', 'activo')
+            ->get();
+        
         // Mensajes recientes y usuarios de chat reales
         $mensajesRecientes = collect($getLastChats->execute($user->id, 5));
         $usuariosIds = $mensajesRecientes->map(fn($m) => $m->senderId == $user->id ? $m->receiverId : $m->senderId)->unique();
         $usuariosChat = User::whereIn('id', $usuariosIds)->get();
         $unreadCounts = $getUnreadCount->execute($user->id);
+        
         // Próximos eventos y citas (simulación, ajustar según tu lógica real)
         $proximosEventos = collect();
         $proximasCitas = collect();
+        
         return view('alumno.home', compact('user', 'persona', 'misCursos', 'cursosDisponibles', 'mensajesRecientes', 'usuariosChat', 'unreadCounts', 'proximosEventos', 'proximasCitas'));
     }
 }
