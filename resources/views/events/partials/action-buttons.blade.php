@@ -14,16 +14,16 @@
     @if(Auth::user()->hasRole('Alumno'))
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal">
             <i class="ri-user-line me-1"></i>
-            Solicitar cita/consulta con profesor
+            Solicitar tutoría con profesor
         </button>
     @else
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudCitaModal2">
             <i class="ri-robot-line me-1"></i>
-            Agendar cita/consulta con IA
+            Agendar tutoría con IA
         </button>
     @endif
     
-    @if(Auth::user()->hasRole('profesor'))
+    @if(Auth::user()->hasRole('Profesor'))
         <a href="{{ route('solicitud-cita.recibidas') }}" class="btn btn-info">
             <i class="ri-mail-line me-1"></i> Ver solicitudes recibidas
         </a>

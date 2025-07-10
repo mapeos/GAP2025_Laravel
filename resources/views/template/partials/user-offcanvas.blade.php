@@ -47,6 +47,13 @@
                        <span class="badge text-bg-danger ms-2">3</span>
                    </a>
                </li>
+               @if(Auth::user()->hasRole('Facultativo'))
+               <li class="nav-item">
+                   <a class="nav-link" href="{{ route('facultativo.calendario') }}">
+                       <i class="ri-calendar-2-line"></i> <span>Calendario</span>
+                   </a>
+               </li>
+               @endif
            </ul>
        </nav>
    </div>

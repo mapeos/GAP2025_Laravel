@@ -34,7 +34,7 @@
                             <select class="form-select" id="paciente_select" required>
                                 <option value="">Seleccionar paciente</option>
                                 @foreach($pacientes ?? [] as $paciente)
-                                    <option value="{{ $paciente->id }}">{{ $paciente->name }} - {{ $paciente->email }}</option>
+                                        <option value="{{ $paciente->id }}">{{ $paciente->name }}</option>
                                 @endforeach
                             </select>
                         </div>
