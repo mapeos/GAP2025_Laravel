@@ -49,6 +49,11 @@
             </a>
         </li>
         <li>
+            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('alumno.cursos.index') }}">
+                <i class="ri-book-open-line"></i> <span>Cursos</span>
+            </a>
+        </li>
+        <li>
             <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('events.calendar') }}">
                 <i class="ri-calendar-line"></i> <span>Eventos</span>
             </a>

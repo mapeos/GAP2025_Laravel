@@ -449,11 +449,18 @@
                 <div class="verification-section">
                     <div class="verification-title">Verificación de Autenticidad</div>
                     <div class="qr-code">
-                        CÓDIGO QR<br><br>
-                        Escanee para<br>verificar la<br>autenticidad del<br>diploma
+                        @if(isset($qrCode) && $qrCode)
+                            <img src="{{ $qrCode }}" alt="Código QR para verificación" style="width: 120px; height: 120px; display: block; margin: 0 auto;">
+                            <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; color: #7f8c8d;">
+                                Escanee para verificar<br>la autenticidad del diploma
+                            </div>
+                        @else
+                            CÓDIGO QR<br><br>
+                            Escanee para<br>verificar la<br>autenticidad del<br>diploma
+                        @endif
                     </div>
-                    <div class="verification-text">Para verificar la autenticidad de este diploma, visite:</div>
-                    <div class="verification-url">www.academiagap.com/verificar</div>
+                    <div class="verification-text">Para verificar la autenticidad de este diploma, escanee el código QR o visite:</div>
+                    <div class="verification-url">{{ config('app.url') }}/cursos/{{ $curso->id }}</div>
                 </div>
                 
                 <!-- Información adicional -->

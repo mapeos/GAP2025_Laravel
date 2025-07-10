@@ -130,6 +130,12 @@
                 <i class="ri-file-list-3-line"></i> <span>Inscripciones</span>
             </a>
         </li>
+        <!-- SOLICITUDES DE INSCRIPCIÓN Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.solicitudes.index') }}">
+                <i class="ri-user-add-line"></i> <span>Solicitudes de inscripción</span>
+            </a>
+        </li>
 
         <!-- Facultativo Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Facultativo</span></li>

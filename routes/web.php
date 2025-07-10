@@ -254,6 +254,9 @@ Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('p
 // Rutas para el rol Alumno
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
     Route::get('/alumno/home', [AlumnoController::class, 'home'])->name('alumno.home');
+    Route::get('/alumno/cursos', [\App\Http\Controllers\Alumno\CursoController::class, 'index'])->name('alumno.cursos.index');
+    Route::get('/alumno/cursos/{id}', [\App\Http\Controllers\Alumno\CursoController::class, 'show'])->name('alumno.cursos.show');
+    Route::post('/alumno/cursos/{id}/solicitar', [\App\Http\Controllers\Alumno\CursoController::class, 'solicitarInscripcion'])->name('alumno.cursos.solicitar');
 });
 
 // Rutas para el rol Paciente
@@ -445,48 +448,9 @@ Route::get('/admin/sincronizar-usuarios-personas', [\App\Http\Controllers\UserCo
 
 // Rutas para la gestión de solicitudes de inscripción para el administrador
 Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->name('admin.solicitudes.')->group(function () {
-    Route::get('/', function() {
-        // Obtener todas las solicitudes de inscripción (pivot estado = pendiente, espera, activo, rechazado)
-        $solicitudes = \App\Models\Persona::whereHas('cursos', function($q) {
-            $q->whereIn('participacion.estado', ['pendiente', 'espera', 'activo', 'rechazado']);
-        })->with(['cursos' => function($q) {
-            $q->withPivot('estado');
-        }])
-        ->get()
-        ->flatMap(function($persona) {
-            return $persona->cursos->map(function($curso) use ($persona) {
-                $curso->pivot->persona = $persona;
-                $curso->curso = $curso; // Asignar el curso a sí mismo para la vista
-                return $curso;
-            });
-        })
-        ->sortByDesc(function($solicitud) {
-            return $solicitud->pivot->created_at ?? $solicitud->created_at;
-        })
-        ->values();
-
-        // Convertir a LengthAwarePaginator manualmente para paginar colecciones
-        $perPage = 10;
-        $page = request()->input('page', 1);
-        $paginator = new Illuminate\Pagination\LengthAwarePaginator(
-            $solicitudes->forPage($page, $perPage),
-            $solicitudes->count(),
-            $perPage,
-            $page,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
-        if (request()->ajax()) {
-            return view('admin.solicitudes._tabla_paginada', ['solicitudes' => $paginator]);
-        }
-        return view('admin.solicitudes.index', ['solicitudes' => $paginator]);
-    })->name('index');
-    Route::put('/{curso}/{persona}', function($cursoId, $personaId) {
-        $persona = \App\Models\Persona::findOrFail($personaId);
-        $curso = \App\Models\Curso::findOrFail($cursoId);
-        $estado = request('estado');
-        $persona->cursos()->updateExistingPivot($curso->id, ['estado' => $estado]);
-        return redirect()->back()->with('success', 'Estado actualizado correctamente.');
-    })->name('update');
+    Route::get('/', [\App\Http\Controllers\Admin\SolicitudInscripcionController::class, 'index'])->name('index');
+    Route::get('/{cursoId}/{personaId}', [\App\Http\Controllers\Admin\SolicitudInscripcionController::class, 'show'])->name('show');
+    Route::put('/{cursoId}/{personaId}', [\App\Http\Controllers\Admin\SolicitudInscripcionController::class, 'update'])->name('update');
 });
 
 // Chat entre usuarios (alumnos y profesores)
@@ -536,5 +500,11 @@ Route::middleware(['auth', 'role:Facultativo|Administrador'])->prefix('facultati
     // Ruta para actualizar estado de citas médicas
     Route::put('/citas/{solicitud}/actualizar-estado', [SolicitudCitaController::class, 'ActualizarEstado'])
         ->name('citas.actualizar-estado');
+});
+
+// Rutas públicas para verificación de diplomas (QR codes)
+Route::prefix('cursos')->name('public.cursos.')->group(function () {
+    Route::get('/{id}', [\App\Http\Controllers\Public\CursoPublicController::class, 'show'])->name('show');
+    Route::get('/{id}/verificar', [\App\Http\Controllers\Public\CursoPublicController::class, 'verificar'])->name('verificar');
 });
 

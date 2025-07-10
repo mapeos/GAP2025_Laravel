@@ -47,6 +47,11 @@
                    </a>
                </li>
                <li class="nav-item">
+                   <a class="nav-link" href="{{ route('alumno.cursos.index') }}">
+                       <i class="ri-book-open-line"></i> <span>Cursos</span>
+                   </a>
+               </li>
+               <li class="nav-item">
                    <a class="nav-link" href="{{ route('events.calendar') }}">
                        <i class="ri-calendar-line"></i> <span>Eventos</span>
                    </a>

@@ -12,6 +12,13 @@ use Spatie\Browsershot\Browsershot;
 
 class DiplomaService
 {
+    protected $qrCodeService;
+    
+    public function __construct(QrCodeService $qrCodeService)
+    {
+        $this->qrCodeService = $qrCodeService;
+    }
+
     /**
      * Genera el PDF del diploma para un curso dado
      * @param Curso $curso
@@ -20,9 +27,12 @@ class DiplomaService
      */
     public function generarDiplomaPdf(Curso $curso): string
     {
-        // Renderizar ambas caras
+        // Generar QR para el curso
+        $qrCode = $this->qrCodeService->generarQrParaCurso($curso->id);
+        
+        // Renderizar ambas caras con el QR
         $frontHtml = View::make('admin.cursos.diplomas.template2', compact('curso'))->render();
-        $backHtml = View::make('admin.cursos.diplomas.template-back', compact('curso'))->render();
+        $backHtml = View::make('admin.cursos.diplomas.template-back', compact('curso', 'qrCode'))->render();
 
         // HTML combinado
         $combinedHtml = $this->generarHtmlContenedor($frontHtml, $backHtml);
@@ -39,9 +49,12 @@ class DiplomaService
      */
     public function generarDiplomaPdfParaParticipante(Curso $curso, Persona $persona): string
     {
-        // Renderizar ambas caras con datos del participante
+        // Generar QR para el curso
+        $qrCode = $this->qrCodeService->generarQrParaCurso($curso->id);
+        
+        // Renderizar ambas caras con datos del participante y el QR
         $frontHtml = View::make('admin.cursos.diplomas.template2', compact('curso', 'persona'))->render();
-        $backHtml = View::make('admin.cursos.diplomas.template-back', compact('curso', 'persona'))->render();
+        $backHtml = View::make('admin.cursos.diplomas.template-back', compact('curso', 'persona', 'qrCode'))->render();
 
         // HTML combinado
         $combinedHtml = $this->generarHtmlContenedor($frontHtml, $backHtml);
