@@ -178,6 +178,12 @@
                 <i class="ri-capsule-line"></i> <span>Tratamientos</span>
             </a>
         </li>
+        <!-- Calendario Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('facultativo.calendario') }}">
+                <i class="ri-calendar-2-line"></i> <span>Calendario</span>
+            </a>
+        </li>
         <!-- Facultativo Section end -->
 
         <!-- Pages Section -->

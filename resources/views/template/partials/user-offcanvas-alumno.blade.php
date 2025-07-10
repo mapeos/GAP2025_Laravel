@@ -51,6 +51,13 @@
                        <i class="ri-calendar-line"></i> <span>Eventos</span>
                    </a>
                </li>
+               @if(Auth::user()->hasRole('Paciente'))
+               <li class="nav-item">
+                   <a class="nav-link" href="{{ route('facultativo.calendario') }}">
+                       <i class="ri-calendar-2-line"></i> <span>Calendario Médico</span>
+                   </a>
+               </li>
+               @endif
            </ul>
        </nav>
    </div>

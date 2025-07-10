@@ -20,8 +20,10 @@ use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\SolicitudCitaController;
+use App\Http\Controllers\FacultativoCalendarioController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AlumnoController;
+use App\Http\Controllers\PacienteController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -253,9 +255,36 @@ Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('p
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
     Route::get('/alumno/home', [AlumnoController::class, 'home'])->name('alumno.home');
 });
+
+// Rutas para el rol Paciente
+Route::middleware(['auth', 'role:Paciente'])->group(function () {
+    Route::get('/paciente/home', [PacienteController::class, 'home'])->name('paciente.home');
+    Route::get('/paciente/solicitar-cita', [PacienteController::class, 'solicitarCitaPage'])->name('paciente.solicitar-cita');
+    Route::get('/paciente/mis-citas', [PacienteController::class, 'misCitas'])->name('paciente.mis-citas');
+    Route::post('/paciente/solicitar-cita', [PacienteController::class, 'solicitarCita'])->name('paciente.solicitar-cita.post');
+    Route::get('/paciente/tratamientos/{especialidadId}', [PacienteController::class, 'getTratamientos'])->name('paciente.tratamientos');
+});
 // Rutas para el rol Profesor
 Route::middleware(['auth', 'role:Profesor'])->group(function () {
     Route::view('/profesor/home', 'profesor.home')->name('profesor.home');
+});
+// Rutas para el rol Facultativo
+Route::middleware(['auth', 'role:Facultativo'])->group(function () {
+    Route::get('/facultativo/calendario', [FacultativoCalendarioController::class, 'index'])->name('facultativo.calendario');
+    Route::get('/facultativo/calendario/citas', [FacultativoCalendarioController::class, 'getCitas'])->name('facultativo.calendario.citas');
+    Route::get('/facultativo/calendario/motivos-cita', [FacultativoCalendarioController::class, 'getMotivosCita'])->name('facultativo.calendario.motivos-cita');
+    Route::get('/facultativo/calendario/tratamientos/{especialidadId}', [FacultativoCalendarioController::class, 'getTratamientosPorEspecialidad'])->name('facultativo.calendario.tratamientos');
+    Route::get('/facultativo/calendario/pacientes', [FacultativoCalendarioController::class, 'getPacientes'])->name('facultativo.calendario.pacientes');
+    
+    // Rutas para citas con IA para facultativos
+    Route::post('/facultativo/ai/appointments/suggest', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointment'])->name('facultativo.ai.appointments.suggest');
+    Route::post('/facultativo/ai/appointments/create', [\App\Http\Controllers\AiAppointmentController::class, 'createAppointment'])->name('facultativo.ai.appointments.create');
+});
+
+// Rutas para el calendario médico (accesible para facultativos y pacientes)
+Route::middleware(['auth', 'role:Facultativo|Paciente'])->group(function () {
+    Route::get('/facultativo/calendario', [FacultativoCalendarioController::class, 'index'])->name('facultativo.calendario');
+    Route::get('/facultativo/calendario/citas', [FacultativoCalendarioController::class, 'getCitas'])->name('facultativo.calendario.citas');
 });
 
 //--------------------------------------------
@@ -314,18 +343,47 @@ Route::middleware(['auth', 'role:Alumno'])->group(function () {
         return view('alumno.cursos.inscribir', compact('curso'));
     })->name('alumno.cursos.inscribir');
     Route::post('/alumno/cursos/{id}/inscribir', function($id) {
-        $curso = \App\Models\Curso::findOrFail($id);
-        $user = Auth::user();
-        $persona = $user->persona;
-        // Validar que no esté ya inscrito
-        if ($persona && !$persona->cursos()->where('cursos.id', $curso->id)->exists()) {
-            $persona->cursos()->attach($curso->id, [
-                'rol_participacion_id' => 1, // 1 = alumno
-                'estado' => 'pendiente',
-            ]);
+        try {
+            $curso = \App\Models\Curso::findOrFail($id);
+            $user = Auth::user();
+            $persona = $user->persona;
+            
+            if (!$persona) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'No tienes un perfil de persona asociado.');
+            }
+            
+            // Verificar si ya existe la participación usando el modelo Participacion
+            $participacionExistente = \App\Models\Participacion::where('curso_id', $curso->id)
+                ->where('persona_id', $persona->id)
+                ->first();
+            
+            if ($participacionExistente) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'Ya tienes una inscripción pendiente o activa en este curso.');
+            }
+            
+            // Usar el método helper para crear la participación de forma segura
+            $participacion = \App\Models\Participacion::crearParticipacionSegura(
+                $curso->id,
+                $persona->id,
+                1, // 1 = alumno
+                'pendiente'
+            );
+            
+            if (!$participacion) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'No se pudo procesar la inscripción. Ya podrías estar inscrito.');
+            }
+            
             return redirect()->route('alumno.cursos.show', $curso->id)->with('success', 'Solicitud de inscripción enviada.');
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('[ALUMNO_INSCRIPCION] Error al inscribir alumno', [
+                'curso_id' => $id,
+                'user_id' => Auth::user()?->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->route('alumno.cursos.show', $id)->with('error', 'Error al procesar la inscripción. Por favor, inténtalo de nuevo.');
         }
-        return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'Ya tienes una inscripción pendiente o activa en este curso.');
     })->name('alumno.cursos.inscribir.solicitar');
 });
 

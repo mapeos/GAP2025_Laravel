@@ -1194,6 +1194,7 @@ php artisan diploma:generate 1
 BROWSERSHOT_CHROME_PATH=/usr/bin/google-chrome
 BROWSERSHOT_NODE_BINARY=/usr/bin/node
 BROWSERSHOT_NPM_BINARY=/usr/bin/npm
+```
 
 ## Notas para el Frontend
 
