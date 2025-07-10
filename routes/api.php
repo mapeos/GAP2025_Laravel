@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\ChatApiController;
 use App\Http\Controllers\Api\EmailNotificationController;
+use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,14 @@ Route::get('/categorias', [CategoriasController::class, 'index']); // Listar cat
 // Endpoints de autenticación (públicos)
 Route::post('auth/register', [AuthController::class, 'register']); // Registro de usuario móvil
 Route::post('auth/login', [AuthController::class, 'login']);       // Login de usuario móvil
+
+// Password Reset Routes (públicos)
+Route::post('auth/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail']); // Enviar email de recuperación (Laravel estándar)
+Route::post('auth/password/reset', [ForgotPasswordController::class, 'reset']); // Resetear contraseña con token (Laravel estándar)
+
+// Alternative Password Reset Routes for Mobile (públicos)
+Route::post('auth/forgot-password', [AuthController::class, 'sendPasswordResetEmail']); // Enviar código de recuperación (móvil)
+Route::post('auth/reset-password', [AuthController::class, 'resetPasswordWithToken']); // Resetear con código (móvil)
 
 // Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {

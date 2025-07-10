@@ -1779,6 +1779,22 @@ MAIL_ENCRYPTION=tls
 - **Controlador API**: `app/Http/Controllers/Api/EmailNotificationController.php`
 - **Vistas Admin**: `resources/views/admin/email-notifications/`
 
+### Integración con Recuperación de Contraseñas
+
+El sistema de notificaciones por email está integrado con la funcionalidad de recuperación de contraseñas:
+
+- **Notificación personalizada**: `app/Notifications/CustomPasswordResetNotification.php`
+- **Controlador de recuperación**: `app/Http/Controllers/Api/Auth/ForgotPasswordController.php`
+- **Métodos en AuthController**: `sendPasswordResetEmail()` y `resetPasswordWithToken()`
+
+**Endpoints API disponibles:**
+- `POST /api/auth/forgot-password` - Enviar código de recuperación (móvil)
+- `POST /api/auth/reset-password` - Restablecer con código (móvil)
+- `POST /api/auth/password/email` - Enviar enlace de recuperación (web)
+- `POST /api/auth/password/reset` - Restablecer con token (web)
+
+**📖 Documentación completa:** Ver `PASSWORD_RECOVERY_API_DOCS.md` para ejemplos de implementación en frontend (JavaScript, React, Vue, React Native, Flutter).
+
 ---
 
 ## 📄 Acceso y descarga de archivos en Laravel (storage) con Docker

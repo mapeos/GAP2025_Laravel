@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Models\Device;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Notifications\CustomPasswordResetNotification;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -306,6 +308,120 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Usuario validado y rol asignado',
             'user' => $user
+        ]);
+    }
+
+    /**
+     * Send password reset notification to user.
+     */
+    public function sendPasswordResetEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email'
+        ], [
+            'email.required' => 'El email es obligatorio.',
+            'email.email' => 'El formato del email no es válido.',
+            'email.exists' => 'No existe una cuenta con este email.'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user->status !== 'activo') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tu cuenta no está activa. Contacta al administrador.'
+            ], 403);
+        }
+
+        // Generate a simple token for mobile app
+        $token = Str::random(6); // 6-digit code for mobile
+
+        // Store the token in cache for 15 minutes
+        cache()->put("password_reset_{$user->email}", [
+            'token' => $token,
+            'user_id' => $user->id,
+            'created_at' => now()
+        ], now()->addMinutes(15));
+
+        // Send notification
+        $user->notify(new CustomPasswordResetNotification($token, $user->email));
+
+        Log::info('Password reset email sent via AuthController', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'token_length' => strlen($token)
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Se ha enviado un código de recuperación a tu email.',
+            'data' => [
+                'email' => $user->email,
+                'expires_in_minutes' => 15
+            ]
+        ]);
+    }
+
+    /**
+     * Verify password reset token and reset password.
+     */
+    public function resetPasswordWithToken(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required|string|size:6',
+            'password' => 'required|min:8|confirmed',
+            'password_confirmation' => 'required|min:8'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Check token in cache
+        $resetData = cache()->get("password_reset_{$request->email}");
+
+        if (!$resetData || $resetData['token'] !== $request->token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El código de recuperación no es válido o ha expirado.'
+            ], 400);
+        }
+
+        $user = User::find($resetData['user_id']);
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Revoke all tokens for security
+        $user->tokens()->delete();
+
+        // Remove the reset token from cache
+        cache()->forget("password_reset_{$request->email}");
+
+        Log::info('Password reset completed via AuthController', [
+            'user_id' => $user->id,
+            'email' => $user->email
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tu contraseña ha sido restablecida correctamente.',
+            'data' => [
+                'email' => $user->email,
+                'reset_at' => now()->toISOString()
+            ]
         ]);
     }
 }

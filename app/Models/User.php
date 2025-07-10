@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Message;
+use App\Notifications\CustomPasswordResetNotification;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -91,5 +93,16 @@ class User extends Authenticatable
     public function mensajesRecibidos()
     {
         return $this->hasMany(ChatMessage::class, 'receiver_id');
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomPasswordResetNotification($token, $this->email));
     }
 }
