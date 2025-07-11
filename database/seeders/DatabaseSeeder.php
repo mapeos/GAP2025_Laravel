@@ -37,6 +37,9 @@ class DatabaseSeeder extends Seeder
             
             // Seeders de citas
             MotivoCitaSeeder::class,
+
+            // Seeder de Clinica Medica
+            ClinicaMedicaSeeder::class,
         ]);
     }
 }

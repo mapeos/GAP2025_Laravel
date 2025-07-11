@@ -210,7 +210,7 @@
                     </div>
                     <div class="card-body p-4">
                         <!-- Imagen actual -->
-                        @if ($curso->portada_path)
+                        @if ($curso->portada_path && Storage::disk('public')->exists($curso->portada_path))
                             <div class="mb-4">
                                 <label class="form-label fw-semibold text-success">
                                     <i class="ri-check-circle-line me-1"></i>
@@ -227,6 +227,26 @@
                                             Portada actual del curso
                                         </small>
                                     </div>
+                                </div>
+                                
+                                <!-- Botones de acción para portada existente -->
+                                <div class="d-flex gap-2 mt-3">
+                                    <a href="{{ asset('storage/' . $curso->portada_path) }}" 
+                                       target="_blank" 
+                                       class="btn btn-info btn-sm">
+                                        <i class="ri-eye-line me-2"></i>
+                                        Ver Portada
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-sm" id="btnEliminarPortada" onclick="eliminarPortada()">
+                                        <span class="btn-text">
+                                            <i class="ri-delete-bin-line me-2"></i>
+                                            Eliminar Portada
+                                        </span>
+                                        <span class="btn-spinner" style="display: none;">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Eliminando...
+                                        </span>
+                                    </button>
                                 </div>
                             </div>
                         @endif
@@ -283,6 +303,44 @@
                 </div>
         </div>
         </div>
+
+        <!-- Botones de acción finales -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            <i class="ri-information-line me-1"></i>
+                            Los campos marcados con <span class="text-danger">*</span> son obligatorios
+                        </small>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <a href="{{ route('admin.cursos.show', $curso->id) }}" class="btn btn-outline-secondary">
+                            <i class="ri-close-line me-2"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="btnGuardarCambios">
+                            <span class="btn-text">
+                                <i class="ri-save-line me-2"></i>
+                                Guardar Cambios
+                            </span>
+                            <span class="btn-spinner" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Guardando cambios...
+                            </span>
+                </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Formulario oculto para eliminar portada -->
+    <form action="{{ route('admin.cursos.delete-portada', $curso->id) }}" 
+          method="POST" 
+          id="formEliminarPortada" 
+          style="display: none;">
+        @csrf
+        @method('DELETE')
     </form>
 
     <!-- Sección de gestión de temario -->
@@ -499,37 +557,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Botones de acción finales -->
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted">
-                        <i class="ri-information-line me-1"></i>
-                        Los campos marcados con <span class="text-danger">*</span> son obligatorios
-                    </small>
-                </div>
-                <div class="d-flex gap-3">
-                    <a href="{{ route('admin.cursos.show', $curso->id) }}" class="btn btn-outline-secondary">
-                        <i class="ri-close-line me-2"></i>
-                        Cancelar
-                    </a>
-                    <button type="submit" form="formEditarCurso" class="btn btn-primary" id="btnGuardarCambios">
-                        <span class="btn-text">
-                            <i class="ri-save-line me-2"></i>
-                            Guardar Cambios
-                        </span>
-                        <span class="btn-spinner" style="display: none;">
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Guardando cambios...
-                        </span>
-                </button>
-                </div>
-            </div>
-        </div>
-        </div>
-    </div>
 @endsection
 
 @push('js')
@@ -563,12 +590,13 @@
         }
     });
 
-    // Validación del formulario antes de enviar
+    // Validación del formulario antes de enviar y spinner
     document.getElementById('formEditarCurso').addEventListener('submit', function(e) {
         const fechaInicio = document.getElementById('fechaInicio').value;
         const fechaFin = document.getElementById('fechaFin').value;
         const today = new Date().toISOString().split('T')[0];
         
+        // Validaciones
         if (fechaInicio < today) {
             e.preventDefault();
             alert('La fecha de inicio no puede ser anterior a hoy.');
@@ -580,6 +608,15 @@
             alert('La fecha de fin debe ser igual o posterior a la fecha de inicio.');
             return false;
         }
+        
+        // Si pasa las validaciones, mostrar spinner
+        const btn = document.getElementById('btnGuardarCambios');
+        const btnText = btn.querySelector('.btn-text');
+        const btnSpinner = btn.querySelector('.btn-spinner');
+        
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline-flex';
+        btn.disabled = true;
     });
 
     // Preview de imagen
@@ -598,17 +635,6 @@
         } else {
             container.style.display = 'none';
         }
-    });
-
-    // Spinner para el formulario principal
-    document.getElementById('formEditarCurso').addEventListener('submit', function(e) {
-        const btn = document.getElementById('btnGuardarCambios');
-        const btnText = btn.querySelector('.btn-text');
-        const btnSpinner = btn.querySelector('.btn-spinner');
-        
-        btnText.style.display = 'none';
-        btnSpinner.style.display = 'inline-flex';
-        btn.disabled = true;
     });
 
     // Spinner para subida de temario
@@ -646,6 +672,47 @@
             btnSpinner.style.display = 'inline-flex';
             btn.disabled = true;
         });
+    }
+
+    // Spinner para eliminación de portada con confirmación
+    const formEliminarPortada = document.getElementById('formEliminarPortada');
+    if (formEliminarPortada) {
+        formEliminarPortada.addEventListener('submit', function(e) {
+            // Mostrar confirmación personalizada
+            const confirmacion = confirm('¿Estás seguro de que quieres eliminar la portada? Esta acción no se puede deshacer.');
+            
+            if (!confirmacion) {
+                e.preventDefault(); // Cancelar el envío del formulario
+                return false;
+            }
+            
+            // Si se confirma, mostrar spinner
+            const btn = this.querySelector('button[type="submit"]');
+            const btnText = btn.querySelector('.btn-text');
+            const btnSpinner = btn.querySelector('.btn-spinner');
+            
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-flex';
+            btn.disabled = true;
+        });
+    }
+
+    // Función para eliminar portada
+    function eliminarPortada() {
+        const confirmacion = confirm('¿Estás seguro de que quieres eliminar la portada? Esta acción no se puede deshacer.');
+        
+        if (confirmacion) {
+            const btn = document.getElementById('btnEliminarPortada');
+            const btnText = btn.querySelector('.btn-text');
+            const btnSpinner = btn.querySelector('.btn-spinner');
+            
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-flex';
+            btn.disabled = true;
+            
+            // Enviar el formulario oculto
+            document.getElementById('formEliminarPortada').submit();
+        }
     }
 </script>
 @endpush

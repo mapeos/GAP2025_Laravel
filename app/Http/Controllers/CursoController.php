@@ -7,6 +7,7 @@ use App\Models\Curso;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
+use App\Services\DiplomaService;
 
 class CursoController extends Controller
 {
@@ -431,4 +432,270 @@ class CursoController extends Controller
             return redirect()->back()->with('error', 'Error al eliminar la portada.');
         }
     }
+
+    /**
+     * Mostrar vista del diploma del curso
+     */
+    public function diploma($id)
+    {
+        $curso = Curso::withTrashed()->findOrFail($id);
+        return view('admin.cursos.diplomas.index', compact('curso'));
+    }
+
+    /**
+     * Mostrar vista completa del diploma (pantalla completa)
+     */
+    public function diplomaFull($id)
+    {
+        $curso = Curso::withTrashed()->findOrFail($id);
+        return view('admin.cursos.diplomas.full', compact('curso'));
+    }
+
+    /**
+     * Descargar diploma del curso como PDF
+     */
+    public function downloadDiploma($id, DiplomaService $diplomaService)
+    {
+        try {
+            $curso = Curso::withTrashed()->findOrFail($id);
+            $pdf = $diplomaService->generarDiplomaPdf($curso);
+            $filename = 'diploma_' . $curso->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
+            return response($pdf)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Content-Length', strlen($pdf))
+                ->header('Cache-Control', 'no-cache, must-revalidate')
+                ->header('Pragma', 'no-cache');
+        } catch (\Exception $e) {
+            Log::error('Error al generar diploma: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al generar el diploma. ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generar diploma para un participante específico
+     */
+    public function generarDiplomaParticipante(Request $request, $cursoId, $personaId, DiplomaService $diplomaService)
+    {
+        try {
+            $curso = Curso::withTrashed()->findOrFail($cursoId);
+            $persona = \App\Models\Persona::findOrFail($personaId);
+
+            // Verificar que la persona está inscrita en el curso
+            if (!$curso->personas()->where('persona_id', $personaId)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La persona no está inscrita en este curso'
+                ], 400);
+            }
+
+            // Generar y guardar el diploma
+            $diploma = $diplomaService->generarYGuardarDiploma($curso, $persona);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Diploma generado correctamente',
+                'diploma' => [
+                    'id' => $diploma->id,
+                    'url_pdf' => $diploma->url_pdf,
+                    'fecha_expedicion' => $diploma->fecha_expedicion->format('d/m/Y')
+                ]
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Curso o persona no encontrada'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Error al generar diploma para participante: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el diploma: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Descargar diploma de un participante específico
+     */
+    public function descargarDiplomaParticipante($cursoId, $personaId)
+    {
+        try {
+            $diploma = \App\Models\Diploma::where('curso_id', $cursoId)
+                                          ->where('persona_id', $personaId)
+                                          ->firstOrFail();
+
+            if (!$diploma->existeArchivoPdf()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El archivo PDF del diploma no existe'
+                ], 404);
+            }
+
+            $path = Storage::disk('public')->path($diploma->path_pdf);
+            $filename = basename($diploma->path_pdf);
+
+            return response()->download($path, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Cache-Control' => 'no-cache, must-revalidate',
+                'Pragma' => 'no-cache'
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Diploma no encontrado'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Error al descargar diploma: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al descargar el diploma'
+            ], 500);
+        }
+    }
+
+    /**
+     * Ver diploma de un participante en pantalla completa
+     */
+    public function verDiplomaParticipante($cursoId, $personaId)
+    {
+        try {
+            $curso = Curso::withTrashed()->findOrFail($cursoId);
+            $persona = \App\Models\Persona::findOrFail($personaId);
+            $diploma = \App\Models\Diploma::where('curso_id', $cursoId)
+                                          ->where('persona_id', $personaId)
+                                          ->firstOrFail();
+
+            return view('admin.cursos.diplomas.ver', compact('curso', 'persona', 'diploma'));
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Diploma no encontrado'
+            ], 404);
+        }
+    }
+
+    /**
+     * Generar diplomas para todos los participantes de un curso
+     */
+    public function generarTodosLosDiplomas(Request $request, $cursoId, DiplomaService $diplomaService)
+    {
+        try {
+            $curso = Curso::withTrashed()->findOrFail($cursoId);
+            $participantes = $curso->personas;
+            $count = 0;
+            $errors = [];
+
+            foreach ($participantes as $persona) {
+                try {
+                    // Verificar si ya existe el diploma
+                    if (!\App\Models\Diploma::existeParaParticipante($curso->id, $persona->id)) {
+                        $diplomaService->generarYGuardarDiploma($curso, $persona);
+                        $count++;
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Error con {$persona->nombre}: " . $e->getMessage();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'count' => $count,
+                'message' => "Se generaron {$count} diplomas correctamente",
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al generar todos los diplomas: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar los diplomas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Descargar todos los diplomas de un curso en un archivo ZIP
+     */
+    public function descargarTodosLosDiplomas($cursoId)
+    {
+        try {
+            $curso = Curso::withTrashed()->findOrFail($cursoId);
+            $diplomas = \App\Models\Diploma::where('curso_id', $cursoId)
+                                          ->with('persona')
+                                          ->get();
+
+            if ($diplomas->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay diplomas generados para este curso'
+                ], 404);
+            }
+
+            $zip = new \ZipArchive();
+            $zipName = "diplomas_curso_{$curso->id}_" . date('Y-m-d_H-i-s') . '.zip';
+            $zipPath = storage_path('app/temp/' . $zipName);
+
+            // Crear directorio temporal si no existe
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
+            }
+
+            if ($zip->open($zipPath, \ZipArchive::CREATE) !== TRUE) {
+                throw new \Exception('No se pudo crear el archivo ZIP');
+            }
+
+            foreach ($diplomas as $diploma) {
+                if ($diploma->existeArchivoPdf()) {
+                    $pdfPath = Storage::disk('public')->path($diploma->path_pdf);
+                    $personaNombre = $diploma->persona->nombre ?? 'Participante';
+                    $zipFileName = "diploma_{$personaNombre}_{$curso->titulo}.pdf";
+                    $zip->addFile($pdfPath, $zipFileName);
+                }
+            }
+
+            $zip->close();
+
+            return response()->download($zipPath, $zipName, [
+                'Content-Type' => 'application/zip',
+                'Cache-Control' => 'no-cache, must-revalidate',
+                'Pragma' => 'no-cache'
+            ])->deleteFileAfterSend();
+
+        } catch (\Exception $e) {
+            Log::error('Error al descargar todos los diplomas: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el archivo ZIP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verificar cuántos diplomas hay generados para un curso específico
+     */
+    public function verificarDiplomasCurso($cursoId)
+    {
+        try {
+            $curso = Curso::withTrashed()->findOrFail($cursoId);
+            $count = \App\Models\Diploma::where('curso_id', $cursoId)->count();
+            
+            return response()->json([
+                'success' => true,
+                'count' => $count,
+                'message' => "Hay {$count} diplomas generados para el curso '{$curso->titulo}'"
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error al verificar diplomas del curso: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al verificar los diplomas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

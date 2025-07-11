@@ -19,6 +19,7 @@ class Persona extends Model
         'tfno',
         'direccion_id',
         'user_id',
+        'foto_perfil', // nuevo campo para la foto de perfil
     ];
 
     protected $casts = [

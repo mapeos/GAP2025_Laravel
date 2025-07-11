@@ -1,3 +1,4 @@
+@if(Auth::check())
 @php
     // Obtener los mensajes no leídos para el usuario autenticado
     $unreadService = app(\App\Application\Chat\GetUnreadCountForUser::class);
@@ -41,7 +42,7 @@
                     $usuario = $usuarios->firstWhere('id', $otro);
                     $unread = $unreadCounts[$otro] ?? 0;
                 @endphp
-                <a href="{{ route('chat.show', $otro) }}" class="dropdown-item notification-item px-3 py-2 border-bottom">
+                <a href="{{ route('chat.index', ['user_id' => $otro]) }}" class="dropdown-item notification-item px-3 py-2 border-bottom wa-chat-item" data-user-id="{{ $otro }}">
                     <div class="d-flex">
                         <div class="flex-shrink-0">
                             <div class="avatar avatar-sm bg-info-subtle"><i class="ri-chat-3-line text-info"></i></div>
@@ -75,8 +76,12 @@
         data-bs-target="#userProfileOffcanvas"
         aria-controls="userProfileOffcanvas">
         <div class="avatar position-relative">
-            <img src="{{ asset('/admin/img/avatars/avatar2.jpg') }}" alt="User" class="rounded-circle" />
+            <img src="{{ Auth::user()->persona && Auth::user()->persona->foto_perfil ? asset('storage/' . Auth::user()->persona->foto_perfil) : asset('/admin/img/avatars/avatar2.jpg') }}" alt="User" class="rounded-circle" />
             <span class="online-indicator"></span>
         </div>
     </button>
 </div>
+@else
+<!-- Theme Toggle Button for non-authenticated users -->
+<button class="btn p-0 border-0 shadow-none" id="theme-toggle"><i class="ri-sun-line fs-5"></i></button>
+@endif

@@ -38,20 +38,36 @@ $tratamiento = (object)[
                     </tr>
                     <tr>
                         <th>Especialidad</th>
-                        <td>{{ $tratamiento->especialidad->nombre ?? 'No disponible' }}</td>
+                        <td>{{ $tratamiento->especialidad ? $tratamiento->especialidad->nombre : 'No disponible' }}</td>
                     </tr>
                     <tr>
                         <th>Duración</th>
-                        <td>{{ $tratamiento->duracion_formateada ?? ($tratamiento->duracion_minutos . ' minutos') }}</td>
+                        <td>
+                            @if(isset($tratamiento->duracion_formateada))
+                                {{ $tratamiento->duracion_formateada }}
+                            @elseif(isset($tratamiento->duracion_minutos))
+                                {{ $tratamiento->duracion_minutos . ' minutos' }}
+                            @else
+                                No disponible
+                            @endif
+                        </td>
                     </tr>
                     <tr>
                         <th>Costo</th>
-                        <td>{{ $tratamiento->costo_formateado ?? '€0.00' }}</td>
+                        <td>
+                            @if(isset($tratamiento->costo_formateado))
+                                {{ $tratamiento->costo_formateado }}
+                            @elseif(isset($tratamiento->costo))
+                                €{{ number_format($tratamiento->costo, 2) }}
+                            @else
+                                No disponible
+                            @endif
+                        </td>
                     </tr>
                     <tr>
                         <th>Activo</th>
                         <td>
-                            @if(isset($tratamiento) && $tratamiento->activo)
+                            @if(isset($tratamiento->activo) && $tratamiento->activo)
                                 <span class="badge bg-success">Sí</span>
                             @else
                                 <span class="badge bg-danger">No</span>
@@ -62,7 +78,7 @@ $tratamiento = (object)[
             </table>
         </div>
     </div>
-    <a href="/facultativo/tratamientos" class="btn btn-outline-success">
+                    <a href="{{ route('facultativo.tratamientos') }}" class="btn btn-outline-success">
         <i class="ri-arrow-left-line"></i> Volver a la lista de tratamientos
     </a>
 </div>

@@ -21,7 +21,7 @@ $especialidades = collect([
 @section('title', 'Nueva Cita')
 @section('content')
 <div class="container-fluid">
-   <form class="space-y-4" method="POST" action="#">
+   <form class="space-y-4" method="POST" action="{{ route('facultativo.tratamiento.store') }}">
       @csrf
       @if(isset($tratamiento))
         @method('PUT')
@@ -29,37 +29,40 @@ $especialidades = collect([
       <style>
         input[type="text"], input[type="number"], textarea, select {
           width: 100% !important;
-          background-color: #1e293b;
-          color: #f1f5f9;
-          border: 1px solid #334155;
+          background-color: #fff;
+          color: #22223b;
+          border: 1px solid #b5b5b5;
           border-radius: 0.5rem;
           padding: 0.75rem 1rem;
           font-size: 1rem;
           transition: border-color 0.2s, box-shadow 0.2s;
-          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+          box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03);
         }
         input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
           outline: none;
-          border-color: #2563eb;
-          box-shadow: 0 0 0 2px #2563eb33;
-          background-color: #0f172a;
+          border-color: #38b000;
+          box-shadow: 0 0 0 2px #38b00033;
+          background-color: #f8fff4;
         }
         label {
-          color: #f1f5f9;
+          color: #22223b;
         }
         ::placeholder {
-          color: #94a3b8;
+          color: #adb5bd;
           opacity: 1;
         }
+        .form-title {
+          color: #38b000;
+        }
       </style>
-      <h3 class="text-green-500 font-bold text-xl mb-4"><i class="ri-sticky-note-add-line"></i> {{ isset($tratamiento) ? 'Editar' : 'Nuevo' }} Tratamiento Médico</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+      <h3 class="form-title font-bold text-xl mb-4"><i class="ri-sticky-note-add-line"></i> Nuevo Tratamiento Médico</h3>
+      <div class="row g-4">
+        <div class="col-md-6">
           <label class="block text-sm font-medium">Nombre del tratamiento</label>
           <input type="text" name="nombre" value="{{ old('nombre', $tratamiento->nombre ?? '') }}" required placeholder="Ej: Limpieza Dental">
         </div>
-        <div>
-          <label class="block text-sm font-medium mt-5">Especialidad</label>
+        <div class="col-md-6">
+          <label class="block text-sm font-medium">Especialidad</label>
           <select name="especialidad_id" required>
             <option value="">Seleccione una especialidad</option>
             @foreach($especialidades as $especialidad)
@@ -69,27 +72,27 @@ $especialidades = collect([
             @endforeach
           </select>
         </div>
-        <div>
-          <label class="block text-sm font-medium mt-5">Duración (minutos)</label>
+        <div class="col-md-6">
+          <label class="block text-sm font-medium">Duración (minutos)</label>
           <input type="number" name="duracion_minutos" min="1" value="{{ old('duracion_minutos', $tratamiento->duracion_minutos ?? '') }}" required placeholder="Ej: 30">
         </div>
-        <div>
-          <label class="block text-sm font-medium mt-5">Costo (€)</label>
+        <div class="col-md-6">
+          <label class="block text-sm font-medium">Costo (€)</label>
           <input type="number" name="costo" min="0" step="0.01" value="{{ old('costo', $tratamiento->costo ?? '') }}" required placeholder="Ej: 35.00">
         </div>
+        <div class="col-12">
+          <label class="block text-sm font-medium">Descripción</label>
+          <textarea name="descripcion" rows="3" required placeholder="Describe el tratamiento...">{{ old('descripcion', $tratamiento->descripcion ?? '') }}</textarea>
+        </div>
+        <div class="col-12">
+          <label class="block text-sm font-medium">¿Activo?</label>
+          <select name="activo" required>
+            <option value="1" {{ old('activo', $tratamiento->activo ?? 1) == 1 ? 'selected' : '' }}>Sí</option>
+            <option value="0" {{ old('activo', $tratamiento->activo ?? 1) == 0 ? 'selected' : '' }}>No</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label class="block text-sm font-medium mt-5">Descripción</label>
-        <textarea name="descripcion" rows="3" required placeholder="Describe el tratamiento...">{{ old('descripcion', $tratamiento->descripcion ?? '') }}</textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mt-5">¿Activo?</label>
-        <select name="activo" required>
-          <option value="1" {{ old('activo', $tratamiento->activo ?? 1) == 1 ? 'selected' : '' }}>Sí</option>
-          <option value="0" {{ old('activo', $tratamiento->activo ?? 1) == 0 ? 'selected' : '' }}>No</option>
-        </select>
-      </div>
-      <div class="flex justify-end">
+      <div class="d-flex justify-content-end">
         <button type="submit" class="btn btn-outline-success font-semibold px-4 py-2 rounded mb-3 mt-5">
           <i class="ri-save-2-line"></i> Guardar tratamiento
         </button>

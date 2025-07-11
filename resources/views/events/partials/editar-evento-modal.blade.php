@@ -3,13 +3,21 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editarEventoModalLabel">Editar Evento</h5>
+                <h5 class="modal-title" id="editarEventoModalLabel">
+                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+                        Editar Evento
+                    @else
+                        Detalles del Evento
+                    @endif
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editarEventoForm">
+            <!-- version de edicion para profesores y Administradores -->
+            @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
+            <form id="editarEventoForm" onsubmit="handleEditarEvento(event)">
                 @csrf
                 @method('PUT')
-                <input type="hidden" id="editEventoId" name="evento_id">
+                <input type="hidden" id="editEventoId" name="id">
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-8">
@@ -18,7 +26,6 @@
                                 <input type="text" class="form-control" id="editTitulo" name="titulo" required>
                             </div>
                         </div>
-                        @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="editTipoEventoId" class="form-label">Tipo de Evento *</label>
@@ -30,7 +37,6 @@
                                 </select>
                             </div>
                         </div>
-                        @endif
                     </div>
 
                     <div class="row">
@@ -71,7 +77,6 @@
                         </div>
                     </div>
 
-                    @if(Auth::user()->hasRole('Administrador') || Auth::user()->hasRole('Profesor'))
                     <div class="mb-3">
                         <label for="editStatus" class="form-label">Estado</label>
                         <select class="form-select" id="editStatus" name="status">
@@ -79,7 +84,7 @@
                             <option value="0">Inactivo</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="editParticipantes" class="form-label">Participantes</label>
                         <select class="form-select" id="editParticipantes" name="participantes[]" multiple>
@@ -89,133 +94,85 @@
                         </select>
                         <small class="form-text text-muted">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples participantes</small>
                     </div>
-                    @endif
                 </div>
                 <div class="modal-footer">
                     <div class="me-auto">
                         <button type="button" class="btn btn-danger" onclick="deleteEvento(event)">
                             <i class="ri-delete-bin-line"></i> Eliminar
                         </button>
-                        <button type="button" class="btn btn-info" onclick="verDetallesEvento()">
-                            <i class="ri-eye-line"></i> Ver Detalles
-                        </button>
                     </div>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Actualizar Evento</button>
                 </div>
             </form>
+            @else
+            <!-- Versión de solo lectura para estudiantes -->
+            <div class="modal-body">
+                <input type="hidden" id="editEventoId">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Título</label>
+                            <p id="viewTitulo" class="form-control-plaintext"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Evento</label>
+                            <p id="viewTipoEvento" class="form-control-plaintext"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de inicio</label>
+                            <p id="viewFechaInicio" class="form-control-plaintext"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de fin</label>
+                            <p id="viewFechaFin" class="form-control-plaintext"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <p id="viewDescripcion" class="form-control-plaintext"></p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ubicación</label>
+                            <p id="viewUbicacion" class="form-control-plaintext"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">URL Virtual</label>
+                            <p id="viewUrlVirtual" class="form-control-plaintext"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Estado</label>
+                    <p id="viewStatus" class="form-control-plaintext"></p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Participantes</label>
+                    <p id="viewParticipantes" class="form-control-plaintext"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+            @endif
         </div>
     </div>
 </div>
-
-<script>
-function deleteEvento(event) {
-    // Si se proporciona un evento, prevenir el comportamiento predeterminado
-    if (event) {
-        event.preventDefault();
-    }
-
-    const eventoId = document.getElementById('editEventoId').value;
-    if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-        const modal = document.getElementById('editarEventoModal');
-
-        // Desactivar todos los elementos del modal
-        const allInputs = modal.querySelectorAll('input, select, textarea, button');
-        allInputs.forEach(el => el.disabled = true);
-
-        // Desactivar el botón de cierre del modal
-        const closeButton = modal.querySelector('.btn-close');
-        if (closeButton) closeButton.disabled = true;
-
-        // Obtener el botón de eliminar y añadir spinner
-        const deleteButton = document.querySelector('.btn-danger[onclick="deleteEvento(event)"]');
-        let spinner = null;
-        let btnText = null;
-
-        if (deleteButton) {
-            btnText = deleteButton.querySelector('.btn-text') || deleteButton;
-            const originalText = btnText.textContent;
-            btnText.textContent = 'Eliminando...';
-
-            // Crear y añadir spinner si no existe
-            spinner = deleteButton.querySelector('.spinner-border');
-            if (!spinner) {
-                spinner = document.createElement('span');
-                spinner.className = 'spinner-border spinner-border-sm ms-2';
-                spinner.setAttribute('role', 'status');
-                spinner.setAttribute('aria-hidden', 'true');
-                deleteButton.appendChild(spinner);
-            } else {
-                spinner.classList.remove('d-none');
-            }
-        }
-
-        // Añadir parámetro json=true a la URL para forzar respuesta JSON
-        fetch(`/admin/events/${eventoId}?json=true`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            // Primero verificar si la respuesta es JSON
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json().then(data => {
-                    if (data.success) {
-                        // Operación exitosa
-                        showNotification('Evento eliminado exitosamente', 'success');
-                        bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
-
-                        // Cambiar a vista mensual después de eliminar
-                        calendar.changeView('dayGridMonth');
-
-                        // Recargar eventos
-                        loadEventosAjax();
-                    } else {
-                        showNotification(data.message || 'Error al eliminar evento', 'error');
-                    }
-                    return data;
-                });
-            } else {
-                // Si no es JSON, manejar como éxito de todas formas
-                showNotification('Evento eliminado exitosamente', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
-
-                // Cambiar a vista mensual después de eliminar
-                calendar.changeView('dayGridMonth');
-
-                // Recargar eventos
-                loadEventosAjax();
-
-                return { success: true };
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error al eliminar evento', 'error');
-        })
-        .finally(() => {
-            // Re-habilitar todos los elementos del modal
-            allInputs.forEach(el => el.disabled = false);
-            if (closeButton) closeButton.disabled = false;
-
-            // Re-habilitar el botón y ocultar spinner
-            if (deleteButton) {
-                if (spinner) spinner.classList.add('d-none');
-                if (btnText) btnText.textContent = 'Eliminar';
-            }
-        });
-    }
-}
-
-function verDetallesEvento() {
-    const eventoId = document.getElementById('editEventoId').value;
-    // Cerrar el modal antes de navegar
-    bootstrap.Modal.getInstance(document.getElementById('editarEventoModal')).hide();
-    // Navegar a la página de detalles
-    window.location.href = `/events/${eventoId}`;
-}
-</script>

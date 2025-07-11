@@ -5,14 +5,37 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Evento;
 use App\Models\TipoEvento;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EventoApiController extends Controller
 {
+    /**
+     * Helper method to check if user has a specific role
+     *
+     * @param User|null $user
+     * @param string $role
+     * @return bool
+     */
+    private function userHasRole($user, string $role): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        // Check if user has the hasRole method (from Spatie Laravel Permission)
+        if (method_exists($user, 'hasRole')) {
+            return $user->hasRole($role);
+        }
+
+        return false;
+    }
+
     /**
      * Obtiene la lista de eventos para el usuario autenticado
      *
@@ -174,7 +197,7 @@ class EventoApiController extends Controller
             $data['creado_por'] = Auth::id();
 
             // Verificar si el usuario es alumno y forzar tipo de evento a Recordatorio Personal
-            if (Auth::user()->hasRole('alumno')) {
+            if ($this->userHasRole(Auth::user(), 'alumno')) {
                 $recordatorioPersonal = Cache::remember('tipo_recordatorio', 3600, function () {
                     return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
                 });
@@ -270,7 +293,7 @@ class EventoApiController extends Controller
             }
 
             // Si el usuario es alumno, no permitir cambiar el tipo de evento
-            if (Auth::user()->hasRole('alumno') && $request->has('tipo_evento_id')) {
+            if ($this->userHasRole(Auth::user(), 'alumno') && $request->has('tipo_evento_id')) {
                 $recordatorioPersonal = Cache::remember('tipo_recordatorio', 3600, function () {
                     return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
                 });
@@ -381,6 +404,266 @@ class EventoApiController extends Controller
                 'success' => false,
                 'message' => 'Evento no encontrado'
             ], 404);
+        }
+    }
+
+    /**
+     * 📅 Obtener eventos para agenda/calendario con formato optimizado
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function agenda(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+            $user = Auth::user();
+
+            // Parámetros de filtrado
+            $fechaInicio = $request->get('fecha_inicio');
+            $fechaFin = $request->get('fecha_fin');
+            $tipoEvento = $request->get('tipo_evento_id');
+            $vista = $request->get('vista', 'month'); // month, week, day, agenda
+
+            // Construir query base
+            $query = Evento::with(['tipoEvento:id,nombre,color', 'participantes:id,name,email'])
+                ->select(['id', 'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'tipo_evento_id', 'creado_por', 'ubicacion', 'url_virtual', 'status'])
+                ->where('status', true);
+
+            // Filtros de fecha
+            if ($fechaInicio) {
+                $query->where('fecha_inicio', '>=', $fechaInicio);
+            }
+            if ($fechaFin) {
+                $query->where('fecha_fin', '<=', $fechaFin);
+            }
+
+            // Filtro por tipo de evento
+            if ($tipoEvento) {
+                $query->where('tipo_evento_id', $tipoEvento);
+            }
+
+            // Aplicar filtros de permisos según rol
+            $tipoRecordatorio = Cache::remember('tipo_recordatorio', 3600, function () {
+                return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
+            });
+
+            if ($this->userHasRole($user, 'alumno')) {
+                // Alumnos ven eventos públicos + sus recordatorios personales
+                $query->where(function ($q) use ($tipoRecordatorio, $userId) {
+                    $q->where(function ($subQ) use ($tipoRecordatorio) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', '!=', $tipoRecordatorio->id);
+                        }
+                    })->orWhere(function ($subQ) use ($tipoRecordatorio, $userId) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', $tipoRecordatorio->id)
+                                 ->where('creado_por', $userId);
+                        }
+                    });
+                });
+            } elseif ($this->userHasRole($user, 'profesor')) {
+                // Profesores ven todos los eventos + sus recordatorios
+                $query->where(function ($q) use ($tipoRecordatorio, $userId) {
+                    $q->where(function ($subQ) use ($tipoRecordatorio) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', '!=', $tipoRecordatorio->id);
+                        }
+                    })->orWhere(function ($subQ) use ($tipoRecordatorio, $userId) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', $tipoRecordatorio->id)
+                                 ->where('creado_por', $userId);
+                        }
+                    });
+                });
+            }
+            // Administradores ven todo (sin filtros adicionales)
+
+            $eventos = $query->orderBy('fecha_inicio', 'asc')->get();
+
+            // Formatear eventos para diferentes vistas
+            $eventosFormateados = $eventos->map(function ($evento) use ($vista) {
+                $eventoData = [
+                    'id' => $evento->id,
+                    'title' => $evento->titulo,
+                    'start' => $evento->fecha_inicio->toISOString(),
+                    'end' => $evento->fecha_fin->toISOString(),
+                    'description' => $evento->descripcion,
+                    'location' => $evento->ubicacion,
+                    'url_virtual' => $evento->url_virtual,
+                    'color' => $evento->tipoEvento->color ?? '#3788d8',
+                    'backgroundColor' => $evento->tipoEvento->color ?? '#3788d8',
+                    'borderColor' => $evento->tipoEvento->color ?? '#3788d8',
+                    'textColor' => '#ffffff',
+                    'tipo_evento' => [
+                        'id' => $evento->tipoEvento->id,
+                        'nombre' => $evento->tipoEvento->nombre,
+                        'color' => $evento->tipoEvento->color
+                    ],
+                    'creado_por' => $evento->creado_por,
+                    'participantes_count' => $evento->participantes->count(),
+                    'es_creador' => $evento->creado_por === Auth::id()
+                ];
+
+                // Información adicional para vista de agenda
+                if ($vista === 'agenda') {
+                    $eventoData['fecha_inicio_formatted'] = $evento->fecha_inicio->format('d/m/Y H:i');
+                    $eventoData['fecha_fin_formatted'] = $evento->fecha_fin->format('d/m/Y H:i');
+                    $eventoData['duracion'] = $evento->fecha_inicio->diffForHumans($evento->fecha_fin, true);
+                    $eventoData['participantes'] = $evento->participantes->map(function ($participante) {
+                        return [
+                            'id' => $participante->id,
+                            'name' => $participante->name,
+                            'email' => $participante->email,
+                            'rol' => $participante->pivot->rol ?? 'participante'
+                        ];
+                    });
+                }
+
+                return $eventoData;
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Eventos de agenda obtenidos correctamente',
+                'data' => $eventosFormateados,
+                'meta' => [
+                    'total' => $eventosFormateados->count(),
+                    'vista' => $vista,
+                    'fecha_inicio' => $fechaInicio,
+                    'fecha_fin' => $fechaFin,
+                    'filtros_aplicados' => [
+                        'tipo_evento' => $tipoEvento,
+                        'fecha_rango' => $fechaInicio && $fechaFin
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('[API][AGENDA] Error al obtener eventos de agenda', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener eventos de agenda'
+            ], 500);
+        }
+    }
+
+    /**
+     * 📊 Obtener resumen de eventos para dashboard
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function resumen(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+            $user = Auth::user();
+
+            $hoy = now()->startOfDay();
+            $finSemana = now()->endOfWeek();
+            $finMes = now()->endOfMonth();
+
+            // Query base con permisos
+            $queryBase = Evento::where('status', true);
+
+            $tipoRecordatorio = Cache::remember('tipo_recordatorio', 3600, function () {
+                return TipoEvento::where('nombre', 'Recordatorio Personal')->first();
+            });
+
+            // Aplicar filtros de permisos
+            if ($this->userHasRole($user, 'alumno')) {
+                $queryBase->where(function ($q) use ($tipoRecordatorio, $userId) {
+                    $q->where(function ($subQ) use ($tipoRecordatorio) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', '!=', $tipoRecordatorio->id);
+                        }
+                    })->orWhere(function ($subQ) use ($tipoRecordatorio, $userId) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', $tipoRecordatorio->id)
+                                 ->where('creado_por', $userId);
+                        }
+                    });
+                });
+            } elseif ($this->userHasRole($user, 'profesor')) {
+                $queryBase->where(function ($q) use ($tipoRecordatorio, $userId) {
+                    $q->where(function ($subQ) use ($tipoRecordatorio) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', '!=', $tipoRecordatorio->id);
+                        }
+                    })->orWhere(function ($subQ) use ($tipoRecordatorio, $userId) {
+                        if ($tipoRecordatorio) {
+                            $subQ->where('tipo_evento_id', $tipoRecordatorio->id)
+                                 ->where('creado_por', $userId);
+                        }
+                    });
+                });
+            }
+
+            // Contadores
+            $eventosHoy = (clone $queryBase)->whereDate('fecha_inicio', $hoy)->count();
+            $eventosSemana = (clone $queryBase)->whereBetween('fecha_inicio', [$hoy, $finSemana])->count();
+            $eventosMes = (clone $queryBase)->whereBetween('fecha_inicio', [$hoy, $finMes])->count();
+
+            // Próximos eventos (los 5 más cercanos)
+            $proximosEventos = (clone $queryBase)
+                ->with(['tipoEvento:id,nombre,color'])
+                ->where('fecha_inicio', '>=', now())
+                ->orderBy('fecha_inicio', 'asc')
+                ->limit(5)
+                ->get()
+                ->map(function ($evento) {
+                    return [
+                        'id' => $evento->id,
+                        'titulo' => $evento->titulo,
+                        'fecha_inicio' => $evento->fecha_inicio->toISOString(),
+                        'fecha_inicio_formatted' => $evento->fecha_inicio->format('d/m/Y H:i'),
+                        'tiempo_restante' => $evento->fecha_inicio->diffForHumans(),
+                        'tipo_evento' => [
+                            'nombre' => $evento->tipoEvento->nombre,
+                            'color' => $evento->tipoEvento->color
+                        ]
+                    ];
+                });
+
+            // Eventos por tipo
+            $eventosPorTipo = (clone $queryBase)
+                ->join('tipos_evento', 'eventos.tipo_evento_id', '=', 'tipos_evento.id')
+                ->selectRaw('tipos_evento.nombre, tipos_evento.color, COUNT(*) as total')
+                ->groupBy('tipos_evento.id', 'tipos_evento.nombre', 'tipos_evento.color')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resumen de eventos obtenido correctamente',
+                'data' => [
+                    'contadores' => [
+                        'hoy' => $eventosHoy,
+                        'esta_semana' => $eventosSemana,
+                        'este_mes' => $eventosMes
+                    ],
+                    'proximos_eventos' => $proximosEventos,
+                    'eventos_por_tipo' => $eventosPorTipo,
+                    'fecha_actual' => now()->toISOString(),
+                    'fecha_actual_formatted' => now()->format('d/m/Y')
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('[API][RESUMEN_EVENTOS] Error al obtener resumen', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener resumen de eventos'
+            ], 500);
         }
     }
 

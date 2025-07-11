@@ -36,7 +36,7 @@
 @endphp
 
 {{-- Gestión de participantes del curso --}}
-<div class="card h-100">
+<div class="card">
     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
         <span>
             <i class="ri-team-line me-2"></i>
@@ -66,6 +66,7 @@
                             <th>Nombre</th>
                             <th>Email</th>
                             <th width="80">Rol</th>
+                            <th width="120">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,6 +100,40 @@
                                     @endphp
                                     <span class="badge {{ $rolClass }}">{{ $rolText }}</span>
                                 </td>
+                                <td>
+                                    @php
+                                        $diplomaExiste = \App\Models\Diploma::existeParaParticipante($curso->id, $persona->id);
+                                    @endphp
+                                    
+                                    @if($diplomaExiste)
+                                        @php
+                                            $diploma = \App\Models\Diploma::obtenerParaParticipante($curso->id, $persona->id);
+                                        @endphp
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ route('admin.cursos.diploma.participante.descargar', [$curso->id, $persona->id]) }}" 
+                                               class="btn btn-success" 
+                                               title="Descargar Diploma">
+                                                <i class="ri-download-line"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-info ver-diploma-btn"
+                                                    data-curso-id="{{ $curso->id }}"
+                                                    data-persona-id="{{ $persona->id }}"
+                                                    title="Ver Diploma">
+                                                <i class="ri-eye-line"></i>
+                                            </button>
+                                        </div>
+                                    @else
+                                        <button type="button" 
+                                                class="btn btn-outline-primary btn-sm generar-diploma-btn"
+                                                data-curso-id="{{ $curso->id }}"
+                                                data-persona-id="{{ $persona->id }}"
+                                                data-persona-nombre="{{ $persona->nombre ?? 'Participante' }}"
+                                                title="Generar Diploma">
+                                            <i class="ri-file-text-line"></i>
+                                        </button>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -123,6 +158,19 @@
                         Añadir más
                     </button>
                 @endif
+                
+                {{-- Botones de gestión masiva de diplomas --}}
+                <button id="generar-todos-diplomas" class="btn btn-outline-warning btn-sm" 
+                        data-curso-id="{{ $curso->id }}">
+                    <i class="ri-file-text-line me-1"></i>
+                    Generar todos los diplomas
+                </button>
+                
+                <button id="descargar-todos-diplomas" class="btn btn-outline-info btn-sm"
+                        data-curso-id="{{ $curso->id }}">
+                    <i class="ri-download-line me-1"></i>
+                    Descargar todos
+                </button>
             </div>
         @else
             <div class="text-center py-4">
@@ -161,4 +209,182 @@
     border-radius: 50%;
     font-size: 14px;
 }
+
+.generar-diploma-btn.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.generar-diploma-btn.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar clics en botones de generar diploma individual
+    document.querySelectorAll('.generar-diploma-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const cursoId = this.dataset.cursoId;
+            const personaId = this.dataset.personaId;
+            const personaNombre = this.dataset.personaNombre;
+            
+            // Confirmar acción
+            if (!confirm(`¿Estás seguro de que quieres generar el diploma para ${personaNombre}?`)) {
+                return;
+            }
+            
+            // Mostrar estado de carga
+            this.classList.add('loading');
+            this.innerHTML = '<i class="ri-loader-4-line"></i>';
+            this.disabled = true;
+            
+            // Realizar petición AJAX
+            fetch(`/admin/cursos/${cursoId}/diploma/participante/${personaId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar mensaje de éxito
+                    alert('Diploma generado correctamente');
+                    
+                    // Recargar la página para mostrar el botón de descarga
+                    window.location.reload();
+                } else {
+                    // Mostrar mensaje de error
+                    alert('Error: ' + data.message);
+                    
+                    // Restaurar botón
+                    this.classList.remove('loading');
+                    this.innerHTML = '<i class="ri-file-text-line"></i>';
+                    this.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al generar el diploma. Inténtalo de nuevo.');
+                
+                // Restaurar botón
+                this.classList.remove('loading');
+                this.innerHTML = '<i class="ri-file-text-line"></i>';
+                this.disabled = false;
+            });
+        });
+    });
+
+    // Manejar clics en botones de ver diploma
+    document.querySelectorAll('.ver-diploma-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const cursoId = this.dataset.cursoId;
+            const personaId = this.dataset.personaId;
+            
+            // Abrir el diploma en una nueva ventana
+            window.open(`/admin/cursos/${cursoId}/diploma/participante/${personaId}/ver`, '_blank');
+        });
+    });
+
+    // Manejar clic en "Generar todos los diplomas"
+    const btnGenerarTodos = document.getElementById('generar-todos-diplomas');
+    if (btnGenerarTodos) {
+        btnGenerarTodos.addEventListener('click', function() {
+            const cursoId = this.dataset.cursoId;
+            
+            if (!confirm('¿Estás seguro de que quieres generar diplomas para todos los participantes? Esto puede tomar varios minutos.')) {
+                return;
+            }
+            
+            // Mostrar estado de carga
+            this.disabled = true;
+            this.innerHTML = '<i class="ri-loader-4-line"></i> Generando...';
+            
+            // Realizar petición AJAX
+            fetch(`/admin/cursos/${cursoId}/diplomas/generar-todos`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.count === 0) {
+                        alert('Todos los diplomas de este curso ya están generados. No hay diplomas pendientes.');
+                    } else {
+                        alert(`Se generaron ${data.count} diplomas correctamente`);
+                    }
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    this.disabled = false;
+                    this.innerHTML = '<i class="ri-file-text-line me-1"></i> Generar todos los diplomas';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al generar los diplomas. Inténtalo de nuevo.');
+                this.disabled = false;
+                this.innerHTML = '<i class="ri-file-text-line me-1"></i> Generar todos los diplomas';
+            });
+        });
+    }
+
+    // Manejar clic en "Descargar todos"
+    const btnDescargarTodos = document.getElementById('descargar-todos-diplomas');
+    if (btnDescargarTodos) {
+        btnDescargarTodos.addEventListener('click', function() {
+            const cursoId = this.dataset.cursoId;
+            
+            if (!confirm('¿Estás seguro de que quieres descargar todos los diplomas de este curso?')) {
+                return;
+            }
+            
+            // Mostrar estado de carga
+            this.disabled = true;
+            this.innerHTML = '<i class="ri-loader-4-line"></i> Preparando descarga...';
+            
+            // Realizar petición AJAX para verificar si hay diplomas
+            fetch(`/admin/cursos/${cursoId}/diplomas/verificar`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.count === 0) {
+                    alert('No hay diplomas generados para este curso.');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="ri-download-line me-1"></i> Descargar todos';
+                } else {
+                    // Descargar directamente el archivo ZIP
+                    window.location.href = `/admin/cursos/${cursoId}/diplomas/descargar-todos`;
+                    
+                    // Restaurar botón después de un tiempo
+                    setTimeout(() => {
+                        this.disabled = false;
+                        this.innerHTML = '<i class="ri-download-line me-1"></i> Descargar todos';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al verificar los diplomas. Inténtalo de nuevo.');
+                this.disabled = false;
+                this.innerHTML = '<i class="ri-download-line me-1"></i> Descargar todos';
+            });
+        });
+    }
+});
+</script>

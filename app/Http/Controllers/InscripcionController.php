@@ -70,26 +70,58 @@ class InscripcionController extends Controller
             'persona_id' => $request->persona_id,
             'rol_participacion_id' => $request->rol_participacion_id
         ]);
+        
         $request->validate([
             'persona_id' => 'required|exists:personas,id',
             'rol_participacion_id' => 'required|exists:roles_participacion,id',
         ]);
 
-        $yaInscrito = $curso->personas()->where('persona_id', $request->persona_id)->exists();
-        Log::info('[INSCRIPCION] ¿Ya inscrito?', ['yaInscrito' => $yaInscrito]);
+        try {
+            // Verificar si ya existe la participación usando el modelo Participacion
+            $participacionExistente = \App\Models\Participacion::where('curso_id', $curso->id)
+                ->where('persona_id', $request->persona_id)
+                ->first();
+            
+            Log::info('[INSCRIPCION] ¿Ya inscrito?', ['yaInscrito' => $participacionExistente ? true : false]);
 
-        if ($yaInscrito) {
-            Log::warning('[INSCRIPCION] Persona ya inscrita', ['curso_id' => $curso->id, 'persona_id' => $request->persona_id]);
-            return redirect()->back()->with('error', 'La persona ya está inscrita en este curso.');
+            if ($participacionExistente) {
+                Log::warning('[INSCRIPCION] Persona ya inscrita', [
+                    'curso_id' => $curso->id, 
+                    'persona_id' => $request->persona_id,
+                    'estado_actual' => $participacionExistente->estado
+                ]);
+                return redirect()->back()->with('error', 'La persona ya está inscrita en este curso.');
+            }
+
+            // Usar el método helper para crear la participación de forma segura
+            $participacion = \App\Models\Participacion::crearParticipacionSegura(
+                $curso->id,
+                $request->persona_id,
+                $request->rol_participacion_id,
+                'pendiente'
+            );
+            
+            if (!$participacion) {
+                return redirect()->back()->with('error', 'No se pudo crear la inscripción. La persona ya podría estar inscrita.');
+            }
+            
+            Log::info('[INSCRIPCION] Persona inscrita correctamente', [
+                'curso_id' => $curso->id, 
+                'persona_id' => $request->persona_id
+            ]);
+
+            return redirect()->back()->with('success', 'Persona inscrita correctamente.');
+            
+        } catch (\Exception $e) {
+            Log::error('[INSCRIPCION] Error al inscribir persona', [
+                'curso_id' => $curso->id,
+                'persona_id' => $request->persona_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Error al inscribir a la persona: ' . $e->getMessage());
         }
-
-        $curso->personas()->attach($request->persona_id, [
-            'rol_participacion_id' => $request->rol_participacion_id,
-            'estado' => 'pendiente',
-        ]);
-        Log::info('[INSCRIPCION] Persona inscrita correctamente', ['curso_id' => $curso->id, 'persona_id' => $request->persona_id]);
-
-        return redirect()->back()->with('success', 'Persona inscrita correctamente.');
     }
 
     /**

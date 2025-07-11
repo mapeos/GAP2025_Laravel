@@ -27,11 +27,20 @@
                         <tr><th>Provincia</th><td>{{ $persona->direccion->provincia }}</td></tr>
                         <tr><th>País</th><td>{{ $persona->direccion->pais }}</td></tr>
                     @endif
+                    <tr>
+                        <th>Foto de perfil</th>
+                        <td>
+                            <img src="{{ $persona->foto_perfil ? asset('storage/' . $persona->foto_perfil) : asset('/admin/img/avatars/avatar2.jpg') }}" alt="Foto de perfil" class="rounded-circle" width="80" height="80">
+                        </td>
+                    </tr>
                 </tbody>
             </table>
-            <div class="mt-4">
+            <div class="mt-4 d-flex gap-2">
                 <a href="{{ route('profile.edit') }}" class="btn btn-secondary">
                     <i class="ri-user-settings-line me-1"></i> Editar Perfil
+                </a>
+                <a href="{{ route('alumno.home') }}" class="btn btn-outline-primary">
+                    <i class="ri-arrow-go-back-line me-1"></i> Volver al inicio
                 </a>
             </div>
         </div>

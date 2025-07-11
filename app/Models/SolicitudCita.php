@@ -14,6 +14,7 @@ class SolicitudCita extends Model
     protected $fillable = [
         'alumno_id',
         'profesor_id',
+        'facultativo_id',
         'motivo',
         'fecha_propuesta',
         'estado',
@@ -44,6 +45,12 @@ class SolicitudCita extends Model
     public function profesor()
     {
         return $this->belongsTo(User::class, 'profesor_id');
+    }
+
+    // Relación con facultativo (nueva)
+    public function facultativo()
+    {
+        return $this->belongsTo(Facultativo::class, 'facultativo_id');
     }
 
     // Relaciones médicas (nuevas)

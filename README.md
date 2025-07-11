@@ -1036,6 +1036,166 @@ Parámetros query opcionales:
 ```
 ---
 
+## Diplomas para cursos
+Genera diplomas PDF profesionales para los cursos completados usando **Browsershot** y **Puppeteer**.
+
+## 📋 Requisitos Previos
+
+- PHP 8.1+ con extensión **sodium** habilitada
+- Node.js y npm instalados
+- Composer instalado
+
+## 🚀 Instalación Paso a Paso
+
+### Habilitar extensión sodium en PHP
+
+**En Windows:**
+```bash
+# Verificar si está habilitada
+php -m | findstr sodium
+
+# Si no aparece, editar C:\php\php.ini
+# Buscar la línea: ;extension=sodium
+# Quitar el punto y coma: extension=sodium
+# Reiniciar terminal
+```
+
+**En Linux/Mac:**
+```bash
+# Verificar si está habilitada
+php -m | grep sodium
+
+# Si no aparece, instalar:
+sudo apt-get install php-sodium  # Ubuntu/Debian
+# o
+brew install php@8.1  # Mac con Homebrew
+```
+
+### 1. Configuración del Dockerfile (para contenedores Docker)
+
+Si estás usando Docker, asegúrate de que tu `Dockerfile` incluya estas dependencias:
+
+```dockerfile
+FROM php:8.3-fpm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libxss1 \
+    libxtst6 \
+    xdg-utils \
+    nodejs \
+    npm \
+    wget \
+    # Dependencias para sodium
+    libsodium-dev \
+    pkg-config
+
+# Instalar solamente una de las dos opciones: Chromium o Chrome
+# Install Google Chrome
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+# version con chromium
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-freefont-ttf \
+    --no-install-recommends
+
+# Install PHP extensions including sodium
+RUN docker-php-ext-install zip pdo_mysql mbstring exif pcntl bcmath gd xml pcntl
+RUN docker-php-ext-install sodium
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+```
+
+### Habilitar extensión sodium en PHP
+
+**En Docker (automático con el Dockerfile anterior):**
+```bash
+# La extensión sodium se instala automáticamente
+# Verificar que esté habilitada dentro del contenedor:
+docker-compose exec www php -m | grep sodium
+```
+
+### 2. Instalar Browsershot y Puppeteer
+
+```bash
+# En la raíz del proyecto Laravel
+composer require spatie/browsershot
+npm install puppeteer --save
+
+**Nota:** Si ya hiciste `npm install` en el paso anterior, Puppeteer ya estará instalado.
+```
+
+### 3. Verificar instalación
+
+```bash
+# Probar que todo funciona
+
+# Desde fuera del contenedor (en tu terminal local)
+docker exec alumnos-gap-app php artisan diploma:generate 1
+
+# O si estás dentro del contenedor
+php artisan diploma:generate 1
+```
+
+Si se genera un PDF, ¡todo está listo!
+
+## 🛠️ Uso Básico
+
+### Generar diploma para un curso
+
+```bash
+# Generar diploma para curso ID 1
+php artisan diploma:generate 1
+
+# El PDF se guarda en: storage/app/diplomas/
+```
+
+### Usar en el navegador
+
+1. Ve a la página del curso
+2. Haz clic en "Generar Diploma"
+3. Se descarga automáticamente
+
+## ⚙️ Configuración (Opcional)
+
+### Variables de entorno (.env)
+
+```env
+# Configuración de Browsershot
+BROWSERSHOT_CHROME_PATH=/usr/bin/google-chrome
+BROWSERSHOT_NODE_BINARY=/usr/bin/node
+BROWSERSHOT_NPM_BINARY=/usr/bin/npm
+```
+
 ## Notas para el Frontend
 
 - Todas las respuestas están en formato JSON.
@@ -1306,6 +1466,338 @@ curl -i -X POST \
 
 ---
 
+## 📧 Sistema de Notificaciones por Email
+
+El sistema de notificaciones por email permite enviar correos personalizados a los usuarios de la plataforma con un diseño profesional que coincide con la interfaz de administración.
+
+### Características
+
+- ✅ **Diseño Consistente**: Emails que coinciden con el estilo de la interfaz de administración
+- ✅ **Interfaz de Administración**: Panel web para crear y enviar notificaciones
+- ✅ **API REST**: Endpoints para envío programático
+- ✅ **Comando Artisan**: Envío masivo desde línea de comandos
+- ✅ **Filtrado de Usuarios**: Por rol, estado activo, o usuarios específicos
+- ✅ **Botones de Acción**: Enlaces personalizables en los emails
+- ✅ **Colas de Trabajo**: Soporte para envío asíncrono
+- ✅ **Plantillas Responsivas**: Diseño optimizado para móviles
+
+### Configuración Inicial
+
+#### 1. Configurar Variables de Entorno
+
+Edita tu archivo `.env` con la configuración de email:
+
+**Para Gmail (Recomendado para producción y entrega real):**
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=tu-email@gmail.com
+MAIL_PASSWORD=tu-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=tu-email@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+**⚠️ Configuración de Gmail paso a paso:**
+1. **Habilitar verificación en 2 pasos** en tu cuenta de Google
+2. **Ir a Configuración de Google** → Seguridad → Verificación en 2 pasos
+3. **Generar contraseña de aplicación**:
+   - Ve a "Contraseñas de aplicaciones"
+   - Selecciona "Correo" y "Otro (nombre personalizado)"
+   - Escribe "Laravel GAP 2025"
+   - Copia la contraseña generada (16 caracteres)
+4. **Usar la contraseña de aplicación** en `MAIL_PASSWORD` (no tu contraseña normal)
+
+**Para Mailtrap (Solo para desarrollo/testing):**
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=587
+MAIL_USERNAME=tu_usuario_mailtrap
+MAIL_PASSWORD=tu_password_mailtrap
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=tu-email@dominio.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+**⚠️ Nota sobre Mailtrap:**
+- Mailtrap **NO entrega emails reales** - solo los captura para testing
+- Los emails aparecen en tu sandbox de Mailtrap pero no llegan a destinatarios reales
+- Perfecto para desarrollo, pero no para producción
+
+**Obtener credenciales de Mailtrap (si eliges usarlo para testing):**
+1. Regístrate en [Mailtrap.io](https://mailtrap.io) (cuenta gratuita)
+2. Crea un nuevo inbox
+3. Ve a **SMTP Settings**
+4. Copia las credenciales que aparecen
+
+#### 2. Limpiar Caché de Configuración
+
+```bash
+# Dentro del contenedor Docker
+docker exec -it GAP_laravel php artisan config:clear
+docker exec -it GAP_laravel php artisan route:clear
+docker exec -it GAP_laravel php artisan view:clear
+```
+
+#### 3. Verificar Configuración
+
+Después de configurar las credenciales, verifica que todo esté correcto:
+
+```bash
+# Verificar que las credenciales se cargaron correctamente
+docker exec -it GAP_laravel php artisan config:show mail
+
+# Para Gmail deberías ver algo como:
+# 'username' => 'tu-email@gmail.com'
+# 'password' => 'abcd efgh ijkl mnop' (contraseña de aplicación de 16 caracteres)
+# 'host' => 'smtp.gmail.com'
+# Si ves 'null', las credenciales no se cargaron correctamente
+
+# Prueba rápida de envío (los emails llegarán a tu bandeja de entrada real)
+docker exec -it GAP_laravel php artisan email:send-notification \
+  --subject="Prueba de Email desde GAP 2025" \
+  --body="Si recibes este email, la configuración de Gmail está funcionando correctamente." \
+  --active-only
+```
+
+### Métodos de Uso
+
+#### 1. Interfaz de Administración (Recomendado)
+
+Accede al panel de administración:
+- **URL**: `/admin/email-notifications`
+- **Crear**: `/admin/email-notifications/create`
+- **Navegación**: Admin → Notificaciones → Email Notifications
+
+**Características del panel:**
+- Vista previa en tiempo real del email
+- Filtrado de usuarios por rol y estado
+- Envío de emails de prueba
+- Selección masiva de destinatarios
+- Estadísticas de envío
+
+#### 2. Comando Artisan (Para envío masivo)
+
+```bash
+# Envío básico a usuarios activos
+docker exec -it GAP_laravel php artisan email:send-notification \
+  --subject="Bienvenido a GAP 2025" \
+  --body="Bienvenido a nuestra plataforma educativa." \
+  --active-only
+
+# Envío completo con botón de acción
+docker exec -it GAP_laravel php artisan email:send-notification \
+  --subject="Nuevo Curso Disponible" \
+  --greeting="Estimado estudiante," \
+  --body="Se ha añadido un nuevo curso a tu plan de estudios. Haz clic en el botón para acceder." \
+  --action-text="Ver Curso" \
+  --action-url="https://tu-dominio.com/cursos/nuevo" \
+  --footer="¡Feliz aprendizaje!" \
+  --active-only
+
+# Ver todas las opciones disponibles
+docker exec -it GAP_laravel php artisan email:send-notification --help
+```
+
+#### 3. API REST (Para integración programática)
+
+**Enviar a múltiples usuarios:**
+```bash
+curl -X POST http://tu-dominio.com/api/email-notifications/send \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN_ADMIN" \
+  -d '{
+    "subject": "Actualización del Sistema",
+    "greeting": "Hola,",
+    "body": "El sistema ha sido actualizado con nuevas funcionalidades.",
+    "action_text": "Explorar Funciones",
+    "action_url": "https://tu-dominio.com/funciones",
+    "active_only": true
+  }'
+```
+
+**Enviar a usuario específico:**
+```bash
+curl -X POST http://tu-dominio.com/api/email-notifications/send-to-user/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN_ADMIN" \
+  -d '{
+    "subject": "Mensaje Personal",
+    "body": "Este es un mensaje personalizado para ti."
+  }'
+```
+
+#### 4. Uso Programático en Código
+
+```php
+use App\Models\User;
+use App\Notifications\CustomEmailNotification;
+
+// Enviar a un usuario específico
+$user = User::find(1);
+$notification = new CustomEmailNotification(
+    subject: 'Bienvenido',
+    greeting: '¡Hola!',
+    body: 'Bienvenido a nuestra plataforma.',
+    actionText: 'Comenzar',
+    actionUrl: 'https://tu-dominio.com/dashboard'
+);
+$user->notify($notification);
+
+// Envío masivo con colas
+use Illuminate\Support\Facades\Notification;
+
+$users = User::where('status', 1)->get();
+Notification::send($users, $notification);
+```
+
+### Personalización
+
+#### Modificar la Plantilla de Email
+
+Edita el archivo `resources/views/emails/custom-notification.blade.php` para:
+- Cambiar colores y estilos
+- Añadir tu logo
+- Modificar el diseño
+- Actualizar el pie de página
+
+#### Añadir Nuevos Parámetros
+
+Modifica `app/Notifications/CustomEmailNotification.php` para añadir nuevos campos personalizables.
+
+### Optimización para Producción
+
+#### 1. Configurar Colas de Trabajo
+
+```env
+QUEUE_CONNECTION=database
+```
+
+```bash
+# Ejecutar worker de colas
+docker exec -it GAP_laravel php artisan queue:work
+```
+
+#### 2. Configurar Proveedor de Email
+
+Para producción, considera usar:
+- **Amazon SES**
+- **SendGrid**
+- **Mailgun**
+- **Postmark**
+
+### Solución de Problemas
+
+#### Error 504 Gateway Timeout
+
+```bash
+# Reiniciar contenedores
+docker-compose restart
+
+# Verificar estado de contenedores
+docker ps
+
+# Limpiar cachés
+docker exec -it GAP_laravel php artisan config:clear
+docker exec -it GAP_laravel php artisan route:clear
+```
+
+#### Rutas no funcionan
+
+```bash
+# Verificar que las rutas de autenticación estén cargadas
+docker exec -it GAP_laravel php artisan route:list | findstr login
+
+# Si no aparecen, verificar bootstrap/app.php
+```
+
+#### Emails no se envían
+
+**Problema más común: Credenciales no configuradas**
+
+Si ves `MAIL_USERNAME=null` y `MAIL_PASSWORD=null` en tu `.env`, necesitas configurar las credenciales reales:
+
+```bash
+# 1. Verificar configuración actual
+docker exec -it GAP_laravel php artisan config:show mail
+
+# 2. Si las credenciales son null, actualizar .env con credenciales reales
+# Para Gmail:
+# MAIL_USERNAME=tu-email@gmail.com
+# MAIL_PASSWORD=tu-contraseña-de-aplicacion-de-16-caracteres
+
+# 3. Limpiar caché después de cambiar .env
+docker exec -it GAP_laravel php artisan config:clear
+
+# 4. Probar envío
+docker exec -it GAP_laravel php artisan email:send-notification \
+  --subject="Test Email" \
+  --body="Prueba de configuración de email" \
+  --active-only
+
+# 5. Verificar logs para errores
+docker exec -it GAP_laravel tail -f storage/logs/laravel.log
+
+# 6. Prueba manual con tinker
+docker exec -it GAP_laravel php artisan tinker
+# En tinker: Mail::raw('Test', function($msg) { $msg->to('test@example.com')->subject('Test'); });
+```
+
+**Problemas específicos de Gmail:**
+
+- **Error de autenticación**: Asegúrate de usar una contraseña de aplicación, no tu contraseña normal
+- **Verificación en 2 pasos**: Debe estar habilitada para generar contraseñas de aplicación
+- **Cuenta bloqueada**: Google puede bloquear el acceso si detecta actividad sospechosa
+- **Límites de envío**: Gmail tiene límites diarios de envío (500 emails/día para cuentas gratuitas)
+
+**Otros problemas comunes:**
+
+- **Puerto bloqueado**: Algunos ISP bloquean el puerto 587, prueba el puerto 465 con SSL
+- **Configuración de firewall**: Verificar que Docker pueda acceder a SMTP
+- **Emails van a spam**: Configura SPF, DKIM y DMARC en tu dominio
+
+**Configuraciones alternativas para Gmail:**
+
+```env
+# Puerto 465 con SSL (alternativa)
+MAIL_PORT=465
+MAIL_ENCRYPTION=ssl
+
+# Puerto 587 con TLS (recomendado)
+MAIL_PORT=587
+MAIL_ENCRYPTION=tls
+```
+
+### Archivos del Sistema
+
+- **Notificación**: `app/Notifications/CustomEmailNotification.php`
+- **Mailable**: `app/Mail/CustomNotificationMail.php`
+- **Plantilla**: `resources/views/emails/custom-notification.blade.php`
+- **Comando**: `app/Console/Commands/SendEmailNotification.php`
+- **Controlador Admin**: `app/Http/Controllers/Admin/EmailNotificationController.php`
+- **Controlador API**: `app/Http/Controllers/Api/EmailNotificationController.php`
+- **Vistas Admin**: `resources/views/admin/email-notifications/`
+
+### Integración con Recuperación de Contraseñas
+
+El sistema de notificaciones por email está integrado con la funcionalidad de recuperación de contraseñas:
+
+- **Notificación personalizada**: `app/Notifications/CustomPasswordResetNotification.php`
+- **Controlador de recuperación**: `app/Http/Controllers/Api/Auth/ForgotPasswordController.php`
+- **Métodos en AuthController**: `sendPasswordResetEmail()` y `resetPasswordWithToken()`
+
+**Endpoints API disponibles:**
+- `POST /api/auth/forgot-password` - Enviar código de recuperación (móvil)
+- `POST /api/auth/reset-password` - Restablecer con código (móvil)
+- `POST /api/auth/password/email` - Enviar enlace de recuperación (web)
+- `POST /api/auth/password/reset` - Restablecer con token (web)
+
+**📖 Documentación completa:** Ver `PASSWORD_RECOVERY_API_DOCS.md` para ejemplos de implementación en frontend (JavaScript, React, Vue, React Native, Flutter).
+
+---
+
 ## 📄 Acceso y descarga de archivos en Laravel (storage) con Docker
 
 Para que la descarga de archivos (como temarios PDF) funcione correctamente en todos los entornos Docker:
@@ -1357,25 +1849,61 @@ El sistema de chat permite la comunicación entre usuarios (alumnos y profesores
 - **Infraestructura:**
   - `app/Infrastructure/Chat/EloquentChatRepository.php`: Implementación con Eloquent.
   - `app/Models/ChatMessage.php`: Modelo Eloquent para la tabla `chat_messages`.
-- **Controlador:**
-  - `app/Http/Controllers/ChatController.php`: Orquesta los casos de uso y la vista.
+- **Controladores:**
+  - `app/Http/Controllers/ChatController.php`: Orquesta los casos de uso y la vista web.
+  - `app/Http/Controllers/Api/ChatApiController.php`: API REST para aplicaciones móviles.
+
+### API REST para Aplicaciones Móviles
+
+El sistema incluye una API completa para integración con aplicaciones móviles (Ionic Angular, React Native, etc.):
+
+#### Endpoints Principales:
+- **GET** `/api/chat/overview` - Vista general del chat (chats recientes + usuarios disponibles)
+- **GET** `/api/chat/users` - Lista de usuarios disponibles para chatear
+- **GET** `/api/chat/users/search` - Búsqueda de usuarios por rol y nombre
+- **GET** `/api/chat/recent` - Conversaciones recientes
+- **GET** `/api/chat/conversation/{userId}` - Mensajes de una conversación específica
+- **POST** `/api/chat/send/{userId}` - Enviar mensaje a un usuario
+
+#### Características de la API:
+- Autenticación con Laravel Sanctum
+- Respuestas JSON estructuradas
+- Manejo de errores completo
+- Optimizada para aplicaciones móviles
+- Documentación completa en `CHAT_API_DOCUMENTATION.md`
+
+#### Ejemplo de uso en Ionic Angular:
+```typescript
+// Cargar pantalla principal del chat
+getChatOverview(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/chat/overview`, this.getHeaders());
+}
+
+// Enviar mensaje
+sendMessage(userId: number, message: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/chat/send/${userId}`,
+    { message }, this.getHeaders());
+}
+```
 
 ### Migraciones
 - `database/migrations/2025_06_30_000000_create_chat_messages_table.php`: Crea la tabla principal del chat.
-- `database/migrations/2025_06_30_120000_add_read_at_to_chat_messages_table.php`: Añade la columna `read_at` para mensajes leídos.
 
-### Vistas
+### Vistas Web
 - `resources/views/chat/index.blade.php`: Lista de usuarios y chats recientes.
 - `resources/views/chat/show.blade.php`: Conversación entre dos usuarios.
 - En el home del alumno (`resources/views/alumno/home.blade.php`), la tarjeta de chat muestra los chats recientes.
 
 ### Características
-- Notificación de mensajes nuevos no leídos.
-- Marcar mensajes como leídos al abrir el chat.
-- Arquitectura desacoplada y fácil de extender.
+- Comunicación en tiempo real entre usuarios
+- Interfaz web y API móvil
+- Búsqueda de usuarios por rol
+- Historial de conversaciones
+- Arquitectura desacoplada y escalable
 
 ### Notas
 - El modelo y la tabla antigua `messages` han sido eliminados para evitar confusiones.
-- Si necesitas migrar datos antiguos, realiza un script de migración manual.
+- La API está optimizada para aplicaciones móviles con endpoints eficientes.
+- Consulta `CHAT_API_DOCUMENTATION.md` para documentación completa de la API.
 
 ---

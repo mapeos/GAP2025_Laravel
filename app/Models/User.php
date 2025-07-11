@@ -8,6 +8,9 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Message;
+use App\Notifications\CustomPasswordResetNotification;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -85,17 +88,22 @@ class User extends Authenticatable
     // Relación con mensajes enviados y recibidos (ajustada a ChatMessage)
     public function mensajesEnviados()
     {
-        return $this->hasMany(\App\Models\ChatMessage::class, 'sender_id');
+        return $this->hasMany(ChatMessage::class, 'sender_id');
     }
 
     public function mensajesRecibidos()
     {
-        return $this->hasMany(\App\Models\ChatMessage::class, 'receiver_id');
+        return $this->hasMany(ChatMessage::class, 'receiver_id');
     }
 
-    // Relación para acceder a las facturas del usuario
-    public function facturas()
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
     {
-        return $this->hasMany(\App\Models\Factura::class, 'user_id');
+        $this->notify(new CustomPasswordResetNotification($token, $this->email));
     }
 }

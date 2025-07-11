@@ -10,10 +10,16 @@
             <h5 class="mb-0"><i class="ri-user-settings-line me-2"></i>Editar mi perfil</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ route('profile.update') }}">
+            <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="row g-3">
+                    <div class="col-md-12 mb-3 text-center">
+                        <label for="foto_perfil" class="form-label">Foto de perfil</label><br>
+                        <img src="{{ $persona->foto_perfil ? asset('storage/' . $persona->foto_perfil) : asset('/admin/img/avatars/avatar2.jpg') }}" alt="Foto de perfil" class="rounded-circle mb-2" width="100" height="100">
+                        <input id="foto_perfil" type="file" name="foto_perfil" class="form-control mt-2 @error('foto_perfil') is-invalid @enderror" accept="image/*" />
+                        @error('foto_perfil')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
                     <div class="col-md-6">
                         <label for="nombre" class="form-label">Nombre</label>
                         <input id="nombre" type="text" name="nombre" value="{{ old('nombre', $persona->nombre) }}" required autofocus class="form-control @error('nombre') is-invalid @enderror" />

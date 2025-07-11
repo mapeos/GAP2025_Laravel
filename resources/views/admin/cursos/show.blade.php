@@ -20,6 +20,10 @@
                 <i class="ri-edit-line me-2"></i>
                 Editar Curso
             </a>
+            <a href="{{ route('admin.cursos.diploma', $curso->id) }}" class="btn btn-success">
+                <i class="ri-award-line me-2"></i>
+                Generar Diploma
+            </a>
             <a href="{{ route('admin.cursos.index') }}" class="btn btn-outline-secondary">
                 <i class="ri-arrow-left-line me-2"></i>
                 Volver a Cursos

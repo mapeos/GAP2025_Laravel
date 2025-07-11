@@ -36,31 +36,6 @@
         background-color: #0a58ca !important;
         border-color: #0a53be !important;
     }
-    /* Estilos para los manejadores de redimensionamiento */
-    .fc-event-resizable {
-        position: relative;
-    }
-    .fc-event-resizer {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 4px;
-        background-color: #fff;
-        border: 1px solid #0d6efd;
-        z-index: 4;
-    }
-    .fc-event-resizer-start {
-        top: 50%;
-        left: -4px;
-        margin-top: -4px;
-        cursor: w-resize;
-    }
-    .fc-event-resizer-end {
-        top: 50%;
-        right: -4px;
-        margin-top: -4px;
-        cursor: e-resize;
-    }
 
     /* Estilos para el indicador de carga */
     #calendar.loading {
@@ -245,5 +220,28 @@
         z-index: 1000;
         font-weight: bold;
         color: #0d6efd;
+    }
+    /* Estilos para días desplegables en la agenda */
+    .day-header {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .day-header:hover {
+        background-color: #e2e3e5;
+    }
+
+    .day-events {
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+    }
+
+    .day-events.collapsed {
+        max-height: 0;
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s;
     }
 </style>

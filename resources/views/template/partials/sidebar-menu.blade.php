@@ -29,14 +29,6 @@
 
             </ul>
         </li>
-                <!-- CURSOS PARTICIPANTES INSCRIPCIONES -->
-        <!-- CURSOS Section -->
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.cursos.index') }}">
-                <i class="ri-file-list-3-line"></i> <span>Cursos</span>
-                    </a>
-        </li>
-
         <!-- Seccion de Calendario -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
@@ -77,12 +69,22 @@
             <ul class="submenu">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.notificaciones.index') }}">
-                        <i class="ri-list-unordered"></i> <span>Listado</span>
+                        <i class="ri-smartphone-line"></i> <span>Push Notifications</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.notificaciones.create') }}">
-                        <i class="ri-add-line"></i> <span>Crear Notificación</span>
+                        <i class="ri-add-line"></i> <span>Crear Push</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.email-notifications.index') }}">
+                        <i class="ri-mail-line"></i> <span>Email Notifications</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.email-notifications.create') }}">
+                        <i class="ri-mail-send-line"></i> <span>Crear Email</span>
                     </a>
                 </li>
             </ul>
@@ -102,6 +104,12 @@
                 <i class="ri-file-list-3-line"></i> <span>Cursos</span>
             </a>
         </li>
+        <!-- DIPLOMAS Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.diplomas.index') }}">
+                <i class="ri-award-line"></i> <span>Gestión de Diplomas</span>
+            </a>
+        </li>
         <!-- PARTICIPANTES Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
@@ -117,25 +125,23 @@
             </ul>
         </li>
         <!-- INSCRIPCIONES Section -->
-        <li class="nav-item has-submenu parent">
-            <a class="nav-link" href="#">
-                <i class="ri-file-list-3-line"></i> <span>Inscripciones</span> <i class="ri-arrow-right-s-line ms-auto"></i>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.inscripciones.cursos.activos') }}">
+                <i class="ri-file-list-3-line"></i> <span>Inscripciones</span>
             </a>
-            <ul class="submenu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.inscripciones.cursos.activos') }}"> <span>Inscribir</span> </a>
-                </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="/pages/forms/select"> <span>Bajas</span> </a>
-                </li> -->
-            </ul>
+        </li>
+        <!-- SOLICITUDES DE INSCRIPCIÓN Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.solicitudes.index') }}">
+                <i class="ri-user-add-line"></i> <span>Solicitudes de inscripción</span>
+            </a>
         </li>
 
         <!-- Facultativo Section -->
         <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Facultativo</span></li>
         <!-- citas Section -->
         <li class="nav-item">
-            <a class="nav-link" href="/facultativo">
+            <a class="nav-link" href="{{ route('facultativo.home') }}">
                 <i class="ri-home-line"></i> <span>Home</span>
             </a>
         </li>
@@ -146,36 +152,42 @@
             </a>
             <ul class="submenu">
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/citas">
+                    <a class="nav-link" href="{{ route('facultativo.citas') }}">
                         <i class="ri-calendar-todo-fill"></i><span>Lista de citas</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/cita/new">
-                        <i class="ri-sticky-note-add-line"></i></i><span>Nueva citas</span>
+                    <a class="nav-link" href="{{ route('facultativo.citas') }}">
+                        <i class="ri-sticky-note-add-line"></i></i><span>Nueva cita</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/citas/confirmadas">
+                    <a class="nav-link" href="{{ route('facultativo.citas.confirmadas') }}">
                         <i class="ri-calendar-check-line"></i> <span>Citas Confirmadas</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/facultativo/citas/pendientes" target="_blank">
+                    <a class="nav-link" href="{{ route('facultativo.citas.pendientes') }}" target="_blank">
                         <i class="ri-calendar-schedule-line"></i> <span>Citas Pendientes</span>
                     </a>
             </ul>
         </li>
         <!-- PACIENTE Section -->
         <li class="nav-item">
-            <a class="nav-link" href="/facultativo/pacientes">
+            <a class="nav-link" href="{{ route('facultativo.pacientes') }}">
                 <i class="ri-team-line"></i> <span>Pacientes</span>
             </a>
         </li>
         <!-- Tratamientos Section -->
         <li class="nav-item">
-            <a class="nav-link" href="/facultativo/tratamientos">
+            <a class="nav-link" href="{{ route('facultativo.tratamientos') }}">
                 <i class="ri-capsule-line"></i> <span>Tratamientos</span>
+            </a>
+        </li>
+        <!-- Calendario Section -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('facultativo.calendario') }}">
+                <i class="ri-calendar-2-line"></i> <span>Calendario</span>
             </a>
         </li>
         <!-- Facultativo Section end -->

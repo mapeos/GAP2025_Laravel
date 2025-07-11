@@ -12,13 +12,18 @@ use App\Http\Controllers\EventoParticipanteController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\EmailNotificationController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\FacultativoController;
 use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\FirebaseAuthController;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\PagoController;
+use App\Http\Controllers\SolicitudCitaController;
+use App\Http\Controllers\FacultativoCalendarioController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AlumnoController;
+use App\Http\Controllers\PacienteController;
 
 // --------------------------------------------
 // Rutas públicas y generales
@@ -98,6 +103,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('solicitud-cita.recibidas');
     Route::put('/solicitud-cita/{solicitud}/estado', [\App\Http\Controllers\SolicitudCitaController::class, 'ActualizarEstado'])
         ->name('solicitud-cita.actualizar-estado');
+    Route::get('/solicitud-citas/{solicitud}/actualizar-estado', [\App\Http\Controllers\SolicitudCitaController::class, 'ActualizarEstado'])
+        ->name('solicitud-citas.actualizar-estado');
     Route::post('/solicitud-cita', [\App\Http\Controllers\SolicitudCitaController::class, 'store'])
         ->name('solicitud-cita.store');
 
@@ -144,10 +151,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [CursoController::class, 'index'])->name('index');
         Route::get('/create', [CursoController::class, 'create'])->name('create');
         Route::post('/', [CursoController::class, 'store'])->name('store');
-        Route::get('/{curso}', [CursoController::class, 'show'])->name('show');
-        Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit');
-        Route::put('/{curso}', [CursoController::class, 'update'])->name('update');
-         Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
+        
+        // Rutas específicas deben ir ANTES que la ruta genérica {curso}
+        Route::get('/{curso}/diploma', [CursoController::class, 'diploma'])->name('diploma');
+        Route::get('/{curso}/diploma/full', [CursoController::class, 'diplomaFull'])->name('diploma.full');
+        Route::get('/{curso}/diploma/download', [CursoController::class, 'downloadDiploma'])->name('diploma.download');
+        
+        // Nuevas rutas para diplomas por participante
+        Route::post('/{curso}/diploma/participante/{persona}', [CursoController::class, 'generarDiplomaParticipante'])->name('diploma.participante.generar');
+        Route::get('/{curso}/diploma/participante/{persona}/descargar', [CursoController::class, 'descargarDiplomaParticipante'])->name('diploma.participante.descargar');
+        Route::get('/{curso}/diploma/participante/{persona}/ver', [CursoController::class, 'verDiplomaParticipante'])->name('diploma.participante.ver');
+        
+        // Rutas para gestión masiva de diplomas
+        Route::post('/{curso}/diplomas/generar-todos', [CursoController::class, 'generarTodosLosDiplomas'])->name('diplomas.generar-todos');
+        Route::get('/{curso}/diplomas/verificar', [CursoController::class, 'verificarDiplomasCurso'])->name('diplomas.verificar');
+        Route::get('/{curso}/diplomas/descargar-todos', [CursoController::class, 'descargarTodosLosDiplomas'])->name('diplomas.descargar-todos');
+        
+        Route::post('/{curso}/upload-portada', [CursoController::class, 'uploadPortada'])->name('upload-portada');
         Route::delete('/{curso}/delete-temario', [CursoController::class, 'deleteTemario'])->name('delete-temario');
         Route::delete('/{curso}/delete-portada', [CursoController::class, 'deletePortada'])->name('delete-portada');
         Route::post('/{curso}/upload', [CursoController::class, 'uploadTemario'])->name('upload');
@@ -155,6 +175,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/toggle-estado', [CursoController::class, 'toggleEstado'])->name('toggle-estado');
         Route::post('/{id}/delete', [CursoController::class, 'delete'])->name('delete');
         Route::post('/{id}/restore', [CursoController::class, 'restore'])->name('restore');
+        
+        // Rutas genéricas van al final
+        Route::get('/{curso}', [CursoController::class, 'show'])->name('show');
+        Route::get('/{curso}/edit', [CursoController::class, 'edit'])->name('edit');
+        Route::put('/{curso}', [CursoController::class, 'update'])->name('update');
     });
 
     // Rutas públicas de cursos (para ver detalles)
@@ -240,11 +265,41 @@ Route::put('admin/categorias/{id}/restore', [CategoriasController::class, 'resto
 Route::get('/pendiente/home', [UserController::class, 'homePendiente'])->name('pendiente.home');
 // Rutas para el rol Alumno
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
-    Route::view('/alumno/home', 'alumno.home')->name('alumno.home');
+    Route::get('/alumno/home', [AlumnoController::class, 'home'])->name('alumno.home');
+    Route::get('/alumno/cursos', [\App\Http\Controllers\Alumno\CursoController::class, 'index'])->name('alumno.cursos.index');
+    Route::get('/alumno/cursos/{id}', [\App\Http\Controllers\Alumno\CursoController::class, 'show'])->name('alumno.cursos.show');
+    Route::post('/alumno/cursos/{id}/solicitar', [\App\Http\Controllers\Alumno\CursoController::class, 'solicitarInscripcion'])->name('alumno.cursos.solicitar');
+});
+
+// Rutas para el rol Paciente
+Route::middleware(['auth', 'role:Paciente'])->group(function () {
+    Route::get('/paciente/home', [PacienteController::class, 'home'])->name('paciente.home');
+    Route::get('/paciente/solicitar-cita', [PacienteController::class, 'solicitarCitaPage'])->name('paciente.solicitar-cita');
+    Route::get('/paciente/mis-citas', [PacienteController::class, 'misCitas'])->name('paciente.mis-citas');
+    Route::post('/paciente/solicitar-cita', [PacienteController::class, 'solicitarCita'])->name('paciente.solicitar-cita.post');
+    Route::get('/paciente/tratamientos/{especialidadId}', [PacienteController::class, 'getTratamientos'])->name('paciente.tratamientos');
 });
 // Rutas para el rol Profesor
 Route::middleware(['auth', 'role:Profesor'])->group(function () {
     Route::view('/profesor/home', 'profesor.home')->name('profesor.home');
+});
+// Rutas para el rol Facultativo
+Route::middleware(['auth', 'role:Facultativo'])->group(function () {
+    Route::get('/facultativo/calendario', [FacultativoCalendarioController::class, 'index'])->name('facultativo.calendario');
+    Route::get('/facultativo/calendario/citas', [FacultativoCalendarioController::class, 'getCitas'])->name('facultativo.calendario.citas');
+    Route::get('/facultativo/calendario/motivos-cita', [FacultativoCalendarioController::class, 'getMotivosCita'])->name('facultativo.calendario.motivos-cita');
+    Route::get('/facultativo/calendario/tratamientos/{especialidadId}', [FacultativoCalendarioController::class, 'getTratamientosPorEspecialidad'])->name('facultativo.calendario.tratamientos');
+    Route::get('/facultativo/calendario/pacientes', [FacultativoCalendarioController::class, 'getPacientes'])->name('facultativo.calendario.pacientes');
+    
+    // Rutas para citas con IA para facultativos
+    Route::post('/facultativo/ai/appointments/suggest', [\App\Http\Controllers\AiAppointmentController::class, 'suggestAppointment'])->name('facultativo.ai.appointments.suggest');
+    Route::post('/facultativo/ai/appointments/create', [\App\Http\Controllers\AiAppointmentController::class, 'createAppointment'])->name('facultativo.ai.appointments.create');
+});
+
+// Rutas para el calendario médico (accesible para facultativos y pacientes)
+Route::middleware(['auth', 'role:Facultativo|Paciente'])->group(function () {
+    Route::get('/facultativo/calendario', [FacultativoCalendarioController::class, 'index'])->name('facultativo.calendario');
+    Route::get('/facultativo/calendario/citas', [FacultativoCalendarioController::class, 'getCitas'])->name('facultativo.calendario.citas');
 });
 
 //--------------------------------------------
@@ -297,27 +352,53 @@ Route::prefix('events')->name('events.')->middleware(['auth'])->group(function (
 
 // Rutas de detalle de curso para alumnos
 Route::middleware(['auth', 'role:Alumno'])->group(function () {
-    Route::get('/alumno/cursos/{id}', function($id) {
-        $curso = \App\Models\Curso::findOrFail($id);
-        return view('alumno.cursos.show', compact('curso'));
-    })->name('alumno.cursos.show');
+    Route::get('/alumno/cursos/{id}', [\App\Http\Controllers\Alumno\CursoController::class, 'show'])->name('alumno.cursos.show');
     Route::get('/alumno/cursos/{id}/inscribir', function($id) {
         $curso = \App\Models\Curso::findOrFail($id);
         return view('alumno.cursos.inscribir', compact('curso'));
     })->name('alumno.cursos.inscribir');
     Route::post('/alumno/cursos/{id}/inscribir', function($id) {
-        $curso = \App\Models\Curso::findOrFail($id);
-        $user = Auth::user();
-        $persona = $user->persona;
-        // Validar que no esté ya inscrito
-        if ($persona && !$persona->cursos()->where('cursos.id', $curso->id)->exists()) {
-            $persona->cursos()->attach($curso->id, [
-                'rol_participacion_id' => 1, // 1 = alumno
-                'estado' => 'pendiente',
-            ]);
+        try {
+            $curso = \App\Models\Curso::findOrFail($id);
+            $user = Auth::user();
+            $persona = $user->persona;
+            
+            if (!$persona) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'No tienes un perfil de persona asociado.');
+            }
+            
+            // Verificar si ya existe la participación usando el modelo Participacion
+            $participacionExistente = \App\Models\Participacion::where('curso_id', $curso->id)
+                ->where('persona_id', $persona->id)
+                ->first();
+            
+            if ($participacionExistente) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'Ya tienes una inscripción pendiente o activa en este curso.');
+            }
+            
+            // Usar el método helper para crear la participación de forma segura
+            $participacion = \App\Models\Participacion::crearParticipacionSegura(
+                $curso->id,
+                $persona->id,
+                1, // 1 = alumno
+                'pendiente'
+            );
+            
+            if (!$participacion) {
+                return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'No se pudo procesar la inscripción. Ya podrías estar inscrito.');
+            }
+            
             return redirect()->route('alumno.cursos.show', $curso->id)->with('success', 'Solicitud de inscripción enviada.');
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('[ALUMNO_INSCRIPCION] Error al inscribir alumno', [
+                'curso_id' => $id,
+                'user_id' => Auth::user()?->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->route('alumno.cursos.show', $id)->with('error', 'Error al procesar la inscripción. Por favor, inténtalo de nuevo.');
         }
-        return redirect()->route('alumno.cursos.show', $curso->id)->with('error', 'Ya tienes una inscripción pendiente o activa en este curso.');
     })->name('alumno.cursos.inscribir.solicitar');
 });
 
@@ -328,6 +409,19 @@ Route::prefix('admin')
         Route::get('notificaciones', [NotificationController::class, 'index'])->name('notificaciones.index');
         Route::get('notificaciones/create', [NotificationController::class, 'create'])->name('notificaciones.create');
         Route::post('notificaciones', [NotificationController::class, 'store'])->name('notificaciones.store');
+
+        // Email Notifications
+        Route::get('email-notifications', [EmailNotificationController::class, 'index'])->name('email-notifications.index');
+        Route::get('email-notifications/create', [EmailNotificationController::class, 'create'])->name('email-notifications.create');
+        Route::post('email-notifications', [EmailNotificationController::class, 'store'])->name('email-notifications.store');
+        Route::post('email-notifications/test', [EmailNotificationController::class, 'sendTest'])->name('email-notifications.test');
+        Route::get('email-notifications/users', [EmailNotificationController::class, 'getUsers'])->name('email-notifications.users');
+
+        // Gestión de diplomas
+        Route::get('diplomas', [\App\Http\Controllers\Admin\DiplomaController::class, 'index'])->name('diplomas.index');
+        Route::post('diplomas/generar-todos', [\App\Http\Controllers\Admin\DiplomaController::class, 'generarTodos'])->name('diplomas.generar-todos-sistema');
+        Route::get('diplomas/verificar-diplomas', [\App\Http\Controllers\Admin\DiplomaController::class, 'verificarDiplomas'])->name('diplomas.verificar-diplomas');
+        Route::get('diplomas/descargar-todos', [\App\Http\Controllers\Admin\DiplomaController::class, 'descargarTodos'])->name('diplomas.descargar-todos-sistema');
 
         // WhatsApp
         Route::get('whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'showForm'])->name('whatsapp.form');
@@ -366,47 +460,63 @@ Route::get('/admin/sincronizar-usuarios-personas', [\App\Http\Controllers\UserCo
 
 // Rutas para la gestión de solicitudes de inscripción para el administrador
 Route::middleware(['auth', 'role:Administrador'])->prefix('admin/solicitudes')->name('admin.solicitudes.')->group(function () {
-    Route::get('/', function() {
-        // Obtener todas las solicitudes de inscripción (pivot estado = pendiente, espera, activo, rechazado)
-        $solicitudes = \App\Models\Persona::whereHas('cursos', function($q) {
-            $q->whereIn('participacion.estado', ['pendiente', 'espera', 'activo', 'rechazado']);
-        })->with(['cursos' => function($q) {
-            $q->withPivot('estado');
-        }])->get()->flatMap(function($persona) {
-            return $persona->cursos->map(function($curso) use ($persona) {
-                $curso->pivot->persona = $persona;
-                $curso->curso = $curso; // Asignar el curso a sí mismo para la vista
-                return $curso;
-            });
-        });
-        return view('admin.solicitudes.index', ['solicitudes' => $solicitudes]);
-    })->name('index');
-    Route::put('/{curso}/{persona}', function($cursoId, $personaId) {
-        $persona = \App\Models\Persona::findOrFail($personaId);
-        $curso = \App\Models\Curso::findOrFail($cursoId);
-        $estado = request('estado');
-        $persona->cursos()->updateExistingPivot($curso->id, ['estado' => $estado]);
-        return redirect()->back()->with('success', 'Estado actualizado correctamente.');
-    })->name('update');
+    Route::get('/', [\App\Http\Controllers\Admin\SolicitudInscripcionController::class, 'index'])->name('index');
+    Route::get('/{cursoId}/{personaId}', [\App\Http\Controllers\Admin\SolicitudInscripcionController::class, 'show'])->name('show');
+    Route::put('/{cursoId}/{personaId}', [\App\Http\Controllers\Admin\SolicitudInscripcionController::class, 'update'])->name('update');
 });
 
 // Chat entre usuarios (alumnos y profesores)
 Route::middleware(['auth'])->prefix('chat')->name('chat.')->group(function () {
     Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
-    Route::get('/{id}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
+    // Route::get('/{id}', ...) eliminada, todo se gestiona en index
     Route::post('/{id}', [\App\Http\Controllers\ChatController::class, 'store'])->name('store');
     Route::get('/search/users', [\App\Http\Controllers\ChatController::class, 'searchUsers'])->name('searchUsers');
+    Route::post('/hide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'hide'])->name('hide');
+    Route::post('/unhide/{otherUserId}', [\App\Http\Controllers\ChatHiddenController::class, 'unhide'])->name('unhide');
+    Route::get('/{id}', function($id, \App\Application\Chat\GetMessagesBetweenUsers $getMessages, \App\Application\Chat\MarkMessagesAsRead $markAsRead) {
+        // Solo responder si es AJAX
+        if (!request()->ajax() && !request('ajax')) {
+            abort(404);
+        }
+        return app(\App\Http\Controllers\ChatController::class)->show($id, $getMessages, $markAsRead);
+    })->where('id', '[0-9]+');
 });
 
-//clinica (temporal)
-Route::get('/facultativo', [FacultativoController::class, 'index']);
-Route::get('/facultativo/citas', [FacultativoController::class, 'citas']);
-Route::get('/facultativo/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas']);
-Route::get('/facultativo/citas/pendientes', [FacultativoController::class, 'citasPendientes']);
-Route::get('/facultativo/cita', [FacultativoController::class, 'cita']);
-Route::get('/facultativo/cita/new', [FacultativoController::class, 'newCita']);
-Route::get('/facultativo/pacientes', [FacultativoController::class, 'pacientes']);
-Route::get('/facultativo/paciente', [FacultativoController::class, 'paciente']);
-Route::get('/facultativo/tratamientos', [FacultativoController::class, 'tratamientos']);
-Route::get('/facultativo/tratamiento', [FacultativoController::class, 'tratamiento']);
-Route::get('/facultativo/tratamiento/new', [FacultativoController::class, 'newTratamiento']);
+// Rutas para Facultativo (médicos)
+Route::middleware(['auth', 'role:Facultativo|Administrador'])->prefix('facultativo')->name('facultativo.')->group(function () {
+    Route::get('/', [FacultativoController::class, 'index'])->name('home');
+    Route::get('/citas', [FacultativoController::class, 'citas'])->name('citas');
+    Route::get('/citas/confirmadas', [FacultativoController::class, 'citasConfirmadas'])->name('citas.confirmadas');
+    Route::get('/citas/pendientes', [FacultativoController::class, 'citasPendientes'])->name('citas.pendientes');
+    
+    // Rutas específicas de citas (deben ir antes que las rutas con parámetros)
+    Route::get('/cita/{id}/edit', [FacultativoController::class, 'editCita'])->name('cita.edit');
+    Route::get('/cita/{id?}', [FacultativoController::class, 'cita'])->name('cita');
+    
+    Route::get('/pacientes', [FacultativoController::class, 'pacientes'])->name('pacientes');
+    Route::get('/paciente', [FacultativoController::class, 'paciente'])->name('paciente');
+    Route::get('/tratamientos', [FacultativoController::class, 'tratamientos'])->name('tratamientos');
+    
+    // Rutas específicas de tratamientos (deben ir antes que las rutas con parámetros)
+    Route::get('/tratamiento/new', [FacultativoController::class, 'newTratamiento'])->name('tratamiento.new');
+    Route::get('/tratamiento/{id}/edit', [FacultativoController::class, 'editTratamiento'])->name('tratamiento.edit');
+    Route::get('/tratamiento/{id}', [FacultativoController::class, 'tratamiento'])->name('tratamiento');
+    
+    // Rutas POST/PUT para formularios
+    Route::post('/tratamiento', [FacultativoController::class, 'storeTratamiento'])->name('tratamiento.store');
+    Route::put('/tratamiento/{id}', [FacultativoController::class, 'updateTratamiento'])->name('tratamiento.update');
+    Route::delete('/tratamiento/{id}', [FacultativoController::class, 'destroyTratamiento'])->name('tratamiento.destroy');
+    Route::post('/cita', [FacultativoController::class, 'storeCita'])->name('cita.store');
+    Route::put('/cita/{id}', [FacultativoController::class, 'updateCita'])->name('cita.update');
+    
+    // Ruta para actualizar estado de citas médicas
+    Route::put('/citas/{solicitud}/actualizar-estado', [SolicitudCitaController::class, 'ActualizarEstado'])
+        ->name('citas.actualizar-estado');
+});
+
+// Rutas públicas para verificación de diplomas (QR codes)
+Route::prefix('cursos')->name('public.cursos.')->group(function () {
+    Route::get('/{id}', [\App\Http\Controllers\Public\CursoPublicController::class, 'show'])->name('show');
+    Route::get('/{id}/verificar', [\App\Http\Controllers\Public\CursoPublicController::class, 'verificar'])->name('verificar');
+});
+
