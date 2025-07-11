@@ -105,6 +105,67 @@ class DiplomaService
     }
 
     /**
+     * Genera diploma para un participante (soporta regeneración forzada)
+     * @param int $cursoId
+     * @param int $participanteId
+     * @param bool $forzarRegeneracion
+     * @return bool
+     */
+    public function generarDiplomaParaParticipante(int $cursoId, int $participanteId, bool $forzarRegeneracion = false): bool
+    {
+        try {
+            $curso = Curso::findOrFail($cursoId);
+            $participante = Persona::findOrFail($participanteId);
+            
+            // Verificar si ya existe un diploma
+            $diplomaExistente = Diploma::where('curso_id', $cursoId)
+                ->where('participante_id', $participanteId)
+                ->first();
+            
+            if ($diplomaExistente && !$forzarRegeneracion) {
+                Log::info("Diploma ya existe para participante {$participanteId} en curso {$cursoId}");
+                return true; // Ya existe, consideramos éxito
+            }
+            
+            // Si existe y queremos regenerar, eliminar el anterior
+            if ($diplomaExistente && $forzarRegeneracion) {
+                // Eliminar archivo anterior
+                if (Storage::disk('public')->exists($diplomaExistente->path_pdf)) {
+                    Storage::disk('public')->delete($diplomaExistente->path_pdf);
+                }
+                
+                // Eliminar registro
+                $diplomaExistente->delete();
+                
+                Log::info("Diploma anterior eliminado para regeneración", [
+                    'curso_id' => $cursoId,
+                    'participante_id' => $participanteId
+                ]);
+            }
+            
+            // Generar nuevo diploma
+            $diploma = $this->generarYGuardarDiploma($curso, $participante);
+            
+            Log::info("Diploma generado exitosamente", [
+                'curso_id' => $cursoId,
+                'participante_id' => $participanteId,
+                'diploma_id' => $diploma->id
+            ]);
+            
+            return true;
+            
+        } catch (\Exception $e) {
+            Log::error("Error al generar diploma", [
+                'curso_id' => $cursoId,
+                'participante_id' => $participanteId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
      * Genera el PDF desde HTML usando Browsershot
      * @param string $html
      * @return string (PDF binario)
@@ -120,10 +181,10 @@ class DiplomaService
             ->showBackground()
             ->noSandbox()
             ->disableGpu()
-            ->scale(1) // valor entre 0.1 y 2
+            ->scale(1)
             ->timeout(120)
             ->waitUntilNetworkIdle()
-            ->preferCssPageSize();
+            ->preferCssPageSize(); // Dejar que el CSS defina el tamaño
 
         // Detección automática de Chrome
         $chromePaths = [

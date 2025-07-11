@@ -567,8 +567,9 @@ class CursoController extends Controller
             $diploma = \App\Models\Diploma::where('curso_id', $cursoId)
                                           ->where('persona_id', $personaId)
                                           ->firstOrFail();
-
-            return view('admin.cursos.diplomas.ver', compact('curso', 'persona', 'diploma'));
+            // Generar el QR para la vista
+            $qrCode = app(\App\Services\QrCodeService::class)->generarQrParaCurso($cursoId);
+            return view('admin.cursos.diplomas.ver', compact('curso', 'persona', 'diploma', 'qrCode'));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([

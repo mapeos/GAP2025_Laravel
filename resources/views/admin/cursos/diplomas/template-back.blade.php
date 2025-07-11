@@ -114,7 +114,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            padding: 60px;
+            padding: 32px 32px 24px 32px; /* Menos padding */
         }
         
         /* Header */
@@ -152,51 +152,51 @@
         /* Título del reverso */
         .diploma-title {
             font-family: 'Playfair Display', serif;
-            font-size: 3rem;
+            font-size: 2.2rem;
             font-weight: 700;
             color: #2c3e50;
             text-align: center;
-            margin: 30px 0;
+            margin: 18px 0 18px 0;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
         
         /* Información detallada */
         .diploma-details {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 40px;
-            margin: 40px 0;
+            gap: 18px;
+            margin: 18px 0 18px 0;
             flex: 1;
         }
         
         .detail-section {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            border: 2px solid rgba(231, 76, 60, 0.1);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.92);
+            padding: 16px 14px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+            border: 1.5px solid rgba(231, 76, 60, 0.09);
+            backdrop-filter: blur(6px);
         }
         
         .detail-title {
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             color: #2c3e50;
             font-weight: 700;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #e74c3c;
-            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 6px;
             text-align: center;
             font-family: 'Playfair Display', serif;
         }
         
         .detail-item {
-            margin-bottom: 15px;
+            margin-bottom: 7px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(231, 76, 60, 0.1);
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(231, 76, 60, 0.08);
         }
         
         .detail-item:last-child {
@@ -204,15 +204,15 @@
         }
         
         .detail-label {
-            font-size: 1rem;
+            font-size: 0.92rem;
             color: #7f8c8d;
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         
         .detail-value {
-            font-size: 1.1rem;
+            font-size: 0.98rem;
             color: #2c3e50;
             font-weight: 600;
             text-align: right;
@@ -221,48 +221,51 @@
         /* Código QR y verificación */
         .verification-section {
             text-align: center;
-            margin: 40px 0;
-            background: rgba(52, 152, 219, 0.05);
-            padding: 30px;
-            border-radius: 20px;
-            border: 2px solid rgba(52, 152, 219, 0.2);
+            margin: 18px 0 18px 0;
+            background: rgba(52, 152, 219, 0.04);
+            padding: 14px 8px 10px 8px;
+            border-radius: 12px;
+            border: 1.5px solid rgba(52, 152, 219, 0.13);
         }
         
         .verification-title {
-            font-size: 1.3rem;
+            font-size: 1.05rem;
             color: #2c3e50;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
             font-family: 'Playfair Display', serif;
         }
         
         .qr-code {
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 135px;
             background: white;
             border: 3px solid #2c3e50;
-            border-radius: 15px;
-            margin: 0 auto 20px;
+            border-radius: 12px;
+            margin: 0 auto 10px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
-            color: #7f8c8d;
-            font-weight: 600;
+            font-size: 0.8rem;
+            color: #2c3e50;
+            font-weight: 500;
             text-align: center;
-            line-height: 1.3;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            line-height: 1.1;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+            padding: 6px 4px 4px 4px;
+            overflow: hidden;
         }
         
         .verification-text {
-            font-size: 1rem;
+            font-size: 0.92rem;
             color: #7f8c8d;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             font-weight: 500;
         }
         
         .verification-url {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #3498db;
             font-weight: 600;
             text-decoration: none;
@@ -270,26 +273,26 @@
         
         /* Información adicional */
         .additional-info {
-            background: rgba(231, 76, 60, 0.05);
-            padding: 25px;
-            border-radius: 20px;
-            margin: 30px 0;
-            border: 2px solid rgba(231, 76, 60, 0.2);
+            background: rgba(231, 76, 60, 0.04);
+            padding: 12px 10px;
+            border-radius: 10px;
+            margin: 14px 0 10px 0;
+            border: 1.5px solid rgba(231, 76, 60, 0.13);
         }
         
         .additional-title {
-            font-size: 1.2rem;
+            font-size: 1rem;
             color: #2c3e50;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 7px;
             text-align: center;
             font-family: 'Playfair Display', serif;
         }
         
         .additional-text {
-            font-size: 1rem;
+            font-size: 0.92rem;
             color: #34495e;
-            line-height: 1.7;
+            line-height: 1.4;
             text-align: justify;
             font-weight: 400;
         }
@@ -299,9 +302,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid rgba(231, 76, 60, 0.2);
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1.5px solid rgba(231, 76, 60, 0.13);
         }
         
         .footer-left {
@@ -450,13 +453,13 @@
                     <div class="verification-title">Verificación de Autenticidad</div>
                     <div class="qr-code">
                         @if(isset($qrCode) && $qrCode)
-                            <img src="{{ $qrCode }}" alt="Código QR para verificación" style="width: 120px; height: 120px; display: block; margin: 0 auto;">
-                            <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; color: #7f8c8d;">
-                                Escanee para verificar<br>la autenticidad del diploma
+                            <div style="width: 100px; height: 100px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                                <img src='{{ $qrCode }}' alt='Código QR para verificación' style='max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; object-fit: contain; margin: 0 auto;' />
                             </div>
                         @else
-                            CÓDIGO QR<br><br>
-                            Escanee para<br>verificar la<br>autenticidad del<br>diploma
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
+                                <span style="font-weight: 700; font-size: 1rem; color: #2c3e50;">CÓDIGO QR</span>
+                            </div>
                         @endif
                     </div>
                     <div class="verification-text">Para verificar la autenticidad de este diploma, escanee el código QR o visite:</div>

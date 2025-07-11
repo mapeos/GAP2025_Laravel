@@ -299,7 +299,7 @@
                 
                 <!-- Vista del dorso -->
                 <div id="diploma-back" class="diploma-view fade-in">
-                    @include('admin.cursos.diplomas.template-back', ['curso' => $curso, 'persona' => $persona])
+                    @include('admin.cursos.diplomas.template-back', ['curso' => $curso, 'persona' => $persona, 'qrCode' => $qrCode])
                 </div>
             </div>
         </div>
