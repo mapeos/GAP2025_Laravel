@@ -137,6 +137,12 @@
       <div id="mensaje_pago" style="margin-top: 20px; display: none;"></div>
     </form>
   </div>
+
+  <div class="mb-4 d-flex gap-2">
+    <a href="{{ route('admin.pagos.metodos') }}" class="btn btn-outline-primary">Métodos</a>
+    <a href="{{ route('admin.pagos.facturas.index') }}" class="btn btn-outline-primary">Facturas</a>
+    <a href="{{ route('admin.pagos.servicios') }}" class="btn btn-primary">Servicios</a>
+  </div>
 </div>
 
 <script>

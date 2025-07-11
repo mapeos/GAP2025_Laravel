@@ -82,13 +82,20 @@ class User extends Authenticatable
         return $this->hasOne(Persona::class);
     }
 
+    // Relación con mensajes enviados y recibidos (ajustada a ChatMessage)
     public function mensajesEnviados()
     {
-        return $this->hasMany(\App\Models\Message::class, 'user_id_origen');
+        return $this->hasMany(\App\Models\ChatMessage::class, 'sender_id');
     }
 
     public function mensajesRecibidos()
     {
-        return $this->hasMany(\App\Models\Message::class, 'user_id_destino');
+        return $this->hasMany(\App\Models\ChatMessage::class, 'receiver_id');
+    }
+
+    // Relación para acceder a las facturas del usuario
+    public function facturas()
+    {
+        return $this->hasMany(\App\Models\Factura::class, 'user_id');
     }
 }

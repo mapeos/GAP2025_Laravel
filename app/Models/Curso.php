@@ -17,8 +17,17 @@ use Illuminate\Support\Facades\Log;
  * - Obtener solo los profesores del curso: $profesores = $curso->personasPorRol('profesor')->get();
  * - Obtener solo los alumnos del curso: $alumnos = $curso->personasPorRol('alumno')->get();
  */
- class Curso extends Model
+class Curso extends Model
 {
+    use SoftDeletes;
+
+    /**
+     * Pagos realizados para este curso
+     */
+    public function pagos()
+    {
+        return $this->hasMany(\App\Models\Pago::class, 'curso_id');
+    }
     use SoftDeletes;
 
     protected $fillable = [

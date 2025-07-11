@@ -43,16 +43,28 @@ Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class,
 Route::get('/admin/pagina-test', function () {
     return view('admin.dashboard.test');
 });
+// Rutas de pagos para administradores
 Route::middleware(['auth', 'role:Administrador'])->prefix('admin/pagos')->name('admin.pagos.')->group(function () {
     Route::view('/', 'admin.dashboard.pagos.pagos')->name('index');
     Route::view('/estado', 'admin.dashboard.pagos.estado')->name('estado');
-    // Route::view('/facturas', 'admin.dashboard.pagos.facturas')->name('facturas'); // Eliminada para evitar conflicto 404
     Route::get('/facturas/list', [FacturaController::class, 'index'])->name('facturas.list');
     Route::get('/facturas/create', [FacturaController::class, 'create'])->name('facturas.create');
     Route::post('/facturas', [FacturaController::class, 'store'])->name('facturas.store');
     Route::get('/facturas', [FacturaController::class, 'index'])->name('facturas.index');
     Route::get('/metodos', [PagoController::class, 'metodos'])->name('metodos');
     Route::post('/metodos', [PagoController::class, 'store'])->name('metodos.store');
+    Route::get('/servicios', [PagoController::class, 'serviciosResumen'])->name('servicios');
+});
+
+// Rutas de pagos para alumnos
+Route::middleware(['auth', 'role:Alumno'])->prefix('alumno/pagos')->name('alumno.pagos.')->group(function () {
+    Route::get('/metodos', [PagoController::class, 'metodos'])->name('metodos');
+    Route::post('/metodos', [PagoController::class, 'store'])->name('metodos.store');
+    Route::get('/facturas', function() {
+        $user = Auth::user();
+        $facturas = $user ? \App\Models\Factura::with('pago')->where('user_id', $user->id)->orderByDesc('fecha')->get() : collect();
+        return view('alumno.facturas', compact('facturas'));
+    })->name('facturas');
 });
 // Eliminar o comentar la ruta antigua del dashboard genérico
 // Route::view('dashboard', 'dashboard')

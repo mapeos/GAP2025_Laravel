@@ -13,9 +13,9 @@ class FacturaController extends Controller
         // Si el usuario es administrador, mostrar todas las facturas
         // Si el usuario tiene un campo 'role' y es 'Administrador', mostrar todas las facturas
         if (Auth::check() && Auth::user()->role === 'Administrador') {
-            $query = Factura::query();
+            $query = Factura::with(['pago.paymentMethod', 'user']);
         } else {
-            $query = Factura::where('user_id', Auth::id());
+            $query = Factura::with(['pago.paymentMethod', 'user'])->where('user_id', Auth::id());
         }
         if ($request->filled('buscar')) {
             $query->where('producto', $request->buscar);

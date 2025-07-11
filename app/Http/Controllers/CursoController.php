@@ -89,11 +89,15 @@ class CursoController extends Controller
      */
     public function show($id)
     {
-        // Cargar el curso con todas las relaciones necesarias para los partials
+        // Cargar el curso con todas las relaciones necesarias para los partials y pagos
         $curso = Curso::withTrashed()
-            ->with(['personas.user', 'personas.participaciones.rol'])
+            ->with([
+                'personas.user', 
+                'personas.participaciones.rol',
+                'pagos.persona' // Cargar persona asociada a cada pago
+            ])
             ->findOrFail($id);
-            
+
         return view('admin.cursos.show', compact('curso'));
     }
 

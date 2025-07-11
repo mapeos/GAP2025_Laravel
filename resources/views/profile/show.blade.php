@@ -36,5 +36,6 @@
             </div>
         </div>
     </div>
+    @include('profile._pagos')
 </div>
 @endsection

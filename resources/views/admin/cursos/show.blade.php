@@ -44,6 +44,110 @@
             
             <!-- Participantes -->
             @include('admin.cursos.parts.participante', ['curso' => $curso])
+
+            <!-- Usuarios que han pagado este curso y resumen financiero (solo admin) -->
+            @if(auth()->user() && auth()->user()->hasRole('Administrador'))
+                <div class="card shadow-sm border-0 mb-4" style="margin-top:-2rem;">
+                    <div class="card-header bg-white border-bottom d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+                        <h5 class="mb-0 text-primary">
+                            <i class="ri-money-euro-circle-line me-2"></i>
+                            Usuarios que han pagado este curso
+                        </h5>
+                        <div class="mt-3 mt-md-0">
+                            <span class="badge bg-success fs-6" style="font-size:1.1em;padding:0.7em 1.3em;">
+                                <i class="ri-coins-line me-1"></i>
+                                Total pagado: €{{ number_format($curso->pagos->sum('importe'), 2) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Buscador mejorado -->
+                        <form method="GET" class="mb-4">
+                            <div class="input-group" style="max-width: 500px; margin-bottom: 1rem;">
+                                <input type="text" name="buscar_usuario" value="{{ request('buscar_usuario') }}" class="form-control" placeholder="Buscar por nombre, DNI o email..." style="border-radius: 8px 0 0 8px;">
+                                <input type="date" name="buscar_fecha" value="{{ request('buscar_fecha') }}" class="form-control" style="max-width: 180px; border-radius: 0;">
+                                <button type="submit" class="btn btn-primary" style="border-radius: 0 8px 8px 0;">Buscar</button>
+                            </div>
+                        </form>
+                        @php
+                            $pagosFiltrados = $curso->pagos->filter(function($pago) {
+                                $usuario = request('buscar_usuario');
+                                $fecha = request('buscar_fecha');
+                                $match = true;
+                                if ($usuario) {
+                                    $nombre = $pago->persona->nombre ?? $pago->nombre ?? '';
+                                    $dni = $pago->persona->dni ?? '';
+                                    $email = $pago->email ?? '';
+                                    $match = $match && (
+                                        stripos($nombre, $usuario) !== false ||
+                                        stripos($dni, $usuario) !== false ||
+                                        stripos($email, $usuario) !== false
+                                    );
+                                }
+                                if ($fecha) {
+                                    $match = $match && ($pago->fecha && \Carbon\Carbon::parse($pago->fecha)->format('Y-m-d') == $fecha);
+                                }
+                                return $match;
+                            });
+                        @endphp
+                        @if($pagosFiltrados->count())
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>DNI</th>
+                                            <th>Email</th>
+                                            <th>Rol</th>
+                                            <th>Fecha de pago</th>
+                                            <th>Factura</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($pagosFiltrados as $pago)
+                                            <tr>
+                                                <td>{{ $pago->persona->nombre ?? $pago->nombre ?? '-' }}</td>
+                                                <td>{{ $pago->persona->dni ?? '-' }}</td>
+                                                <td>{{ $pago->email ?? '-' }}</td>
+                                                <td>
+                                                    @php
+                                                        $user = $pago->factura ? $pago->factura->user : null;
+                                                    @endphp
+                                                    @if($user && method_exists($user, 'hasRole'))
+                                                        @if($user->hasRole('Administrador'))
+                                                            Administrador
+                                                        @elseif($user->hasRole('Profesor'))
+                                                            Profesor
+                                                        @elseif($user->hasRole('Alumno'))
+                                                            Alumno
+                                                        @elseif($user->hasRole('Editor'))
+                                                            Editor
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>{{ $pago->fecha ? \Carbon\Carbon::parse($pago->fecha)->format('d/m/Y') : '-' }}</td>
+                                                <td>
+                                                    @if($pago->factura)
+                                                        <a href="{{ route('admin.pagos.facturas.index', ['factura_id' => $pago->factura->id]) }}" class="btn btn-sm btn-info">Ver factura</a>
+                                                    @else
+                                                        <span class="text-muted">No disponible</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="alert alert-info mb-0">No hay pagos registrados para este curso con los filtros aplicados.</div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
         
         <!-- Panel lateral - Recursos del curso -->

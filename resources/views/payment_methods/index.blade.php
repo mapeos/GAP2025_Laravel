@@ -1,4 +1,5 @@
-@extends('template.base-admin')
+
+@extends(isset($alumno) && $alumno ? 'template.base-alumno' : 'template.base-admin')
 
 @section('title', 'Métodos de Pago')
 @section('title-sidebar', 'Gestión de Pagos')
@@ -154,63 +155,80 @@
             box-sizing: border-box;
         }
     </style>
-    <div class="pago-form">
-        <h1>Método de pago</h1>
-        @if(session('success'))
-            <div class="success">{{ session('success') }}</div>
-        @endif
-        @if($errors->any())
-            <div class="error">
-                <ul style="margin: 0; padding-left: 1.2em;">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-        <form action="{{ route('admin.pagos.metodos.store') }}" method="POST" id="form-metodo-pago">
-            @csrf
-            <fieldset>
-                <legend>Datos del usuario y curso</legend>
-                <label for="nombre">Nombre:</label>
-                <input type="text" name="nombre" id="nombre" required>
-                <label for="email">Email:</label>
-                <input type="email" name="email" id="email" required>
-                <label for="curso">Tipo de curso:</label>
-                <input type="text" name="curso" id="curso" required placeholder="Ej: Curso de inglés, Excel, etc.">
-            </fieldset>
-            <div class="radio-group">
-                <label><input type="radio" name="tipo_pago" value="unico" checked> Pago único</label>
-                <label><input type="radio" name="tipo_pago" value="mensual"> Pago mensual</label>
-            </div>
-            <div id="campo-meses" style="display: none;">
-                <label for="meses">Número de meses:</label>
-                <input type="number" name="meses" id="meses" min="1" value="1" style="width: 80px; display: inline-block;">
-                <span id="precio-mensual" class="info"></span>
-            </div>
-            <div class="radio-group">
-                <label><input type="radio" name="metodo_pago" value="tarjeta" required> <span>Tarjeta de crédito/débito</span>
-                    <span class="metodo-icono" style="margin-left:auto;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa"> 
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="Mastercard">
-                    </span>
-                </label>
-                <label><input type="radio" name="metodo_pago" value="transferencia"> <span>Transferencia bancaria</span>
-                    <span class="metodo-icono" style="margin-left:auto;">🏦</span>
-                </label>
-                <label><input type="radio" name="metodo_pago" value="paypal"> <span>PayPal</span>
-                    <span class="metodo-icono" style="margin-left:auto;">
-                        <img src='https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg' alt='PayPal'>
-                    </span>
-                </label>
-                <label><input type="radio" name="metodo_pago" value="efectivo"> <span>Efectivo</span>
-                    <span class="metodo-icono" style="margin-left:auto;">💶</span>
-                </label>
-            </div>
-            <div id="formulario-dinamico"></div>
-            <button type="submit">Pagar</button>
-        </form>
-    </div>
+    @auth
+        <div class="pago-form">
+            <h1>Método de pago</h1>
+            @if(session('success'))
+                <div class="success">{{ session('success') }}</div>
+            @endif
+            @if($errors->any())
+                <div class="error">
+                    <ul style="margin: 0; padding-left: 1.2em;">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form action="{{ isset($alumno) && $alumno ? route('alumno.pagos.metodos.store') : route('admin.pagos.metodos.store') }}" method="POST" id="form-metodo-pago">
+                @csrf
+                <fieldset>
+                    <legend>Datos del usuario y curso</legend>
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" name="nombre" id="nombre" value="{{ auth()->user()->name }}" readonly>
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" id="email" value="{{ auth()->user()->email }}" readonly>
+                    <label for="curso_id" style="margin-bottom:0.3em; color:#6366f1; font-weight:600;">Curso:</label>
+                    <div style="position:relative; margin-bottom:1.2em;">
+                        <select name="curso_id" id="curso_id" required style="width:100%; padding:0.6em 2.5em 0.6em 1em; border-radius:6px; border:1.5px solid #cbd5e1; background:#f8fafc; font-size:1.05em; color:#222; appearance:none; box-shadow:0 2px 8px 0 #6366f111;">
+                            <option value="">-- Selecciona un curso --</option>
+                            @foreach($cursos as $curso)
+                                <option value="{{ $curso->id }}">{{ $curso->titulo }}</option>
+                            @endforeach
+                        </select>
+                        <span style="position:absolute; right:1em; top:50%; transform:translateY(-50%); pointer-events:none; color:#6366f1; font-size:1.2em;">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 8L10 12L14 8" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                    </div>
+                </fieldset>
+                <div class="radio-group">
+                    <label><input type="radio" name="tipo_pago" value="unico" checked> Pago único</label>
+                    <label><input type="radio" name="tipo_pago" value="mensual"> Pago mensual</label>
+                </div>
+                <div id="campo-meses" style="display: none;">
+                    <label for="meses">Número de meses:</label>
+                    <input type="number" name="meses" id="meses" min="1" value="1" style="width: 80px; display: inline-block;">
+                    <span id="precio-mensual" class="info"></span>
+                </div>
+                <div class="radio-group">
+                    <label><input type="radio" name="metodo_pago" value="tarjeta" required> <span>Tarjeta de crédito/débito</span>
+                        <span class="metodo-icono" style="margin-left:auto;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa"> 
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="Mastercard">
+                        </span>
+                    </label>
+                    <label><input type="radio" name="metodo_pago" value="transferencia"> <span>Transferencia bancaria</span>
+                        <span class="metodo-icono" style="margin-left:auto;">🏦</span>
+                    </label>
+                    <label><input type="radio" name="metodo_pago" value="paypal"> <span>PayPal</span>
+                        <span class="metodo-icono" style="margin-left:auto;">
+                            <img src='https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg' alt='PayPal'>
+                        </span>
+                    </label>
+                    <label><input type="radio" name="metodo_pago" value="efectivo"> <span>Efectivo</span>
+                        <span class="metodo-icono" style="margin-left:auto;">💶</span>
+                    </label>
+                </div>
+                <div id="formulario-dinamico"></div>
+                <button type="submit">Pagar</button>
+            </form>
+        </div>
+    @else
+        <div class="pago-form" style="text-align:center;">
+            <h1>Acceso requerido</h1>
+            <p>Debes <a href="{{ route('login') }}" style="color:#6366f1; font-weight:600;">iniciar sesión</a> o <a href="{{ route('register') }}" style="color:#6366f1; font-weight:600;">registrarte</a> para realizar un pago.</p>
+        </div>
+    @endauth
     <script>
         // Simulación de precio total (puedes cambiarlo por el precio real del curso)
         const precioTotal = 120;

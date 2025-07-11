@@ -100,6 +100,20 @@
                   <span><i class="ri-chat-3-line nav-icon me-2"></i>Chat</span>
                 </a>
               </li>
+
+              <!-- Enlace para realizar pago (alumno) -->
+              <li class="nav-item">
+                <a class="nav-link d-flex align-items-center {{ request()->routeIs('alumno.pagos.metodos') ? 'active' : '' }}" href="{{ route('alumno.pagos.metodos') }}">
+                  <span><i class="ri-bank-card-line nav-icon me-2"></i>Realizar pago</span>
+                </a>
+              </li>
+
+              <!-- Enlace para ver facturas (alumno) -->
+              <li class="nav-item">
+                <a class="nav-link d-flex align-items-center {{ request()->routeIs('alumno.pagos.facturas') ? 'active' : '' }}" href="{{ route('alumno.pagos.facturas') }}">
+                  <span><i class="ri-file-list-3-line nav-icon me-2"></i>Mis facturas</span>
+                </a>
+              </li>
             </ul>
           </nav>
         </div>

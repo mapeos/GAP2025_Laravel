@@ -180,10 +180,17 @@
         </li>
         <!-- Facultativo Section end -->
 
-        <!-- Pages Section -->
-        <li class="nav-section"><span class="nav-section-text text-uppercase px-2">Pages</span></li>
-        
-        <!-- Gestión de Pagos -->
+        <!-- Enlace visible para alumnos: Métodos de Pago -->
+        @if(auth()->check() && auth()->user()->hasRole('Alumno'))
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.pagos.metodos') }}">
+                <i class="ri-bank-card-line"></i> <span>Realizar pago</span>
+            </a>
+        </li>
+        @endif
+
+        <!-- Gestión de Pagos (visible para admin/profesores) -->
+        @if(auth()->check() && !auth()->user()->hasRole('Alumno'))
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">
                 <i class="ri-lock-line"></i> <span>Gestión de Pagos</span> <i class="ri-arrow-right-s-line"></i>
@@ -199,8 +206,14 @@
                         <span>Facturas</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.pagos.servicios') }}">
+                        <span>Servicios</span>
+                    </a>
+                </li>
             </ul>
         </li>
+        @endif
         <!-- Other Pages Section -->
         <li class="nav-item has-submenu parent">
             <a class="nav-link" href="#">

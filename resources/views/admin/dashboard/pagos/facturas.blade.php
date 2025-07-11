@@ -96,6 +96,10 @@
                 <input type="text" name="buscar" id="buscar" value="{{ request('buscar') }}" placeholder="Nombre del curso" style="padding: 0.5em 1em; border-radius: 6px; border: 1px solid #cbd5e1;">
             </div>
             <div>
+                <label for="buscar_usuario">Usuario:</label><br>
+                <input type="text" name="buscar_usuario" id="buscar_usuario" value="{{ request('buscar_usuario') }}" placeholder="Nombre, email o DNI" style="padding: 0.5em 1em; border-radius: 6px; border: 1px solid #cbd5e1;">
+            </div>
+            <div>
                 <label for="fecha_inicio">Desde:</label><br>
                 <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ request('fecha_inicio') }}" style="padding: 0.5em 1em; border-radius: 6px; border: 1px solid #cbd5e1;">
             </div>
@@ -113,24 +117,60 @@
                     <tr>
                         <th>ID</th>
                         <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Tipo de usuario</th>
                         <th>Curso</th>
                         <th>Importe</th>
                         <th>Fecha</th>
+                        <th>Tipo de pago</th>
+                        <!-- <th>Método de pago</th> -->
                         <th>Estado</th>
+                        <th>Próxima fecha de cobro</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($facturas as $factura)
                         <tr>
                             <td>{{ $factura->id }}</td>
-                            <td>{{ $factura->user->name ?? 'N/A' }}</td>
+                            <td>{{ $factura->pago->nombre ?? 'N/A' }}</td>
+                            <td>{{ $factura->pago->email ?? '-' }}</td>
+                            <td>
+                                @if($factura->user && method_exists($factura->user, 'hasRole'))
+                                    @if($factura->user->hasRole('Administrador'))
+                                        Administrador
+                                    @elseif($factura->user->hasRole('Profesor'))
+                                        Profesor
+                                    @elseif($factura->user->hasRole('Alumno'))
+                                        Alumno
+                                    @elseif($factura->user->hasRole('Editor'))
+                                        Editor
+                                    @else
+                                        -
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td>{{ $factura->producto }}</td>
                             <td>€{{ number_format($factura->importe, 2) }}</td>
                             <td>{{ \Carbon\Carbon::parse($factura->fecha)->format('d/m/Y') }}</td>
+                            <td>{{ $factura->pago->tipo_pago === 'mensual' ? 'Mensual' : 'Único' }}</td>
+                            <!-- <td>{{ $factura->pago->metodo_pago ?? '-' }}</td> -->
                             <td>
-                                <span class="badge bg-{{ $factura->estado === 'pagado' ? 'success' : 'warning' }}">
-                                    {{ ucfirst($factura->estado) }}
-                                </span>
+                                <span class="badge bg-success">Pagado</span>
+                            </td>
+                            <td>
+                                @if($factura->pago->tipo_pago === 'mensual' && ($factura->pago->pendiente ?? 0) > 0)
+                                    @php
+                                        $fecha_ultimo_pago = $factura->pago->fecha_ultimo_pago ?? $factura->fecha;
+                                        $intervalo = $factura->pago->intervalo_mensual ?? 1;
+                                        $proxima_fecha = \Carbon\Carbon::parse($fecha_ultimo_pago)->addMonths($intervalo);
+                                    @endphp
+                                    <span class="badge bg-info" style="background:#6366f1;color:#fff;">{{ $proxima_fecha->format('d/m/Y') }}</span>
+                                    <div style="font-size:0.95em;color:#64748b;">Próxima cuota</div>
+                                @else
+                                    <span style="color:#22c55e;font-weight:600;">-</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
