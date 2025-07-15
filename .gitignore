@@ -1,39 +1,63 @@
 # Dependencias de PHP y Node
 /vendor/
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Archivos de entorno y configuración sensible
 .env
 .env.*
+!.env.example
 auth.json
-*.env
-*.bak
-*.tmp
+*.env.local
+*.env.production
+*.env.staging
+
+# Laravel: almacenamiento y compilados
+/storage/*.key
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/app/*
+!/storage/app/.gitkeep
+!/storage/app/public/.gitkeep
+/public/storage
+/public/build/*
+/public/hot
+
+# Bootstrap cache
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
 
 # Cachés y archivos de test
 .phpunit.result.cache
 /.phpunit.cache
 .phpactor.json
+/coverage/
+/phpunit.xml
+!/phpunit.xml.dist
 
-# Laravel: almacenamiento y compilados
-storage/*.key
-storage/logs/
-storage/framework/*
-!storage/framework/.gitkeep
-/public/storage
-/public/build
-/public/hot
-
-# Compilados de Laravel
-bootstrap/cache/
-!bootstrap/cache/.gitkeep
-
-# Base de datos local y backups
+# Docker y base de datos
+/mysql/data/*
+!/mysql/data/.gitkeep
+/mysql/logs/*
+!/mysql/logs/.gitkeep
 database/*.sqlite
 /dumps/
 /backups/
 /*.sql
 *.gz
+
+# Logs generales
+*.log
+logs/
+*.log.*
 
 # IDEs y entornos locales
 /.idea
@@ -52,17 +76,45 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 
-# Lock files (opcional, si no los quieres en control de versiones)
-composer.lock
-package-lock.json
-yarn.lock
+# NPM y Yarn
+.npm
+.yarn-integrity
+.pnp
+.pnp.js
 
-# Git keep (para carpetas vacías requeridas por Laravel)
-!.gitkeep
-.env.example
-.gitattributes
-composer.json
-composer.lock
-package-lock.json
-package.json
-database/migrations/2025_06_04_114905_create_personal_access_tokens_table.php
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Archives
+*.tar
+*.tar.gz
+*.zip
+*.rar
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+/temp/
+
+# OS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
+
+# Certificados y claves
+*.pem
+*.key
+*.crt
+*.csr
+
+# Archivos específicos que no deben subirse
+/public/storage
+/storage/debugbar/
