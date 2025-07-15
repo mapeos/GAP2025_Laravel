@@ -1,0 +1,73 @@
+services:
+  app:
+    build:
+      args:
+        user: mapeos
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: ionic-academia-v2
+    container_name: GAP2025-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www/
+    networks:
+      - ionic-academia
+
+  db:
+    image: mariadb:10.6
+    command: --default-authentication-plugin=mysql_native_password --innodb-use-native-aio=0
+    container_name: GAP2025-db
+    restart: unless-stopped
+    ports:
+      - 9083:3306
+    environment:
+      MYSQL_DATABASE: GAP2025
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_USER: academia
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mariadb_10_6 
+    volumes:
+      - './mysql/data:/var/lib/mysql'
+      - './mysql/my.cnf:/etc/mysql/conf.d/my.cnf'
+      - './mysql/sql:/docker-entrypoint-initdb.d'
+    networks:
+      - ionic-academia
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  nginx:
+    image: nginx:alpine
+    container_name: GAP2025-nginx
+    restart: unless-stopped
+    ports:
+      - 9800:80
+    volumes:
+      - ./:/var/www/
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - ionic-academia
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: gap2025-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - 9001:80
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: academia
+      PMA_PASSWORD: password
+    networks:
+      - ionic-academia
+
+networks:
+  ionic-academia:
+    driver: bridge
