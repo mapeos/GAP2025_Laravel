@@ -17,7 +17,8 @@ services:
 
   db:
     image: mariadb:10.6
-    command: --default-authentication-plugin=mysql_native_password --innodb-use-native-aio=0
+    platform: linux/amd64
+    command: --default-authentication-plugin=mysql_native_password --innodb-use-native-aio=0 --innodb-buffer-pool-size=256M --max-connections=100
     container_name: GAP2025-db
     restart: unless-stopped
     ports:
@@ -31,7 +32,6 @@ services:
       SERVICE_NAME: mariadb_10_6 
     volumes:
       - './mysql/data:/var/lib/mysql'
-      - './mysql/my.cnf:/etc/mysql/conf.d/my.cnf'
       - './mysql/sql:/docker-entrypoint-initdb.d'
     networks:
       - ionic-academia
